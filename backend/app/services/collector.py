@@ -17,7 +17,6 @@ async def collect_parking_data() -> tuple[int, int]:
     Fetch parking data from UCR API and store in database.
     Returns tuple of (lots_updated, snapshots_created).
     """
-    global _last_collection_time
     settings = get_settings()
 
     lots_updated = 0

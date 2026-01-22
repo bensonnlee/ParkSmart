@@ -2,34 +2,37 @@ services:
   - type: web
     name: parksmart-api
     runtime: python
+    rootDir: backend
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: DATABASE_URL
         sync: false  # Set manually in Render dashboard
       - key: PYTHON_VERSION
-        value: "3.11"
+        value: "3.12.10"
 
   - type: cron
     name: parksmart-collector
     runtime: python
+    rootDir: backend
     buildCommand: pip install -r requirements.txt
-    schedule: "*/5 7-17 * * *"  # Every 5 min, 7am-5pm
+    schedule: "*/5 0-1,15-23 * * *"  # Every 5 min, 7am-5pm PST (UTC)
     startCommand: python -c "import asyncio; from app.services.collector import collect_parking_data; asyncio.run(collect_parking_data())"
     envVars:
       - key: DATABASE_URL
         sync: false  # Set manually in Render dashboard
       - key: PYTHON_VERSION
-        value: "3.11"
+        value: "3.12.10"
 
   - type: cron
     name: parksmart-collector-offpeak
     runtime: python
+    rootDir: backend
     buildCommand: pip install -r requirements.txt
-    schedule: "0 0-6,18-23 * * *"  # Every hour, 6pm-6am
+    schedule: "0 2-14 * * *"  # Every hour, 6pm-6am PST (UTC)
     startCommand: python -c "import asyncio; from app.services.collector import collect_parking_data; asyncio.run(collect_parking_data())"
     envVars:
       - key: DATABASE_URL
         sync: false  # Set manually in Render dashboard
       - key: PYTHON_VERSION
-        value: "3.11"
+        value: "3.12.10"
