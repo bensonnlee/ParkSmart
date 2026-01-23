@@ -79,7 +79,7 @@ export function TimeSelector({ mode, selectedTime, onModeChange, onTimeChange }:
           <div className="flex items-center gap-1 flex-1">
             <Popover open={isTimeOpen} onOpenChange={setIsTimeOpen}>
               <PopoverTrigger asChild>
-                <Button variant="ghost" className="font-medium hover:bg-gray-50 px-2 h-auto">
+                <Button variant="ghost" className="font-medium hover:bg-gray-50 px-2 h-auto w-full justify-start">
                   <Clock className="size-4 mr-2 text-ucr-blue flex-shrink-0" />
                   <span className="whitespace-nowrap">{format(selectedTime, 'h:mm a')}</span>
                 </Button>
@@ -116,30 +116,13 @@ export function TimeSelector({ mode, selectedTime, onModeChange, onTimeChange }:
                 </div>
               </PopoverContent>
             </Popover>
-
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => adjustTime(-15)}
-              className="h-8 w-8 p-0"
-            >
-              <ChevronLeft className="size-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => adjustTime(15)}
-              className="h-8 w-8 p-0"
-            >
-              <ChevronRight className="size-4" />
-            </Button>
           </div>
 
           {/* Date Selector */}
           <div className="flex items-center gap-1 flex-1">
             <Popover open={isDateOpen} onOpenChange={setIsDateOpen}>
               <PopoverTrigger asChild>
-                <Button variant="ghost" className="font-medium hover:bg-gray-50 px-2 h-auto">
+                <Button variant="ghost" className="font-medium hover:bg-gray-50 px-2 h-auto w-full justify-start">
                   <Calendar className="size-4 mr-2 text-ucr-blue flex-shrink-0" />
                   <span className="whitespace-nowrap">{format(selectedTime, 'EEE, MMM d')}</span>
                 </Button>
@@ -165,23 +148,6 @@ export function TimeSelector({ mode, selectedTime, onModeChange, onTimeChange }:
                 </div>
               </PopoverContent>
             </Popover>
-
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => adjustDate(1)}
-              className="h-8 w-8 p-0"
-            >
-              <ChevronLeft className="size-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => adjustDate(-1)}
-              className="h-8 w-8 p-0"
-            >
-              <ChevronRight className="size-4" />
-            </Button>
           </div>
         </div>
       </div>
