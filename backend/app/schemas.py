@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional
+
 from pydantic import BaseModel, ConfigDict
 
 
@@ -10,7 +10,7 @@ class PermitTypeRead(BaseModel):
 
     id: uuid.UUID
     name: str
-    description: Optional[str] = None
+    description: str | None = None
 
 
 class ParkingSnapshotRead(BaseModel):
@@ -19,7 +19,7 @@ class ParkingSnapshotRead(BaseModel):
     id: uuid.UUID
     lot_id: uuid.UUID
     free_spaces: int
-    occupancy_pct: Optional[Decimal] = None
+    occupancy_pct: Decimal | None = None
     collected_at: datetime
 
 
@@ -28,18 +28,18 @@ class ParkingLotRead(BaseModel):
 
     id: uuid.UUID
     name: str
-    address: Optional[str] = None
-    total_spaces: Optional[int] = None
-    latitude: Optional[Decimal] = None
-    longitude: Optional[Decimal] = None
+    address: str | None = None
+    total_spaces: int | None = None
+    latitude: Decimal | None = None
+    longitude: Decimal | None = None
     created_at: datetime
     updated_at: datetime
 
 
 class ParkingLotWithAvailability(ParkingLotRead):
-    free_spaces: Optional[int] = None
-    occupancy_pct: Optional[Decimal] = None
-    availability_updated_at: Optional[datetime] = None
+    free_spaces: int | None = None
+    occupancy_pct: Decimal | None = None
+    availability_updated_at: datetime | None = None
 
 
 class PaginatedSnapshots(BaseModel):
@@ -52,7 +52,7 @@ class PaginatedSnapshots(BaseModel):
 
 class HealthResponse(BaseModel):
     status: str
-    last_collection: Optional[datetime] = None
+    last_collection: datetime | None = None
 
 
 class CollectionResponse(BaseModel):
@@ -65,7 +65,7 @@ class CollectionResponse(BaseModel):
 class SignUpRequest(BaseModel):
     email: str
     password: str
-    display_name: Optional[str] = None
+    display_name: str | None = None
 
 
 class LoginRequest(BaseModel):
@@ -90,8 +90,8 @@ class UserResponse(BaseModel):
     id: uuid.UUID
     supabase_id: uuid.UUID
     email: str
-    display_name: Optional[str] = None
-    preferred_permit_id: Optional[uuid.UUID] = None
+    display_name: str | None = None
+    preferred_permit_id: uuid.UUID | None = None
     created_at: datetime
     updated_at: datetime
 

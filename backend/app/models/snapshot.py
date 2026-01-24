@@ -1,15 +1,18 @@
+from __future__ import annotations
+
 import uuid
 from datetime import datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING, Optional
-from sqlalchemy import Integer, Numeric, DateTime, ForeignKey, Index, func
+from typing import TYPE_CHECKING
+
+from sqlalchemy import DateTime, ForeignKey, Index, Integer, Numeric, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from .base import Base, UUIDMixin
+from app.models.base import Base, UUIDMixin
 
 if TYPE_CHECKING:
-    from .parking_lot import ParkingLot
+    from app.models.parking_lot import ParkingLot
 
 
 class ParkingSnapshot(Base, UUIDMixin):
@@ -19,9 +22,7 @@ class ParkingSnapshot(Base, UUIDMixin):
         UUID(as_uuid=True), ForeignKey("parking_lots.id"), nullable=False
     )
     free_spaces: Mapped[int] = mapped_column(Integer, nullable=False)
-    occupancy_pct: Mapped[Optional[Decimal]] = mapped_column(
-        Numeric(5, 2), nullable=True
-    )
+    occupancy_pct: Mapped[Decimal | None] = mapped_column(Numeric(5, 2), nullable=True)
     collected_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
@@ -29,11 +30,17 @@ class ParkingSnapshot(Base, UUIDMixin):
     )
 
     # Relationships
-    lot: Mapped["ParkingLot"] = relationship("ParkingLot", back_populates="snapshots")
+    lot: Mapped[ParkingLot] = relationship("ParkingLot", back_populates="snapshots")
 
     def __repr__(self) -> str:
-        return f"<ParkingSnapshot(lot_id={self.lot_id}, collected_at={self.collected_at})>"
+        return (
+            f"<ParkingSnapshot(lot_id={self.lot_id}, collected_at={self.collected_at})>"
+        )
 
 
 # Index created after class definition to reference column properly
-Index("idx_snapshots_lot_time", ParkingSnapshot.lot_id, ParkingSnapshot.collected_at.desc())
+Index(
+    "idx_snapshots_lot_time",
+    ParkingSnapshot.lot_id,
+    ParkingSnapshot.collected_at.desc(),
+)

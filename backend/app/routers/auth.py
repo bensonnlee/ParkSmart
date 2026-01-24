@@ -1,5 +1,10 @@
+from __future__ import annotations
+
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials
+from gotrue.types import Session
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -19,8 +24,11 @@ from app.services import auth as auth_service
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
+DbSession = Annotated[AsyncSession, Depends(get_db)]
+CurrentUser = Annotated[User, Depends(get_current_user)]
 
-def _build_tokens(session) -> AuthTokens:
+
+def _build_tokens(session: Session) -> AuthTokens:
     """Build AuthTokens from a Supabase session."""
     return AuthTokens(
         access_token=session.access_token,
@@ -30,12 +38,12 @@ def _build_tokens(session) -> AuthTokens:
 
 
 @router.post("/signup", response_model=AuthResponse)
-async def signup(request: SignUpRequest, db: AsyncSession = Depends(get_db)):
+async def signup(request: SignUpRequest, db: DbSession) -> AuthResponse:
     """Register a new user with email and password."""
     try:
         response = await auth_service.sign_up(request.email, request.password)
 
-        if not response.user:
+        if not response.user or not response.session:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Failed to create user",
@@ -60,11 +68,11 @@ async def signup(request: SignUpRequest, db: AsyncSession = Depends(get_db)):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
-        )
+        ) from e
 
 
 @router.post("/login", response_model=AuthResponse)
-async def login(request: LoginRequest, db: AsyncSession = Depends(get_db)):
+async def login(request: LoginRequest, db: DbSession) -> AuthResponse:
     """Login with email and password."""
     try:
         response = await auth_service.sign_in(request.email, request.password)
@@ -100,14 +108,14 @@ async def login(request: LoginRequest, db: AsyncSession = Depends(get_db)):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid credentials",
-        )
+        ) from None
 
 
 @router.post("/logout", response_model=LogoutResponse)
 async def logout(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
-    _user: User = Depends(get_current_user),
-):
+    credentials: Annotated[HTTPAuthorizationCredentials, Depends(security)],
+    _user: CurrentUser,
+) -> LogoutResponse:
     """Logout and invalidate the current session."""
     # Even if Supabase sign out fails, we consider it logged out
     try:
@@ -118,13 +126,13 @@ async def logout(
 
 
 @router.get("/me", response_model=UserResponse)
-async def get_me(user: User = Depends(get_current_user)):
+async def get_me(user: CurrentUser) -> UserResponse:
     """Get current authenticated user info."""
     return UserResponse.model_validate(user)
 
 
 @router.post("/refresh", response_model=AuthTokens)
-async def refresh_token(request: RefreshTokenRequest):
+async def refresh_token(request: RefreshTokenRequest) -> AuthTokens:
     """Refresh access token using refresh token."""
     try:
         response = await auth_service.refresh_session(request.refresh_token)
@@ -142,4 +150,4 @@ async def refresh_token(request: RefreshTokenRequest):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid refresh token",
-        )
+        ) from None

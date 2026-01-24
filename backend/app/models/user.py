@@ -1,10 +1,10 @@
 import uuid
-from typing import Optional
-from sqlalchemy import String, ForeignKey
+
+from sqlalchemy import ForeignKey, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
-from .base import Base, UUIDMixin, TimestampMixin
+from app.models.base import Base, TimestampMixin, UUIDMixin
 
 
 class User(Base, UUIDMixin, TimestampMixin):
@@ -16,9 +16,9 @@ class User(Base, UUIDMixin, TimestampMixin):
     )
     # Denormalized for convenience
     email: Mapped[str] = mapped_column(String, unique=True, nullable=False)
-    display_name: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    display_name: Mapped[str | None] = mapped_column(String, nullable=True)
     # Future preference
-    preferred_permit_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+    preferred_permit_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("permit_types.id"), nullable=True
     )
 

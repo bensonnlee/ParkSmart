@@ -1,17 +1,25 @@
 import uuid
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import select, func, desc
+from sqlalchemy import desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.models import ParkingLot, ParkingSnapshot
-from app.schemas import ParkingLotWithAvailability, ParkingSnapshotRead, PaginatedSnapshots
+from app.schemas import (
+    PaginatedSnapshots,
+    ParkingLotWithAvailability,
+    ParkingSnapshotRead,
+)
 
 router = APIRouter(prefix="/api/lots", tags=["parking"])
 
+DbSession = Annotated[AsyncSession, Depends(get_db)]
+
 
 @router.get("", response_model=list[ParkingLotWithAvailability])
-async def list_lots(db: AsyncSession = Depends(get_db)):
+async def list_lots(db: DbSession) -> list[ParkingLotWithAvailability]:
     """Get all parking lots with their latest availability."""
     # Subquery to get the latest snapshot for each lot
     latest_snapshot_subq = (
@@ -64,7 +72,7 @@ async def list_lots(db: AsyncSession = Depends(get_db)):
 
 
 @router.get("/{lot_id}", response_model=ParkingLotWithAvailability)
-async def get_lot(lot_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+async def get_lot(lot_id: uuid.UUID, db: DbSession) -> ParkingLotWithAvailability:
     """Get a single parking lot by ID with latest availability."""
     # Get the lot
     stmt = select(ParkingLot).where(ParkingLot.id == lot_id)
@@ -102,10 +110,10 @@ async def get_lot(lot_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
 @router.get("/{lot_id}/history", response_model=PaginatedSnapshots)
 async def get_lot_history(
     lot_id: uuid.UUID,
+    db: DbSession,
     page: int = Query(1, ge=1),
     per_page: int = Query(50, ge=1, le=100),
-    db: AsyncSession = Depends(get_db),
-):
+) -> PaginatedSnapshots:
     """Get historical snapshots for a parking lot with pagination."""
     # Verify lot exists
     lot_stmt = select(ParkingLot.id).where(ParkingLot.id == lot_id)
@@ -120,7 +128,7 @@ async def get_lot_history(
         .where(ParkingSnapshot.lot_id == lot_id)
     )
     total_result = await db.execute(count_stmt)
-    total = total_result.scalar()
+    total = total_result.scalar() or 0
 
     # Get paginated snapshots
     offset = (page - 1) * per_page

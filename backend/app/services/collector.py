@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 
 import httpx
@@ -72,7 +72,7 @@ async def collect_parking_data() -> tuple[int, int]:
                         lot_id=lot.id,
                         free_spaces=free_spaces,
                         occupancy_pct=occupancy_pct,
-                        collected_at=datetime.now(timezone.utc),
+                        collected_at=datetime.now(UTC),
                     )
                     session.add(snapshot)
                     snapshots_created += 1

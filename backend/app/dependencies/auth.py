@@ -1,5 +1,7 @@
+from typing import Annotated
+
 from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -22,8 +24,8 @@ def _auth_error(detail: str) -> HTTPException:
 
 
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials | None = Depends(security),
-    db: AsyncSession = Depends(get_db),
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(security)],
+    db: Annotated[AsyncSession, Depends(get_db)],
 ) -> User:
     """Validate JWT and return the current user. Raises 401 if invalid."""
     if not credentials:
@@ -31,17 +33,15 @@ async def get_current_user(
 
     try:
         response = get_supabase_client().auth.get_user(credentials.credentials)
-        supabase_user = response.user
+        supabase_user = response.user if response else None
         if not supabase_user:
             raise _auth_error("Invalid authentication token")
     except HTTPException:
         raise
     except Exception:
-        raise _auth_error("Invalid authentication token")
+        raise _auth_error("Invalid authentication token") from None
 
-    result = await db.execute(
-        select(User).where(User.supabase_id == supabase_user.id)
-    )
+    result = await db.execute(select(User).where(User.supabase_id == supabase_user.id))
     user = result.scalar_one_or_none()
 
     if not user:
@@ -51,8 +51,8 @@ async def get_current_user(
 
 
 async def get_optional_user(
-    credentials: HTTPAuthorizationCredentials | None = Depends(security),
-    db: AsyncSession = Depends(get_db),
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(security)],
+    db: Annotated[AsyncSession, Depends(get_db)],
 ) -> User | None:
     """Return current user if authenticated, None otherwise."""
     if not credentials:

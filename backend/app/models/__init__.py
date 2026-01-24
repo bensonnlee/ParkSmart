@@ -1,7 +1,14 @@
-from .base import Base
-from .parking_lot import ParkingLot
-from .permit import PermitType, LotPermitAccess
-from .snapshot import ParkingSnapshot
-from .user import User
+from app.models.base import Base
+from app.models.parking_lot import ParkingLot
+from app.models.permit import LotPermitAccess, PermitType
+from app.models.snapshot import ParkingSnapshot
+from app.models.user import User
 
-__all__ = ["Base", "ParkingLot", "PermitType", "LotPermitAccess", "ParkingSnapshot", "User"]
+__all__ = [
+    "Base",
+    "ParkingLot",
+    "PermitType",
+    "LotPermitAccess",
+    "ParkingSnapshot",
+    "User",
+]
