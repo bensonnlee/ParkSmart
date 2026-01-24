@@ -1,4 +1,3 @@
-from typing import Optional
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy import select
@@ -10,59 +9,51 @@ from app.services.auth import get_supabase_client
 
 security = HTTPBearer(auto_error=False)
 
+AUTH_HEADERS = {"WWW-Authenticate": "Bearer"}
+
+
+def _auth_error(detail: str) -> HTTPException:
+    """Create a 401 Unauthorized error with proper headers."""
+    return HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail=detail,
+        headers=AUTH_HEADERS,
+    )
+
 
 async def get_current_user(
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
+    credentials: HTTPAuthorizationCredentials | None = Depends(security),
     db: AsyncSession = Depends(get_db),
 ) -> User:
     """Validate JWT and return the current user. Raises 401 if invalid."""
     if not credentials:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Missing authentication token",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    token = credentials.credentials
-    supabase = get_supabase_client()
+        raise _auth_error("Missing authentication token")
 
     try:
-        # Verify token with Supabase
-        response = supabase.auth.get_user(token)
+        response = get_supabase_client().auth.get_user(credentials.credentials)
         supabase_user = response.user
         if not supabase_user:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid authentication token",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
+            raise _auth_error("Invalid authentication token")
+    except HTTPException:
+        raise
     except Exception:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid authentication token",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+        raise _auth_error("Invalid authentication token")
 
-    # Get local user record
     result = await db.execute(
         select(User).where(User.supabase_id == supabase_user.id)
     )
     user = result.scalar_one_or_none()
 
     if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User not found",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+        raise _auth_error("User not found")
 
     return user
 
 
 async def get_optional_user(
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
+    credentials: HTTPAuthorizationCredentials | None = Depends(security),
     db: AsyncSession = Depends(get_db),
-) -> Optional[User]:
+) -> User | None:
     """Return current user if authenticated, None otherwise."""
     if not credentials:
         return None

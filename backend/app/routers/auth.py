@@ -1,23 +1,32 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.security import HTTPAuthorizationCredentials
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
-from app.dependencies.auth import get_current_user
+from app.dependencies.auth import get_current_user, security
 from app.models import User
 from app.schemas import (
-    SignUpRequest,
-    LoginRequest,
-    RefreshTokenRequest,
-    AuthTokens,
-    UserResponse,
     AuthResponse,
+    AuthTokens,
+    LoginRequest,
     LogoutResponse,
+    RefreshTokenRequest,
+    SignUpRequest,
+    UserResponse,
 )
 from app.services import auth as auth_service
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
-security = HTTPBearer()
+
+
+def _build_tokens(session) -> AuthTokens:
+    """Build AuthTokens from a Supabase session."""
+    return AuthTokens(
+        access_token=session.access_token,
+        refresh_token=session.refresh_token,
+        expires_in=session.expires_in,
+    )
 
 
 @router.post("/signup", response_model=AuthResponse)
@@ -32,7 +41,6 @@ async def signup(request: SignUpRequest, db: AsyncSession = Depends(get_db)):
                 detail="Failed to create user",
             )
 
-        # Create local user record
         user = User(
             supabase_id=response.user.id,
             email=response.user.email,
@@ -42,14 +50,10 @@ async def signup(request: SignUpRequest, db: AsyncSession = Depends(get_db)):
         await db.commit()
         await db.refresh(user)
 
-        tokens = AuthTokens(
-            access_token=response.session.access_token,
-            refresh_token=response.session.refresh_token,
-            expires_in=response.session.expires_in,
+        return AuthResponse(
+            user=UserResponse.model_validate(user),
+            tokens=_build_tokens(response.session),
         )
-
-        return AuthResponse(user=UserResponse.model_validate(user), tokens=tokens)
-
     except HTTPException:
         raise
     except Exception as e:
@@ -71,8 +75,6 @@ async def login(request: LoginRequest, db: AsyncSession = Depends(get_db)):
                 detail="Invalid credentials",
             )
 
-        # Get local user record
-        from sqlalchemy import select
         result = await db.execute(
             select(User).where(User.supabase_id == response.user.id)
         )
@@ -88,17 +90,13 @@ async def login(request: LoginRequest, db: AsyncSession = Depends(get_db)):
             await db.commit()
             await db.refresh(user)
 
-        tokens = AuthTokens(
-            access_token=response.session.access_token,
-            refresh_token=response.session.refresh_token,
-            expires_in=response.session.expires_in,
+        return AuthResponse(
+            user=UserResponse.model_validate(user),
+            tokens=_build_tokens(response.session),
         )
-
-        return AuthResponse(user=UserResponse.model_validate(user), tokens=tokens)
-
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid credentials",
@@ -108,15 +106,15 @@ async def login(request: LoginRequest, db: AsyncSession = Depends(get_db)):
 @router.post("/logout", response_model=LogoutResponse)
 async def logout(
     credentials: HTTPAuthorizationCredentials = Depends(security),
-    user: User = Depends(get_current_user),
+    _user: User = Depends(get_current_user),
 ):
     """Logout and invalidate the current session."""
+    # Even if Supabase sign out fails, we consider it logged out
     try:
         await auth_service.sign_out(credentials.credentials)
-        return LogoutResponse(message="Successfully logged out")
     except Exception:
-        # Even if Supabase sign out fails, we consider it logged out
-        return LogoutResponse(message="Successfully logged out")
+        pass
+    return LogoutResponse(message="Successfully logged out")
 
 
 @router.get("/me", response_model=UserResponse)
@@ -137,12 +135,7 @@ async def refresh_token(request: RefreshTokenRequest):
                 detail="Invalid refresh token",
             )
 
-        return AuthTokens(
-            access_token=response.session.access_token,
-            refresh_token=response.session.refresh_token,
-            expires_in=response.session.expires_in,
-        )
-
+        return _build_tokens(response.session)
     except HTTPException:
         raise
     except Exception:
