@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import health, parking, permits
+from app.routers import auth, health, parking, permits
 
 # Configure logging
 logging.basicConfig(
@@ -39,6 +39,7 @@ app.add_middleware(
 )
 
 # Include routers
+app.include_router(auth.router)
 app.include_router(health.router)
 app.include_router(parking.router)
 app.include_router(permits.router)
