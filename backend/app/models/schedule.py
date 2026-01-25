@@ -9,6 +9,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import Base, TimestampMixin, UUIDMixin
 
 if TYPE_CHECKING:
+    from app.models.classroom import Classroom
     from app.models.user import User
 
 
@@ -47,7 +48,12 @@ class ScheduleEvent(Base, UUIDMixin, TimestampMixin):
         index=True,
     )
     event_name: Mapped[str] = mapped_column(String, nullable=False)
-    location: Mapped[str | None] = mapped_column(String, nullable=True)
+    classroom_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("classrooms.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
     start_time: Mapped[time] = mapped_column(Time, nullable=False)
     end_time: Mapped[time] = mapped_column(Time, nullable=False)
     days_of_week: Mapped[list[int] | None] = mapped_column(
@@ -59,6 +65,9 @@ class ScheduleEvent(Base, UUIDMixin, TimestampMixin):
     # Relationships
     schedule: Mapped["UserSchedule"] = relationship(
         "UserSchedule", back_populates="events"
+    )
+    classroom: Mapped["Classroom | None"] = relationship(
+        "Classroom", back_populates="schedule_events"
     )
 
     def __repr__(self) -> str:

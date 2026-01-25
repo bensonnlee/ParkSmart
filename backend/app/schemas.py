@@ -105,10 +105,36 @@ class LogoutResponse(BaseModel):
     message: str
 
 
+# Building and Classroom schemas
+class BuildingRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    name: str
+    latitude: Decimal
+    longitude: Decimal
+    created_at: datetime
+    updated_at: datetime
+
+
+class ClassroomRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    location_string: str
+    building_id: uuid.UUID | None = None
+    created_at: datetime
+    updated_at: datetime
+
+
+class ClassroomWithBuilding(ClassroomRead):
+    building: BuildingRead | None = None
+
+
 # Schedule schemas
 class ScheduleEventCreate(BaseModel):
     event_name: str
-    location: str | None = None
+    classroom_id: uuid.UUID | None = None
     start_time: time
     end_time: time
     days_of_week: list[int] | None = None
@@ -122,7 +148,7 @@ class ScheduleEventRead(BaseModel):
     id: uuid.UUID
     schedule_id: uuid.UUID
     event_name: str
-    location: str | None = None
+    classroom_id: uuid.UUID | None = None
     start_time: time
     end_time: time
     days_of_week: list[int] | None = None
