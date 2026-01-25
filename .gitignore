@@ -205,3 +205,6 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+#.ics file for testing with parser.py in backend/app/services/parser.py
+*.ics
