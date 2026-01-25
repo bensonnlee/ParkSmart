@@ -6,6 +6,8 @@ import icalendar
 
 Link: https://icalendar.org/iCalendar-RFC-5545/3-3-10-recurrence-rule.html - formatting on RRULE or recurrence rules
 
+Link: https://stackoverflow.com/questions/3408097/parsing-files-ics-icalendar-using-python - how to begin traversing through .ics files with icalendar and specific variables/methods with icalendar
+
 Multiple VEVENTS in one file (for every event/class, there is a VEVENT) """
 
 def parse_ics(file_name: str) -> list[dict]: #Gets file and parses through it to extract relevant components to a dictionary and returns a list of a schedule's classes and components
