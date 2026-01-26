@@ -1,3 +1,15 @@
+"""
+ParkSmart Database Models
+
+Models:
+- ParkingLot, ParkingSnapshot: Lots and real-time occupancy data
+- PermitType, LotPermitAccess: Permit types and lot access rules
+- Building, Classroom: Campus locations for proximity calculations
+- User, UserSchedule, ScheduleEvent: Users and their class schedules
+
+All models use UUID primary keys. See base.py for shared mixins.
+"""
+
 from app.models.base import Base
 from app.models.building import Building
 from app.models.classroom import Classroom

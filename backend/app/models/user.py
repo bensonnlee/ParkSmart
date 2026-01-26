@@ -1,3 +1,5 @@
+"""User model - links to Supabase auth, stores permit preference."""
+
 import uuid
 from typing import TYPE_CHECKING
 
@@ -12,6 +14,8 @@ if TYPE_CHECKING:
 
 
 class User(Base, UUIDMixin, TimestampMixin):
+    """App user linked to Supabase auth. Has optional schedule and permit preference."""
+
     __tablename__ = "users"
 
     # Links to Supabase auth.users

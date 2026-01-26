@@ -1,3 +1,5 @@
+"""Classroom model - rooms within buildings, linked from schedule events."""
+
 import uuid
 from typing import TYPE_CHECKING
 
@@ -13,6 +15,8 @@ if TYPE_CHECKING:
 
 
 class Classroom(Base, UUIDMixin, TimestampMixin):
+    """A classroom parsed from schedule data. building_id may be null if unmapped."""
+
     __tablename__ = "classrooms"
 
     location_string: Mapped[str] = mapped_column(String, unique=True, nullable=False)

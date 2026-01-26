@@ -1,3 +1,5 @@
+"""Schedule models - user schedules and recurring class events."""
+
 import uuid
 from datetime import date, time
 from typing import TYPE_CHECKING
@@ -14,6 +16,8 @@ if TYPE_CHECKING:
 
 
 class UserSchedule(Base, UUIDMixin, TimestampMixin):
+    """A user's schedule container (1:1 with User). Holds multiple events."""
+
     __tablename__ = "user_schedules"
 
     user_id: Mapped[uuid.UUID] = mapped_column(
@@ -39,6 +43,8 @@ class UserSchedule(Base, UUIDMixin, TimestampMixin):
 
 
 class ScheduleEvent(Base, UUIDMixin, TimestampMixin):
+    """A recurring class/event with time, days_of_week, and optional classroom location."""
+
     __tablename__ = "schedule_events"
 
     schedule_id: Mapped[uuid.UUID] = mapped_column(

@@ -1,3 +1,5 @@
+"""Building model - campus buildings with GPS coordinates for proximity calculations."""
+
 import uuid
 from decimal import Decimal
 from typing import TYPE_CHECKING
@@ -12,6 +14,8 @@ if TYPE_CHECKING:
 
 
 class Building(Base, UUIDMixin, TimestampMixin):
+    """A campus building with GPS coordinates. Contains classrooms."""
+
     __tablename__ = "buildings"
 
     name: Mapped[str] = mapped_column(String, unique=True, nullable=False)
