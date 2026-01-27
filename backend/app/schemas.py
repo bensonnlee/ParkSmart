@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import date, datetime, time
 from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict
@@ -103,3 +103,72 @@ class AuthResponse(BaseModel):
 
 class LogoutResponse(BaseModel):
     message: str
+
+
+# Building and Classroom schemas
+class BuildingRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    name: str
+    latitude: Decimal
+    longitude: Decimal
+    created_at: datetime
+    updated_at: datetime
+
+
+class ClassroomRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    location_string: str
+    building_id: uuid.UUID | None = None
+    created_at: datetime
+    updated_at: datetime
+
+
+class ClassroomWithBuilding(ClassroomRead):
+    building: BuildingRead | None = None
+
+
+# Schedule schemas
+class ScheduleEventCreate(BaseModel):
+    event_name: str
+    classroom_id: uuid.UUID | None = None
+    start_time: time
+    end_time: time
+    days_of_week: list[int] | None = None
+    valid_from: date | None = None
+    valid_until: date | None = None
+
+
+class ScheduleEventRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    schedule_id: uuid.UUID
+    event_name: str
+    classroom_id: uuid.UUID | None = None
+    start_time: time
+    end_time: time
+    days_of_week: list[int] | None = None
+    valid_from: date | None = None
+    valid_until: date | None = None
+    created_at: datetime
+    updated_at: datetime
+
+
+class UserScheduleCreate(BaseModel):
+    name: str | None = None
+    events: list[ScheduleEventCreate] = []
+
+
+class UserScheduleRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    user_id: uuid.UUID
+    name: str | None = None
+    events: list[ScheduleEventRead] = []
+    created_at: datetime
+    updated_at: datetime

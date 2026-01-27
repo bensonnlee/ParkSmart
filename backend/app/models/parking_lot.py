@@ -1,3 +1,5 @@
+"""Parking lot model with location, capacity, and GPS coordinates."""
+
 from __future__ import annotations
 
 from decimal import Decimal
@@ -14,6 +16,8 @@ if TYPE_CHECKING:
 
 
 class ParkingLot(Base, UUIDMixin, TimestampMixin):
+    """A campus parking lot. Links to snapshots (occupancy) and permit_access (rules)."""
+
     __tablename__ = "parking_lots"
 
     name: Mapped[str] = mapped_column(String, unique=True, nullable=False)
