@@ -30,8 +30,10 @@ def parse_ics(
                 event = {}
                 event["class"] = components.get("SUMMARY")
                 location = components.get("LOCATION")
-                if 'Campus: Riverside Building: ' in location:
-                    location = location.replace('Campus: Riverside Building: ', '')
+                if (
+                    "Campus: Riverside Building: " in location
+                ):  # identify and remove specific text 'Campus: Riverside Building: ' from location for easier readability and usage in future code
+                    location = location.replace("Campus: Riverside Building: ", "")
                 event["classroom"] = location
                 event["start_time"] = components.get(
                     "DTSTART"
