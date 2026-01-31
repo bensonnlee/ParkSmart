@@ -29,7 +29,10 @@ def parse_ics(
             ):  # Found a single event/class so set up a dictionary of relevant components and add to events list
                 event = {}
                 event["class"] = components.get("SUMMARY")
-                event["classroom"] = components.get("LOCATION")
+                location = components.get("LOCATION")
+                if 'Campus: Riverside Building: ' in location:
+                    location = location.replace('Campus: Riverside Building: ', '')
+                event["classroom"] = location
                 event["start_time"] = components.get(
                     "DTSTART"
                 ).dt  # dt allows for better readability of datetime
