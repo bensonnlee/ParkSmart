@@ -1,294 +1,210 @@
-import { useState, useMemo } from 'react';
-import { LocationInput } from '@/app/components/LocationInput';
-import { DestinationSelect } from '@/app/components/DestinationSelect';
-import { TimeSelector } from '@/app/components/TimeSelector';
-import { ParkingLotCard } from '@/app/components/ParkingLotCard';
-import { RecommendationCard } from '@/app/components/RecommendationCard';
+import { useState } from 'react';
+import { useNavigate } from 'react-router';
 import { Button } from '@/app/components/ui/button';
 import { Card, CardContent } from '@/app/components/ui/card';
-import { Alert, AlertDescription } from '@/app/components/ui/alert';
-import { ucrParkingLots, campusLocations, calculateDistance, calculateWalkingTime, predictParkingAvailability } from '@/app/components/ucr-data';
-import { ParkingRecommendation, ParkingLot } from '@/app/components/ucr-types';
-import { Navigation, AlertCircle, Info } from 'lucide-react';
-import { toast } from 'sonner';
+import { Calendar, MapPin, Clock, Upload, Settings, ChevronRight } from 'lucide-react';
+import { format, addMinutes } from 'date-fns';
+
+interface TodayClass {
+  id: string;
+  name: string;
+  startTime: Date;
+  endTime: Date;
+  building: string;
+  room: string;
+}
 
 export default function Home() {
-  const [currentLocation, setCurrentLocation] = useState('');
-  const [destination, setDestination] = useState('');
-  const [userCoordinates, setUserCoordinates] = useState<{ lat: number; lng: number } | null>(null);
-  const [timeMode, setTimeMode] = useState<'depart' | 'arrive'>('depart');
-  const [selectedTime, setSelectedTime] = useState<Date>(new Date());
+  const navigate = useNavigate();
+  const [hasSchedule, setHasSchedule] = useState(true); // Change to false for no-schedule state
 
-  // Get current location using browser geolocation
-  const handleUseCurrentLocation = () => {
-    if ('geolocation' in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setUserCoordinates({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-          });
-          setCurrentLocation(`${position.coords.latitude.toFixed(4)}, ${position.coords.longitude.toFixed(4)}`);
-          toast.success('Location accessed successfully!');
-        },
-        (error) => {
-          toast.error('Unable to access location. Please enter manually.');
-          console.error('Geolocation error:', error);
-        }
-      );
-    } else {
-      toast.error('Geolocation is not supported by your browser.');
+  // Mock today's classes - would come from uploaded schedule
+  const todayClasses: TodayClass[] = [
+    {
+      id: '1',
+      name: 'CS 100 - Software Construction',
+      startTime: new Date(2025, 0, 31, 10, 0),
+      endTime: new Date(2025, 0, 31, 11, 15),
+      building: 'Olmsted Hall',
+      room: '2'
+    },
+    {
+      id: '2',
+      name: 'MATH 009A - Calculus',
+      startTime: new Date(2025, 0, 31, 14, 0),
+      endTime: new Date(2025, 0, 31, 15, 15),
+      building: 'Skye Hall',
+      room: '268'
+    },
+    {
+      id: '3',
+      name: 'ENGL 001A - English Composition',
+      startTime: new Date(2025, 0, 31, 16, 30),
+      endTime: new Date(2025, 0, 31, 17, 45),
+      building: 'Humanities',
+      room: '1500'
     }
+  ];
+
+  const getNextClass = () => {
+    const now = new Date();
+    return todayClasses.find(c => c.startTime > now) || todayClasses[0];
   };
 
-  // Get predicted parking data for selected time
-  const predictedLots = useMemo(() => {
-    return ucrParkingLots.map(lot => {
-      const predicted = predictParkingAvailability(lot, selectedTime);
-      return {
-        ...lot,
-        openSpaces: predicted.openSpaces,
-        occupancyRate: predicted.occupancyRate,
-      };
-    });
-  }, [selectedTime]);
-
-  // Determine if we're using prediction (if time is in future)
-  const isPredicted = selectedTime > new Date();
-
-  // Use either predicted or current data
-  const lotsData = isPredicted ? predictedLots : ucrParkingLots;
-
-  // Calculate recommendations
-  const recommendation = useMemo<ParkingRecommendation | null>(() => {
-    if (!destination) return null;
-
-    const destinationLocation = campusLocations.find(loc => loc.id === destination);
-    if (!destinationLocation) return null;
-
-    // Calculate scores for each lot
-    const lotsWithScores = lotsData
-      .filter(lot => lot.openSpaces > 0) // Only consider lots with available spaces
-      .map(lot => {
-        const distance = calculateDistance(
-          lot.coordinates.lat,
-          lot.coordinates.lng,
-          destinationLocation.coordinates.lat,
-          destinationLocation.coordinates.lng
-        );
-        const walkingTime = calculateWalkingTime(distance);
-
-        // Scoring algorithm:
-        // - Distance (40%): Closer is better
-        // - Availability (40%): More spaces is better
-        // - Occupancy rate (20%): Lower occupancy is better
-
-        const distanceScore = Math.max(0, 100 - (distance * 1000)); // Penalize distance heavily
-        const availabilityScore = (lot.openSpaces / lot.totalSpaces) * 100;
-        const occupancyScore = 100 - lot.occupancyRate;
-
-        const totalScore = (distanceScore * 0.4) + (availabilityScore * 0.4) + (occupancyScore * 0.2);
-
-        return {
-          lot,
-          score: totalScore,
-          distance,
-          walkingTime,
-        };
-      })
-      .sort((a, b) => b.score - a.score);
-
-    if (lotsWithScores.length === 0) return null;
-
-    const best = lotsWithScores[0];
+  const getClassStatus = (startTime: Date) => {
+    const now = new Date();
+    const minutesUntil = Math.floor((startTime.getTime() - now.getTime()) / 60000);
     
-    // Generate reason
-    let reason = '';
-    if (best.distance < 0.2) {
-      reason = `This lot is very close to your destination (${best.walkingTime} min walk) and has ${best.lot.openSpaces} available spaces.`;
-    } else if (best.lot.openSpaces > 300) {
-      reason = `This lot has plenty of available spaces (${best.lot.openSpaces}) and is within reasonable walking distance.`;
-    } else if (best.lot.occupancyRate < 20) {
-      reason = `This lot has low occupancy (${best.lot.occupancyRate}%) and good availability near your destination.`;
-    } else {
-      reason = `This lot offers the best balance of proximity (${best.walkingTime} min walk) and availability (${best.lot.openSpaces} spaces).`;
-    }
+    if (minutesUntil < 0) return { text: 'In progress', color: 'text-green-600' };
+    if (minutesUntil < 30) return { text: `Starts in ${minutesUntil} min`, color: 'text-orange-600' };
+    return { text: format(startTime, 'h:mm a'), color: 'text-gray-600' };
+  };
 
-    return {
-      ...best,
-      reason,
-    };
-  }, [destination, lotsData]);
-
-  // Calculate distances for all lots if destination is selected
-  const lotsWithDistances = useMemo(() => {
-    if (!destination) return lotsData;
-
-    const destinationLocation = campusLocations.find(loc => loc.id === destination);
-    if (!destinationLocation) return lotsData;
-
-    return lotsData.map(lot => {
-      const distance = calculateDistance(
-        lot.coordinates.lat,
-        lot.coordinates.lng,
-        destinationLocation.coordinates.lat,
-        destinationLocation.coordinates.lng
-      );
-      const walkingTime = calculateWalkingTime(distance);
-
-      return {
-        ...lot,
-        distance,
-        walkingTime,
-      };
-    }).sort((a, b) => (a.distance || 0) - (b.distance || 0));
-  }, [destination, lotsData]);
-
-  const destinationName = campusLocations.find(loc => loc.id === destination)?.name;
+  const nextClass = getNextClass();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-yellow-50">
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
-        {/* Title */}
-        <div className="text-center mb-8">
-          <h2 className="text-4xl font-bold text-ucr-blue mb-2">
-            Parking Finder
-          </h2>
-          <p className="text-gray-600 text-lg">
-            Find the best parking spot based on availability and proximity
-          </p>
-        </div>
-
-        {/* Location & Time Inputs */}
-        <Card className="mb-8 border-2 border-ucr-blue/20 shadow-lg">
-          <CardContent className="p-6">
-            <h3 className="text-xl font-bold text-ucr-blue mb-4">Plan Your Trip</h3>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <LocationInput
-                value={currentLocation}
-                onChange={setCurrentLocation}
-                onUseCurrentLocation={handleUseCurrentLocation}
-                label="Your Current Location"
-                placeholder="Enter address or use GPS"
-              />
-              <DestinationSelect
-                value={destination}
-                onChange={setDestination}
-              />
-              <TimeSelector
-                mode={timeMode}
-                selectedTime={selectedTime}
-                onModeChange={setTimeMode}
-                onTimeChange={setSelectedTime}
-              />
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-b sticky top-0 z-10">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-xl font-bold text-ucr-blue">Today's Classes</h1>
+              <p className="text-sm text-gray-500">{format(new Date(), 'EEEE, MMMM d')}</p>
             </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('/settings')}
+              className="text-gray-600"
+            >
+              <Settings className="size-5" />
+            </Button>
+          </div>
+        </div>
+      </div>
 
-            {destination && (
-              <div className="mt-6 flex justify-center">
-                <Button
-                  size="lg"
-                  className="bg-ucr-blue hover:bg-ucr-blue-dark text-white"
-                  onClick={() => {
-                    if (recommendation) {
-                      toast.success('Recommendation updated!');
-                    }
-                  }}
-                >
-                  <Navigation className="size-5 mr-2" />
-                  Find Best Parking Spot
-                </Button>
+      <div className="container mx-auto px-4 py-6 max-w-2xl">
+        {!hasSchedule ? (
+          /* No Schedule State */
+          <Card className="mt-8">
+            <CardContent className="p-8 text-center">
+              <div className="bg-ucr-blue/10 rounded-full size-16 mx-auto mb-4 flex items-center justify-center">
+                <Calendar className="size-8 text-ucr-blue" />
               </div>
+              <h2 className="text-lg font-semibold text-gray-900 mb-2">No schedule uploaded</h2>
+              <p className="text-sm text-gray-600 mb-6">
+                Upload your class schedule to get personalized parking recommendations
+              </p>
+              <Button
+                onClick={() => navigate('/upload')}
+                className="bg-ucr-blue hover:bg-ucr-blue/90"
+              >
+                <Upload className="size-4 mr-2" />
+                Upload Schedule
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <>
+            {/* Next Class Highlight */}
+            {nextClass && (
+              <Card className="mb-6 border-l-4 border-l-ucr-gold bg-amber-50">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Clock className="size-4 text-ucr-gold" />
+                    <span className="text-xs font-semibold text-ucr-gold uppercase tracking-wide">
+                      Next Class
+                    </span>
+                  </div>
+                  <h3 className="font-semibold text-gray-900 mb-1">{nextClass.name}</h3>
+                  <p className="text-sm text-gray-600 flex items-center gap-1 mb-3">
+                    <MapPin className="size-3" />
+                    {nextClass.building} {nextClass.room}
+                  </p>
+                  <Button
+                    onClick={() => navigate(`/parking/${nextClass.id}`)}
+                    className="w-full bg-ucr-blue hover:bg-ucr-blue/90"
+                    size="lg"
+                  >
+                    Get Parking Recommendations
+                    <ChevronRight className="size-4 ml-2" />
+                  </Button>
+                </CardContent>
+              </Card>
             )}
-          </CardContent>
-        </Card>
 
-        {/* Info Alert */}
-        <Alert className="mb-6 border-ucr-blue bg-blue-50">
-          <Info className="size-4 text-ucr-blue" />
-          <AlertDescription className="text-ucr-blue">
-            <strong>{isPredicted ? 'Predicted data:' : 'Real-time data:'}</strong>{' '}
-            {isPredicted 
-              ? 'Availability is predicted based on historical patterns for your selected time.'
-              : 'Parking availability updates every few minutes. Walking times calculated at 3 mph average.'}
-          </AlertDescription>
-        </Alert>
-
-        {/* Recommendation */}
-        {recommendation && destinationName && (
-          <div className="mb-8">
-            <h3 className="text-2xl font-bold text-ucr-blue mb-4">
-              Recommended for {destinationName}
-            </h3>
-            <RecommendationCard recommendation={recommendation} isPredicted={isPredicted} />
-          </div>
-        )}
-
-        {/* Warning for no destination */}
-        {!destination && (
-          <Alert className="mb-6 border-ucr-gold bg-yellow-50">
-            <AlertCircle className="size-4 text-ucr-gold-dark" />
-            <AlertDescription className="text-ucr-gold-dark">
-              Select your campus destination to get personalized parking recommendations.
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {/* All Parking Lots */}
-        <div>
-          <h3 className="text-2xl font-bold text-ucr-blue mb-4">
-            {destination ? 'All Parking Options' : 'Available Parking Lots'}
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {lotsWithDistances.map((lot) => (
-              <ParkingLotCard
-                key={lot.id}
-                lot={lot}
-                distance={'distance' in lot ? lot.distance : undefined}
-                walkingTime={'walkingTime' in lot ? lot.walkingTime : undefined}
-                isRecommended={recommendation?.lot.id === lot.id}
-                isPredicted={isPredicted}
-              />
-            ))}
-          </div>
-        </div>
-
-        {/* Statistics Summary */}
-        <Card className="mt-8 border-2 border-ucr-gold/30">
-          <CardContent className="p-6">
-            <h4 className="font-semibold text-lg mb-4 text-ucr-blue">
-              Campus Parking Summary {isPredicted && '(Predicted)'}
-            </h4>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-              <div>
-                <p className="text-3xl font-bold text-ucr-blue">
-                  {lotsData.reduce((sum, lot) => sum + lot.openSpaces, 0)}
-                </p>
-                <p className="text-sm text-gray-600">Total Available</p>
-              </div>
-              <div>
-                <p className="text-3xl font-bold text-ucr-gold-dark">
-                  {lotsData.reduce((sum, lot) => sum + lot.totalSpaces, 0)}
-                </p>
-                <p className="text-sm text-gray-600">Total Capacity</p>
-              </div>
-              <div>
-                <p className="text-3xl font-bold text-green-600">
-                  {lotsData.filter(lot => lot.openSpaces > 100).length}
-                </p>
-                <p className="text-sm text-gray-600">Lots with 100+ Spaces</p>
-              </div>
-              <div>
-                <p className="text-3xl font-bold text-ucr-blue">
-                  {Math.round(
-                    lotsData.reduce((sum, lot) => sum + lot.occupancyRate, 0) /
-                    lotsData.filter(lot => lot.totalSpaces > 0).length
-                  )}%
-                </p>
-                <p className="text-sm text-gray-600">Avg Occupancy</p>
-              </div>
+            {/* Quick Stats */}
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              <Card>
+                <CardContent className="p-4 text-center">
+                  <p className="text-2xl font-bold text-ucr-blue">{todayClasses.length}</p>
+                  <p className="text-xs text-gray-600">Classes Today</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4 text-center">
+                  <p className="text-2xl font-bold text-ucr-gold">
+                    {nextClass ? format(nextClass.startTime, 'h:mm a') : '--'}
+                  </p>
+                  <p className="text-xs text-gray-600">Next Class</p>
+                </CardContent>
+              </Card>
             </div>
-          </CardContent>
-        </Card>
+
+            {/* All Classes List */}
+            <div className="space-y-3">
+              <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
+                All Classes
+              </h2>
+              {todayClasses.map((classItem) => {
+                const status = getClassStatus(classItem.startTime);
+                return (
+                  <Card key={classItem.id} className="hover:shadow-md transition-shadow">
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className={`text-sm font-medium ${status.color}`}>
+                              {status.text}
+                            </span>
+                            <span className="text-xs text-gray-400">•</span>
+                            <span className="text-xs text-gray-500">
+                              {format(classItem.endTime, 'h:mm a')}
+                            </span>
+                          </div>
+                          <h3 className="font-semibold text-gray-900 mb-1">{classItem.name}</h3>
+                          <p className="text-sm text-gray-600 flex items-center gap-1">
+                            <MapPin className="size-3" />
+                            {classItem.building} {classItem.room}
+                          </p>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => navigate(`/parking/${classItem.id}`)}
+                          className="flex-shrink-0"
+                        >
+                          Get Parking
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+
+            {/* Upload Different Schedule */}
+            <Button
+              variant="ghost"
+              onClick={() => navigate('/upload')}
+              className="w-full mt-6 text-gray-600"
+            >
+              <Upload className="size-4 mr-2" />
+              Upload Different Schedule
+            </Button>
+          </>
+        )}
       </div>
     </div>
   );
