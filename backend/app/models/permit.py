@@ -1,3 +1,5 @@
+"""Permit models - permit types and time-based lot access rules."""
+
 from __future__ import annotations
 
 import uuid
@@ -15,6 +17,8 @@ if TYPE_CHECKING:
 
 
 class PermitType(Base, UUIDMixin):
+    """A parking permit type (e.g., "Gold Permit", "Gold Plus Permit", "Blue Permit")."""
+
     __tablename__ = "permit_types"
 
     name: Mapped[str] = mapped_column(String, unique=True, nullable=False)
@@ -30,6 +34,8 @@ class PermitType(Base, UUIDMixin):
 
 
 class LotPermitAccess(Base, UUIDMixin):
+    """Junction table: which permits can access which lots, with day/time restrictions."""
+
     __tablename__ = "lot_permit_access"
     __table_args__ = (
         UniqueConstraint(

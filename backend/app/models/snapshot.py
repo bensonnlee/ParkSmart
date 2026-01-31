@@ -1,3 +1,5 @@
+"""Parking snapshot model - time-series occupancy data from the scraper."""
+
 from __future__ import annotations
 
 import uuid
@@ -16,6 +18,8 @@ if TYPE_CHECKING:
 
 
 class ParkingSnapshot(Base, UUIDMixin):
+    """Point-in-time record of lot occupancy (free_spaces, occupancy_pct, collected_at)."""
+
     __tablename__ = "parking_snapshots"
 
     lot_id: Mapped[uuid.UUID] = mapped_column(
