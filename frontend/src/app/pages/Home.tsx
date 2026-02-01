@@ -243,8 +243,8 @@ export default function Home() {
               <ParkingLotCard
                 key={lot.id}
                 lot={lot}
-                distance={'distance' in lot ? lot.distance : undefined}
-                walkingTime={'walkingTime' in lot ? lot.walkingTime : undefined}
+                distance={('distance' in lot ? lot.distance : undefined) as number}
+                walkingTime={('walkingTime' in lot ? lot.walkingTime : undefined) as number}
                 isRecommended={recommendation?.lot.id === lot.id}
                 isPredicted={isPredicted}
               />

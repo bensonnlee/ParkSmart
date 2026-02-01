@@ -1,3 +1,4 @@
+import { login } from '../../api/auth'
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Button } from '@/app/components/ui/button';
@@ -18,20 +19,43 @@ export default function SignIn() {
     e.preventDefault();
     setMessage(null);
     setIsLoading(true);
-
-    // Simulate authentication
-    setTimeout(() => {
-      if (email && password) {
-        // Mock successful login
+  
+    try {
+      console.log("Attempting login with:", email);
+      const data = await login(email, password);
+      
+      // This log will show you exactly what the backend returned
+      console.log("Server Response Data:", data);
+  
+      // Verify the structure matches your Swagger screenshot
+      if (data && data.tokens && data.tokens.access_token) {
+        console.log("Token found! Saving to LocalStorage...");
+        
+        // Save the token
+        localStorage.setItem('token', data.tokens.access_token);
+        
+        // Save the user info
+        localStorage.setItem('user', JSON.stringify(data.user));
+  
         setMessage({ type: 'success', text: 'Sign in successful! Redirecting...' });
+        
         setTimeout(() => {
           navigate('/');
         }, 1500);
       } else {
-        setMessage({ type: 'error', text: 'Please enter both email and password.' });
+        console.error("Login succeeded but token structure was unexpected:", data);
+        setMessage({ type: 'error', text: 'Server error: Token not received correctly.' });
       }
+  
+    } catch (error: any) {
+      console.error("Login Function Error:", error);
+      setMessage({ 
+        type: 'error', 
+        text: error.message || 'Login failed. Please check your credentials.' 
+      });
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   return (
