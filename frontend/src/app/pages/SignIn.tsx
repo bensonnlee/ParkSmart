@@ -1,12 +1,12 @@
 import { login } from '../../api/auth'
 import { useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, Link } from 'react-router'; // Unified imports
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/app/components/ui/card';
 import { Alert, AlertDescription } from '@/app/components/ui/alert';
-import { LogIn, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { LogIn, AlertCircle, CheckCircle2, Sparkles, MapPin } from 'lucide-react';
 
 export default function SignIn() {
   const navigate = useNavigate();
@@ -21,99 +21,80 @@ export default function SignIn() {
     setIsLoading(true);
   
     try {
-      console.log("Attempting login with:", email);
       const data = await login(email, password);
-      
-      console.log("Server Response Data:", data);
-  
-      if (data && data.tokens && data.tokens.access_token) {
-        console.log("Token found! Saving to LocalStorage...");
-        
+      if (data && data.tokens?.access_token) {
         localStorage.setItem('token', data.tokens.access_token);
         localStorage.setItem('user', JSON.stringify(data.user));
-  
         window.dispatchEvent(new Event('authChange')); 
 
-        setMessage({ type: 'success', text: 'Sign in successful! Redirecting...' });
-        
-        setTimeout(() => {
-          navigate('/');
-        }, 1500);
+        setMessage({ type: 'success', text: "We're in! Finding your spot... 🚗" });
+        setTimeout(() => navigate('/'), 1500);
       } else {
-        console.error("Login succeeded but token structure was unexpected:", data);
-        setMessage({ type: 'error', text: 'Server error: Token not received correctly.' });
+        setMessage({ type: 'error', text: 'Oops! The server is acting shy. Try again?' });
       }
-  
     } catch (error: any) {
-      console.error("Login Function Error:", error);
-      setMessage({ 
-        type: 'error', 
-        text: error.message || 'Login failed. Please check your credentials.' 
-      });
+      setMessage({ type: 'error', text: error.message || 'Identity theft is not a joke, Jim! (Or just a wrong password).' });
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-yellow-50 flex items-center justify-center px-4 py-8">
-      <Card className="w-full max-w-md border-2 border-ucr-blue/20 shadow-lg">
+    <div className="min-h-screen bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-blue-100 via-slate-50 to-yellow-100 flex items-center justify-center px-4 py-8">
+      {/* Decorative background elements */}
+      <div className="absolute top-10 left-10 text-ucr-blue/10 rotate-12 hidden md:block"><MapPin size={120} /></div>
+      <div className="absolute bottom-10 right-10 text-yellow-500/10 -rotate-12 hidden md:block"><Sparkles size={120} /></div>
+
+      <Card className="w-full max-w-md border-t-8 border-t-ucr-blue shadow-2xl backdrop-blur-sm bg-white/90 transform transition-all hover:scale-[1.01]">
         <CardHeader className="space-y-1">
-          <div className="flex items-center justify-center mb-4">
-            <div className="size-16 bg-ucr-blue rounded-full flex items-center justify-center">
-              <LogIn className="size-8 text-white" />
+          <div className="flex items-center justify-center mb-2">
+            <div className="size-20 bg-gradient-to-tr from-ucr-blue to-blue-400 rounded-2xl rotate-3 flex items-center justify-center shadow-lg group hover:rotate-0 transition-transform">
+              <LogIn className="size-10 text-white group-hover:scale-110 transition-transform" />
             </div>
           </div>
-          <CardTitle className="text-2xl sm:text-3xl font-bold text-center text-ucr-blue">
-            Sign In
+          <CardTitle className="text-3xl font-black text-center bg-clip-text text-transparent bg-gradient-to-r from-ucr-blue to-blue-700">
+            Welcome Back!
           </CardTitle>
-          <CardDescription className="text-center text-gray-600 px-2">
-            Sign in to access your personalized parking recommendations and saved schedules
+          <CardDescription className="text-center font-medium text-slate-500">
+            Ready to beat the Lot 30 rush? 🏁
           </CardDescription>
         </CardHeader>
-        <CardContent>
+
+        <CardContent className="space-y-6">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-ucr-blue font-medium">
-                Email or Username
-              </Label>
+              <Label htmlFor="email" className="text-sm font-bold uppercase tracking-wider text-slate-700">Student Identity</Label>
               <Input
                 id="email"
                 type="text"
-                placeholder="student@ucr.edu"
+                placeholder="R'lyeh@ucr.edu"
+                className="h-12 border-2 focus:ring-ucr-blue transition-all"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="border-ucr-blue/30 focus:border-ucr-blue w-full"
                 disabled={isLoading}
                 required
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-ucr-blue font-medium">
-                Password
-              </Label>
+            <Label htmlFor="password" className="text-sm font-bold uppercase tracking-wider text-slate-700">
+            Secret Code
+            </Label>
               <Input
                 id="password"
                 type="password"
-                placeholder="Enter your password"
+                placeholder="••••••••"
+                className="h-12 border-2 focus:ring-ucr-blue transition-all"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="border-ucr-blue/30 focus:border-ucr-blue w-full"
                 disabled={isLoading}
                 required
-                minLength={6}
               />
             </div>
 
             {message && (
-              <Alert className={message.type === 'success' ? 'border-green-500 bg-green-50' : 'border-red-500 bg-red-50'}>
-                {message.type === 'success' ? (
-                  <CheckCircle2 className="size-4 text-green-600" />
-                ) : (
-                  <AlertCircle className="size-4 text-red-600" />
-                )}
-                <AlertDescription className={message.type === 'success' ? 'text-green-800' : 'text-red-800'}>
+              <Alert className={`animate-bounce ${message.type === 'success' ? 'bg-green-100 border-green-500' : 'bg-red-100 border-red-500'}`}>
+                <AlertDescription className="font-bold text-center w-full">
                   {message.text}
                 </AlertDescription>
               </Alert>
@@ -121,40 +102,30 @@ export default function SignIn() {
 
             <Button
               type="submit"
-              className="w-full bg-ucr-blue hover:bg-ucr-blue-dark text-white font-semibold py-2.5"
+              className="w-full h-12 bg-ucr-blue hover:bg-blue-700 text-white text-lg font-bold shadow-[0_4px_0_rgb(30,58,138)] active:shadow-none active:translate-y-1 transition-all"
               disabled={isLoading}
             >
-              {isLoading ? (
-                <span className="flex items-center justify-center">
-                  <span className="animate-spin mr-2">⏳</span>
-                  Signing in...
-                </span>
-              ) : (
-                <>
-                  <LogIn className="size-4 mr-2" />
-                  Sign In
-                </>
-              )}
+              {isLoading ? "Consulting the Map..." : "Let's Ride 🏎️"}
             </Button>
-
-            {/* Additional Info */}
-            <div className="bg-blue-50 border border-ucr-blue/20 rounded-lg p-3 mt-4">
-              <p className="text-xs sm:text-sm text-gray-700">
-                <strong className="text-ucr-blue">Why sign in?</strong> Your account allows us to save your uploaded schedules, 
-                remember your preferences, and provide personalized parking predictions based on your class times.
-              </p>
-            </div>
-
-            <div className="text-center text-sm text-gray-600 mt-4">
-              <button
-                type="button"
-                onClick={() => navigate('/')}
-                className="text-ucr-blue hover:underline font-medium"
-              >
-                Back to Parking Finder
-              </button>
-            </div>
           </form>
+
+          <div className="relative py-2">
+            <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-slate-200"></span></div>
+            <div className="relative flex justify-center text-xs uppercase"><span className="bg-white px-2 text-slate-400 font-bold">New around here?</span></div>
+          </div>
+
+          <div className="space-y-3">
+            <Link to="/register" className="block w-full text-center py-2 rounded-lg border-2 border-ucr-blue text-ucr-blue font-bold hover:bg-blue-50 transition-colors">
+              Create an Account 🎟️
+            </Link>
+            
+            <button
+              onClick={() => navigate('/')}
+              className="w-full text-center text-sm font-semibold text-slate-400 hover:text-ucr-blue transition-colors"
+            >
+              ← Just browsing for now
+            </button>
+          </div>
         </CardContent>
       </Card>
     </div>
