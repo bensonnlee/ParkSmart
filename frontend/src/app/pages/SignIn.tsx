@@ -24,19 +24,16 @@ export default function SignIn() {
       console.log("Attempting login with:", email);
       const data = await login(email, password);
       
-      // This log will show you exactly what the backend returned
       console.log("Server Response Data:", data);
   
-      // Verify the structure matches your Swagger screenshot
       if (data && data.tokens && data.tokens.access_token) {
         console.log("Token found! Saving to LocalStorage...");
         
-        // Save the token
         localStorage.setItem('token', data.tokens.access_token);
-        
-        // Save the user info
         localStorage.setItem('user', JSON.stringify(data.user));
   
+        window.dispatchEvent(new Event('authChange')); 
+
         setMessage({ type: 'success', text: 'Sign in successful! Redirecting...' });
         
         setTimeout(() => {
