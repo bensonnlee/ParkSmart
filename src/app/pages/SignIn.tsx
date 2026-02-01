@@ -35,25 +35,25 @@ export default function SignIn() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-yellow-50 flex items-center justify-center px-4 py-8">
-      <Card className="w-full max-w-md border-2 border-ucr-blue/20 shadow-lg">
+    <div className="min-h-screen bg-gradient-to-br from-blue-600 via-ucr-blue to-blue-900 flex items-center justify-center px-4 py-8">
+      <Card className="w-full max-w-md border-2 border-white/20 shadow-2xl bg-white/95 backdrop-blur">
         <CardHeader className="space-y-1">
           <div className="flex items-center justify-center mb-4">
-            <div className="size-16 bg-ucr-blue rounded-full flex items-center justify-center">
-              <LogIn className="size-8 text-white" />
+            <div className="size-20 bg-gradient-to-br from-ucr-blue to-blue-700 rounded-full flex items-center justify-center shadow-lg border-4 border-white">
+              <LogIn className="size-10 text-white" />
             </div>
           </div>
-          <CardTitle className="text-2xl sm:text-3xl font-bold text-center text-ucr-blue">
+          <CardTitle className="text-3xl sm:text-4xl font-bold text-center text-ucr-blue">
             Sign In
           </CardTitle>
-          <CardDescription className="text-center text-gray-600 px-2">
-            Sign in to access your personalized parking recommendations and saved schedules
+          <CardDescription className="text-center text-gray-600 px-2 text-base">
+            Access your personalized parking recommendations
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-ucr-blue font-medium">
+              <Label htmlFor="email" className="text-ucr-blue font-semibold text-base">
                 Email or Username
               </Label>
               <Input
@@ -62,14 +62,14 @@ export default function SignIn() {
                 placeholder="student@ucr.edu"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="border-ucr-blue/30 focus:border-ucr-blue w-full"
+                className="border-2 border-ucr-blue/30 focus:border-ucr-blue focus:ring-2 focus:ring-ucr-blue/20 w-full h-12 text-base"
                 disabled={isLoading}
                 required
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-ucr-blue font-medium">
+              <Label htmlFor="password" className="text-ucr-blue font-semibold text-base">
                 Password
               </Label>
               <Input
@@ -78,7 +78,7 @@ export default function SignIn() {
                 placeholder="Enter your password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="border-ucr-blue/30 focus:border-ucr-blue w-full"
+                className="border-2 border-ucr-blue/30 focus:border-ucr-blue focus:ring-2 focus:ring-ucr-blue/20 w-full h-12 text-base"
                 disabled={isLoading}
                 required
                 minLength={6}
@@ -86,13 +86,13 @@ export default function SignIn() {
             </div>
 
             {message && (
-              <Alert className={message.type === 'success' ? 'border-green-500 bg-green-50' : 'border-red-500 bg-red-50'}>
+              <Alert className={message.type === 'success' ? 'border-2 border-blue-500 bg-blue-50' : 'border-2 border-red-500 bg-red-50'}>
                 {message.type === 'success' ? (
-                  <CheckCircle2 className="size-4 text-green-600" />
+                  <CheckCircle2 className="size-5 text-blue-600" />
                 ) : (
-                  <AlertCircle className="size-4 text-red-600" />
+                  <AlertCircle className="size-5 text-red-600" />
                 )}
-                <AlertDescription className={message.type === 'success' ? 'text-green-800' : 'text-red-800'}>
+                <AlertDescription className={message.type === 'success' ? 'text-blue-800 font-medium' : 'text-red-800 font-medium'}>
                   {message.text}
                 </AlertDescription>
               </Alert>
@@ -100,7 +100,7 @@ export default function SignIn() {
 
             <Button
               type="submit"
-              className="w-full bg-ucr-blue hover:bg-ucr-blue-dark text-white font-semibold py-2.5"
+              className="w-full bg-gradient-to-r from-ucr-blue to-blue-700 hover:from-blue-700 hover:to-ucr-blue text-white font-bold py-3.5 text-base shadow-lg hover:shadow-xl transition-all h-14"
               disabled={isLoading}
             >
               {isLoading ? (
@@ -110,27 +110,27 @@ export default function SignIn() {
                 </span>
               ) : (
                 <>
-                  <LogIn className="size-4 mr-2" />
+                  <LogIn className="size-5 mr-2" />
                   Sign In
                 </>
               )}
             </Button>
 
             {/* Additional Info */}
-            <div className="bg-blue-50 border border-ucr-blue/20 rounded-lg p-3 mt-4">
-              <p className="text-xs sm:text-sm text-gray-700">
-                <strong className="text-ucr-blue">Why sign in?</strong> Your account allows us to save your uploaded schedules, 
-                remember your preferences, and provide personalized parking predictions based on your class times.
+            <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 border-2 border-ucr-blue/30 rounded-xl p-4 mt-5">
+              <p className="text-sm sm:text-base text-gray-700">
+                <strong className="text-ucr-blue font-bold">Why sign in?</strong> Save your uploaded schedules, 
+                remember your preferences, and get personalized parking predictions based on your class times.
               </p>
             </div>
 
-            <div className="text-center text-sm text-gray-600 mt-4">
+            <div className="text-center text-sm text-gray-600 mt-5">
               <button
                 type="button"
                 onClick={() => navigate('/')}
-                className="text-ucr-blue hover:underline font-medium"
+                className="text-ucr-blue hover:text-blue-700 font-semibold hover:underline transition-colors"
               >
-                Back to Parking Finder
+                ← Back to Parking Finder
               </button>
             </div>
           </form>

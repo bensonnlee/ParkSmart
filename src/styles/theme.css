@@ -45,6 +45,7 @@
   --ucr-gold: #F1AB00;
   --ucr-blue-dark: #002d7a;
   --ucr-gold-dark: #d49500;
+  --ucr-gold-light: #FFD966;
 }
 
 .dark {
@@ -129,6 +130,7 @@
   --color-ucr-gold: var(--ucr-gold);
   --color-ucr-blue-dark: var(--ucr-blue-dark);
   --color-ucr-gold-dark: var(--ucr-gold-dark);
+  --color-ucr-gold-light: var(--ucr-gold-light);
 }
 
 @layer base {

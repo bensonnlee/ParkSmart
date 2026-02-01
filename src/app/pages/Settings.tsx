@@ -3,24 +3,28 @@ import { useNavigate } from 'react-router';
 import { Button } from '@/app/components/ui/button';
 import { Card, CardContent } from '@/app/components/ui/card';
 import { Label } from '@/app/components/ui/label';
+import { Input } from '@/app/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
-import { ArrowLeft, CreditCard, Clock, Navigation, Upload, LogOut, Shield } from 'lucide-react';
+import { Slider } from '@/app/components/ui/slider';
+import { Switch } from '@/app/components/ui/switch';
+import { ArrowLeft, User, CreditCard, Sliders, Bell, Calendar, LogOut, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function Settings() {
   const navigate = useNavigate();
   const [parkingPass, setParkingPass] = useState('blue');
-  const [arrivalBuffer, setArrivalBuffer] = useState(5);
-  const [transportation, setTransportation] = useState('walk');
-  const [riskTolerance, setRiskTolerance] = useState('moderate');
+  const [arrivalBuffer, setArrivalBuffer] = useState([10]);
+  const [walkingSpeed, setWalkingSpeed] = useState([3]);
+  const [enableNotifications, setEnableNotifications] = useState(true);
+  const [weekdayReminder, setWeekdayReminder] = useState(true);
 
-  const handleSave = () => {
+  const handleSaveChanges = () => {
     toast.success('Settings saved successfully!');
   };
 
   const handleLogout = () => {
     toast.success('Logged out successfully');
-    navigate('/sign-in');
+    navigate('/welcome');
   };
 
   return (
@@ -31,190 +35,330 @@ export default function Settings() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/dashboard')}
             className="mb-3 -ml-2"
           >
             <ArrowLeft className="size-4 mr-1" />
-            Back to Home
+            Dashboard
           </Button>
-          <h1 className="text-xl font-bold text-ucr-blue">Settings</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Account Settings</h1>
+          <p className="text-sm text-gray-500">Manage your account data and parking preferences</p>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-6 max-w-2xl space-y-4">
-        {/* Account Section */}
-        <Card>
-          <CardContent className="p-5">
-            <div className="flex items-center gap-2 mb-4">
-              <Shield className="size-5 text-ucr-blue" />
-              <h2 className="font-semibold text-gray-900">Account</h2>
-            </div>
-            <div className="space-y-3">
+      <div className="container mx-auto px-4 py-6 max-w-4xl">
+        {/* Account Data */}
+        <Card className="mb-6">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="bg-green-100 rounded-full p-3">
+                <User className="size-6 text-green-600" />
+              </div>
               <div>
-                <Label className="text-sm text-gray-600">Email</Label>
-                <p className="text-sm font-medium text-gray-900 mt-1">student@ucr.edu</p>
+                <h2 className="font-bold text-gray-900 text-lg">Account Data</h2>
+                <p className="text-sm text-gray-500">Alex Wilson</p>
               </div>
-              <Button variant="outline" size="sm" className="w-full sm:w-auto">
-                Change Password
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <Label className="text-sm text-gray-600">Full Name</Label>
+                <Input value="Alex Wilson" className="mt-1" readOnly />
+              </div>
+              <div>
+                <Label className="text-sm text-gray-600">Student ID</Label>
+                <Input value="861881470" className="mt-1" readOnly />
+              </div>
+              <div>
+                <Label className="text-sm text-gray-600">Email Address</Label>
+                <Input value="alex.wilson@ucr.edu" className="mt-1" readOnly />
+              </div>
+              <div className="flex items-end">
+                <Button variant="outline" className="w-full">
+                  Change Password
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Parking Logistics */}
+        <Card className="mb-6">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="bg-green-100 rounded-full p-3">
+                <CreditCard className="size-6 text-green-600" />
+              </div>
+              <div>
+                <h2 className="font-bold text-gray-900 text-lg">Parking Logistics</h2>
+              </div>
+            </div>
+
+            {/* Current Pass */}
+            <div className="mb-6">
+              <Label className="text-sm text-gray-700 mb-2 block">Current Pass</Label>
+              <Input value="Commuter Lot B Group 11" className="mb-2" readOnly />
+              <p className="text-xs text-gray-500">License plate ends with 84</p>
+            </div>
+
+            {/* Pass Type */}
+            <div className="mb-6">
+              <Label className="text-sm text-gray-700 mb-2 block">Parking Permit Type</Label>
+              
+              {/* Commuter Permits */}
+              <p className="text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide">Commuter Permits</p>
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                <Button
+                  variant={parkingPass === 'gold-plus' ? 'default' : 'outline'}
+                  onClick={() => setParkingPass('gold-plus')}
+                  className={`flex-col h-auto py-4 ${parkingPass === 'gold-plus' ? 'bg-gradient-to-br from-yellow-500 to-amber-600 hover:from-yellow-600 hover:to-amber-700 text-white' : ''}`}
+                >
+                  <div className="text-2xl mb-1">👑</div>
+                  <span className="text-xs font-semibold">Gold Plus</span>
+                  <span className="text-[10px] opacity-75">Premium parking</span>
+                </Button>
+                <Button
+                  variant={parkingPass === 'gold' ? 'default' : 'outline'}
+                  onClick={() => setParkingPass('gold')}
+                  className={`flex-col h-auto py-4 ${parkingPass === 'gold' ? 'bg-gradient-to-br from-ucr-gold to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-white' : ''}`}
+                >
+                  <div className="text-2xl mb-1">⭐</div>
+                  <span className="text-xs font-semibold">Gold</span>
+                  <span className="text-[10px] opacity-75">Standard commuter</span>
+                </Button>
+                <Button
+                  variant={parkingPass === 'blue' ? 'default' : 'outline'}
+                  onClick={() => setParkingPass('blue')}
+                  className={`flex-col h-auto py-4 ${parkingPass === 'blue' ? 'bg-gradient-to-br from-ucr-blue to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white' : ''}`}
+                >
+                  <div className="text-2xl mb-1">🅿️</div>
+                  <span className="text-xs font-semibold">Blue</span>
+                  <span className="text-[10px] opacity-75">Student basic</span>
+                </Button>
+                <Button
+                  variant={parkingPass === 'evening' ? 'default' : 'outline'}
+                  onClick={() => setParkingPass('evening')}
+                  className={`flex-col h-auto py-4 ${parkingPass === 'evening' ? 'bg-gradient-to-br from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white' : ''}`}
+                >
+                  <div className="text-2xl mb-1">🌙</div>
+                  <span className="text-xs font-semibold">Evening</span>
+                  <span className="text-[10px] opacity-75">After 5 PM</span>
+                </Button>
+              </div>
+
+              {/* Resident Permits */}
+              <p className="text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide">Resident Permits</p>
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                <Button
+                  variant={parkingPass === 'residence-hall' ? 'default' : 'outline'}
+                  onClick={() => setParkingPass('residence-hall')}
+                  className={`flex-col h-auto py-4 ${parkingPass === 'residence-hall' ? 'bg-gradient-to-br from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white' : ''}`}
+                >
+                  <div className="text-2xl mb-1">🏠</div>
+                  <span className="text-xs font-semibold">Residence Hall</span>
+                  <span className="text-[10px] opacity-75">On-campus housing</span>
+                </Button>
+                <Button
+                  variant={parkingPass === 'apartment' ? 'default' : 'outline'}
+                  onClick={() => setParkingPass('apartment')}
+                  className={`flex-col h-auto py-4 ${parkingPass === 'apartment' ? 'bg-gradient-to-br from-teal-500 to-cyan-600 hover:from-teal-600 hover:to-cyan-700 text-white' : ''}`}
+                >
+                  <div className="text-2xl mb-1">🏢</div>
+                  <span className="text-xs font-semibold">Apartment</span>
+                  <span className="text-[10px] opacity-75">Campus apartments</span>
+                </Button>
+              </div>
+
+              {/* Other Permits */}
+              <p className="text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide">Other Permits</p>
+              <div className="grid grid-cols-2 gap-3">
+                <Button
+                  variant={parkingPass === 'red' ? 'default' : 'outline'}
+                  onClick={() => setParkingPass('red')}
+                  className={`flex items-center justify-center gap-2 py-4 ${parkingPass === 'red' ? 'bg-gradient-to-br from-red-500 to-red-700 hover:from-red-600 hover:to-red-800 text-white' : ''}`}
+                >
+                  <span className="text-xl">🎓</span>
+                  <div className="flex flex-col items-start">
+                    <span className="text-xs font-semibold">Red</span>
+                    <span className="text-[10px] opacity-75">Graduate/Faculty</span>
+                  </div>
+                </Button>
+                <Button
+                  variant={parkingPass === 'orange' ? 'default' : 'outline'}
+                  onClick={() => setParkingPass('orange')}
+                  className={`flex items-center justify-center gap-2 py-4 ${parkingPass === 'orange' ? 'bg-gradient-to-br from-orange-500 to-orange-700 hover:from-orange-600 hover:to-orange-800 text-white' : ''}`}
+                >
+                  <span className="text-xl">🏫</span>
+                  <div className="flex flex-col items-start">
+                    <span className="text-xs font-semibold">Orange</span>
+                    <span className="text-[10px] opacity-75">Staff/Service</span>
+                  </div>
+                </Button>
+              </div>
+            </div>
+
+            {/* Pass Details Link */}
+            <div className="flex gap-3">
+              <Button
+                variant="link"
+                size="sm"
+                onClick={() => window.open('https://transportation.ucr.edu/undergrad/undergrad-commuter#gold-plus-permit', '_blank')}
+                className="text-ucr-blue hover:text-ucr-blue-dark px-0"
+              >
+                View commuter permits
+                <ExternalLink className="size-3 ml-1" />
+              </Button>
+              <Button
+                variant="link"
+                size="sm"
+                onClick={() => window.open('https://transportation.ucr.edu/undergrad/undergrad-resident', '_blank')}
+                className="text-ucr-blue hover:text-ucr-blue-dark px-0"
+              >
+                View resident permits
+                <ExternalLink className="size-3 ml-1" />
               </Button>
             </div>
           </CardContent>
         </Card>
 
-        {/* Parking Pass Section */}
-        <Card>
-          <CardContent className="p-5">
-            <div className="flex items-center gap-2 mb-4">
-              <CreditCard className="size-5 text-ucr-blue" />
-              <h2 className="font-semibold text-gray-900">Parking Pass</h2>
+        {/* Optimization Preferences */}
+        <Card className="mb-6">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="bg-green-100 rounded-full p-3">
+                <Sliders className="size-6 text-green-600" />
+              </div>
+              <div>
+                <h2 className="font-bold text-gray-900 text-lg">Optimization Preferences</h2>
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label className="text-sm text-gray-600">What parking pass do you have?</Label>
-              <Select value={parkingPass} onValueChange={setParkingPass}>
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="blue">Blue Permit (Student General)</SelectItem>
-                  <SelectItem value="gold">Gold Permit (Reserved)</SelectItem>
-                  <SelectItem value="gold-plus">Gold Plus Permit (Premium)</SelectItem>
-                  <SelectItem value="visitor">Visitor Pass</SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-gray-500">
-                This determines which parking lots are available to you
-              </p>
-            </div>
-          </CardContent>
-        </Card>
 
-        {/* Preferences Section */}
-        <Card>
-          <CardContent className="p-5">
-            <h2 className="font-semibold text-gray-900 mb-4">Preferences</h2>
-            
             {/* Arrival Buffer */}
-            <div className="space-y-3 mb-5">
-              <Label className="text-sm text-gray-600 flex items-center gap-2">
-                <Clock className="size-4" />
-                Arrival Buffer Time
-              </Label>
-              <div className="flex items-center gap-4">
-                <input
-                  type="range"
-                  min="0"
-                  max="15"
-                  value={arrivalBuffer}
-                  onChange={(e) => setArrivalBuffer(Number(e.target.value))}
-                  className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                />
-                <span className="text-sm font-medium text-ucr-blue w-16 text-right">
-                  {arrivalBuffer} min
-                </span>
+            <div className="mb-6">
+              <div className="flex items-center justify-between mb-3">
+                <Label className="text-sm text-gray-700">Arrival Buffer</Label>
+                <span className="text-sm font-bold text-green-600">{arrivalBuffer[0]} min</span>
               </div>
-              <p className="text-xs text-gray-500">
-                Extra time to arrive before class starts
-              </p>
+              <Slider
+                value={arrivalBuffer}
+                onValueChange={setArrivalBuffer}
+                max={20}
+                step={1}
+                className="mb-2"
+              />
+              <p className="text-xs text-gray-500">Extra time cushion before class starts</p>
             </div>
 
-            {/* Transportation Method */}
-            <div className="space-y-2 mb-5">
-              <Label className="text-sm text-gray-600 flex items-center gap-2">
-                <Navigation className="size-4" />
-                Transportation on Campus
-              </Label>
-              <Select value={transportation} onValueChange={setTransportation}>
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="walk">Walking</SelectItem>
-                  <SelectItem value="scooter">E-Scooter</SelectItem>
-                  <SelectItem value="bike">Bike</SelectItem>
-                  <SelectItem value="bus">Campus Shuttle</SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-gray-500">
-                Affects walking time calculations
-              </p>
+            {/* Walking Speed */}
+            <div className="mb-6">
+              <div className="flex items-center justify-between mb-3">
+                <Label className="text-sm text-gray-700">Walking Speed</Label>
+                <span className="text-sm font-bold text-green-600">{walkingSpeed[0]} mph</span>
+              </div>
+              <Slider
+                value={walkingSpeed}
+                onValueChange={setWalkingSpeed}
+                max={5}
+                min={2}
+                step={0.5}
+                className="mb-2"
+              />
+              <p className="text-xs text-gray-500">Average walking pace (affects time estimates)</p>
             </div>
 
-            {/* Risk Tolerance */}
-            <div className="space-y-2">
-              <Label className="text-sm text-gray-600">Parking Risk Tolerance</Label>
-              <Select value={riskTolerance} onValueChange={setRiskTolerance}>
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="conservative">Conservative (Always recommend backup lots)</SelectItem>
-                  <SelectItem value="moderate">Moderate (Balanced approach)</SelectItem>
-                  <SelectItem value="optimistic">Optimistic (Trust predictions more)</SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-gray-500">
-                How cautious should we be with parking predictions?
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Schedule Management */}
-        <Card>
-          <CardContent className="p-5">
-            <div className="flex items-center gap-2 mb-4">
-              <Upload className="size-5 text-ucr-blue" />
-              <h2 className="font-semibold text-gray-900">Schedule Management</h2>
-            </div>
-            <div className="space-y-3">
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => navigate('/upload')}
-              >
-                <Upload className="size-4 mr-2" />
-                Upload New Schedule
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => navigate('/planner')}
-              >
-                View Full Week Schedule
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Save Button */}
-        <Button
-          onClick={handleSave}
-          className="w-full bg-ucr-blue hover:bg-ucr-blue/90"
-          size="lg"
-        >
-          Save Settings
-        </Button>
-
-        {/* Logout & About */}
-        <Card>
-          <CardContent className="p-5">
-            <div className="space-y-3">
-              <Button
-                variant="ghost"
-                className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
-                onClick={handleLogout}
-              >
-                <LogOut className="size-4 mr-2" />
-                Logout
-              </Button>
-              <div className="pt-3 border-t">
-                <p className="text-xs text-gray-500 text-center">
-                  UCR Parking Optimizer v1.0.0
-                </p>
+            {/* Parking Strategy */}
+            <div>
+              <Label className="text-sm text-gray-700 mb-3 block">Parking Strategy</Label>
+              <div className="space-y-3">
+                <label className="flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                  <input type="radio" name="strategy" defaultChecked className="mt-1" />
+                  <div>
+                    <p className="font-medium text-sm text-gray-900">Minimize Walking Distance</p>
+                    <p className="text-xs text-gray-500">Prioritize spots closest to your class (may have fewer open spots)</p>
+                  </div>
+                </label>
+                <label className="flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                  <input type="radio" name="strategy" className="mt-1" />
+                  <div>
+                    <p className="font-medium text-sm text-gray-900">Weekday Expert (Best Spot Combo)</p>
+                    <p className="text-xs text-gray-500">Balance distance with guaranteed availability based on your week</p>
+                  </div>
+                </label>
               </div>
             </div>
           </CardContent>
         </Card>
+
+        {/* Schedule Integration */}
+        <Card className="mb-6">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="bg-green-100 rounded-full p-3">
+                <Calendar className="size-6 text-green-600" />
+              </div>
+              <div>
+                <h2 className="font-bold text-gray-900 text-lg">Schedule Integration</h2>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200">
+                <div className="flex items-center gap-3">
+                  <div className="bg-green-500 rounded-full size-10 flex items-center justify-center">
+                    <Calendar className="size-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-sm text-gray-900">Google UMR Work</p>
+                    <p className="text-xs text-gray-600">Last synced: 15 mins ago</p>
+                  </div>
+                </div>
+                <Button variant="outline" size="sm">Manage Sync</Button>
+              </div>
+
+              <div className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="flex items-center gap-3">
+                  <div className="bg-gray-100 rounded-full size-10 flex items-center justify-center">
+                    <Calendar className="size-5 text-gray-400" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-sm text-gray-900">Recent Upload (.ics)</p>
+                    <p className="text-xs text-gray-600">Uploaded 3 days ago</p>
+                  </div>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => navigate('/dashboard/upload')}>
+                  Upload New
+                </Button>
+              </div>
+
+              <Button variant="ghost" className="w-full text-green-600 hover:text-green-700">
+                + Or connect to new app or R'Shop
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Save Changes */}
+        <div className="flex justify-between items-center">
+          <Button
+            variant="ghost"
+            onClick={handleLogout}
+            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+          >
+            <LogOut className="size-4 mr-2" />
+            Logout
+          </Button>
+          <Button
+            onClick={handleSaveChanges}
+            className="bg-green-500 hover:bg-green-600 px-8"
+            size="lg"
+          >
+            Save Changes
+          </Button>
+        </div>
+
+        <p className="text-xs text-gray-500 text-center mt-6">
+          Campus Parking Optimizer v1.0.0 • UC Riverside
+        </p>
       </div>
     </div>
   );
