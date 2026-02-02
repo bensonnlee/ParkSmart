@@ -33,10 +33,10 @@ export function MapContainer({ mapImageUrl, children, onDrop, zoom = 1 }: MapCon
   return (
     <div
       id="map-container"
-      ref={drop}
+      ref={drop as any} 
       className="relative w-full h-full overflow-hidden bg-gray-900"
       style={{
-        cursor: isOver ? 'crosshair' : 'default',
+        cursor: isOver ? 'crosshair' : 'default', 
       }}
     >
       {/* Map Image with Zoom */}

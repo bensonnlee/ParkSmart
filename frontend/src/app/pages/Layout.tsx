@@ -1,104 +1,68 @@
-import { useState, useEffect } from 'react';
-import { Outlet, useNavigate } from 'react-router';
+import { Outlet, useNavigate, useLocation } from 'react-router';
 import { Button } from '@/app/components/ui/button';
-import { LogIn, Upload, LogOut, User } from 'lucide-react';
+import { Home, Calendar, Settings } from 'lucide-react';
+import { useState } from 'react';
+import { Sidebar, SidebarToggle } from '@/app/components/Sidebar';
 
 export default function Layout() {
   const navigate = useNavigate();
-  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const location = useLocation();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  useEffect(() => {
-    const checkAuth = () => {
-      const savedUser = localStorage.getItem('user');
-      if (savedUser) {
-        const user = JSON.parse(savedUser);
-        setUserEmail(user.email);
-      } else {
-        setUserEmail(null);
-      }
-    };
-
-    checkAuth();
-
-    window.addEventListener('authChange', checkAuth);
-
-    return () => {
-      window.removeEventListener('authChange', checkAuth);
-    };
-  }, []);
-
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user'); 
- 
-    window.dispatchEvent(new Event('authChange')); 
-    
-    navigate('/sign-in');
-  };
-
+  // Layout is now only used for dashboard sub-routes
   return (
-    <div className="min-h-screen">
-      {/* UCR Header */}
-      <div className="bg-ucr-blue text-white py-3 sm:py-4 shadow-md">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between gap-4">
-            <div 
-              onClick={() => navigate('/')} 
-              className="cursor-pointer"
-            >
-              <h1 className="text-xl sm:text-2xl font-bold">UC RIVERSIDE</h1>
-              <p className="text-xs sm:text-sm opacity-90">Transportation Services</p>
-            </div>
-            
-            <div className="flex items-center gap-2 sm:gap-4">
-              <Button
-                onClick={() => navigate('/upload')}
-                variant="ghost"
-                size="sm"
-                className="text-white hover:bg-white/20 text-xs sm:text-sm"
-              >
-                <Upload className="size-3 sm:size-4 mr-1 sm:mr-2" />
-                <span className="hidden sm:inline">Upload Schedule</span>
-                <span className="sm:hidden">Upload</span>
-              </Button>
+    <div className="min-h-screen pb-20 md:pb-0">
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-              {/* Conditional Rendering: Show Email/Logout if logged in, else show Sign In */}
-              {userEmail ? (
-                <div className="flex items-center gap-2">
-                  <div className="hidden md:flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full">
-                    <User className="size-3" />
-                    <span className="text-xs">{userEmail}</span>
-                  </div>
-                  <Button
-                    onClick={handleLogout}
-                    variant="ghost"
-                    size="sm"
-                    className="text-white hover:bg-red-500/20 text-xs sm:text-sm"
-                  >
-                    <LogOut className="size-3 sm:size-4 mr-1 sm:mr-2" />
-                    <span>Logout</span>
-                  </Button>
-                </div>
-              ) : (
-                <Button
-                  onClick={() => navigate('/sign-in')}
-                  variant="ghost"
-                  size="sm"
-                  className="text-white hover:bg-white/20 text-xs sm:text-sm"
-                >
-                  <LogIn className="size-3 sm:size-4 mr-1 sm:mr-2" />
-                  <span>Sign In</span>
-                </Button>
-              )}
+      {/* UCR Top Banner */}
+      <div className="bg-ucr-blue text-white py-3 shadow-md">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <SidebarToggle onClick={() => setSidebarOpen(true)} />
+              <div onClick={() => navigate('/dashboard')} className="cursor-pointer">
+                <h1 className="text-lg font-bold uppercase tracking-wider">UC Riverside</h1>
+                <p className="text-[10px] opacity-80 uppercase">Parking Optimizer</p>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
       {/* Page Content */}
-      <main>
+      <main className="container mx-auto px-4 py-6">
         <Outlet />
       </main>
+
+      {/* Bottom Navigation for Mobile */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg md:hidden z-50">
+        <div className="grid grid-cols-3 gap-1 p-2">
+          <Button
+            variant={location.pathname === '/dashboard' ? 'default' : 'ghost'}
+            onClick={() => navigate('/dashboard')}
+            className="flex-col h-auto py-2"
+          >
+            <Home className="size-5 mb-1" />
+            <span className="text-[10px]">Today</span>
+          </Button>
+          <Button
+            variant={location.pathname === '/dashboard/planner' ? 'default' : 'ghost'}
+            onClick={() => navigate('/dashboard/planner')}
+            className="flex-col h-auto py-2"
+          >
+            <Calendar className="size-5 mb-1" />
+            <span className="text-[10px]">Schedule</span>
+          </Button>
+          <Button
+            variant={location.pathname === '/dashboard/settings' ? 'default' : 'ghost'}
+            onClick={() => navigate('/dashboard/settings')}
+            className="flex-col h-auto py-2"
+          >
+            <Settings className="size-5 mb-1" />
+            <span className="text-[10px]">Settings</span>
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }

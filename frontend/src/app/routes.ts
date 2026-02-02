@@ -1,13 +1,40 @@
 import { createBrowserRouter } from 'react-router';
 import Layout from '@/app/pages/Layout';
+import Welcome from '@/app/pages/Welcome';
+import OnboardingUpload from '@/app/pages/OnboardingUpload';
+import OnboardingParkingPass from '@/app/pages/OnboardingParkingPass';
 import Home from '@/app/pages/Home';
-import SignIn from '@/app/pages/SignIn';
+import ParkingRecommendations from '@/app/pages/ParkingRecommendations';
+import MapView from '@/app/pages/MapView';
+import Settings from '@/app/pages/Settings';
 import IcsUpload from '@/app/pages/IcsUpload';
+import SchedulePlanner from '@/app/pages/SchedulePlanner';
 import NotFound from '@/app/pages/NotFound';
+import RedirectToPlanner from '@/app/pages/RedirectToPlanner';
 
 export const router = createBrowserRouter([
   {
     path: '/',
+    Component: Welcome,
+  },
+  {
+    path: '/welcome',
+    Component: Welcome,
+  },
+  {
+    path: '/planner',
+    Component: RedirectToPlanner,
+  },
+  {
+    path: '/onboarding/upload',
+    Component: OnboardingUpload,
+  },
+  {
+    path: '/onboarding/parking-pass',
+    Component: OnboardingParkingPass,
+  },
+  {
+    path: '/dashboard',
     Component: Layout,
     children: [
       {
@@ -15,8 +42,20 @@ export const router = createBrowserRouter([
         Component: Home,
       },
       {
-        path: 'sign-in',
-        Component: SignIn,
+        path: 'parking/:classId',
+        Component: ParkingRecommendations,
+      },
+      {
+        path: 'map',
+        Component: MapView,
+      },
+      {
+        path: 'settings',
+        Component: Settings,
+      },
+      {
+        path: 'planner',
+        Component: SchedulePlanner,
       },
       {
         path: 'upload',
@@ -27,5 +66,9 @@ export const router = createBrowserRouter([
         Component: NotFound,
       },
     ],
+  },
+  {
+    path: '*',
+    Component: NotFound,
   },
 ]);
