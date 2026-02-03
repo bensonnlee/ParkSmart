@@ -131,6 +131,11 @@ class ClassroomWithBuilding(ClassroomRead):
     building: BuildingRead | None = None
 
 
+class ClassroomLotsResponse(BaseModel):
+    classroom: ClassroomWithBuilding
+    lots: list[ParkingLotRead]
+
+
 # Schedule schemas
 class ScheduleEventCreate(BaseModel):
     event_name: str
