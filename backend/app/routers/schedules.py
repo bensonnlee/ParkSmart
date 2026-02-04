@@ -101,7 +101,7 @@ async def upload_schedule(
             end_time=ev["end_time"].time(),
             days_of_week=days_of_week,
             valid_from=ev["start_time"].date(),
-            valid_until=ev.get("until"),
+            valid_until=ev["until"].date() if ev.get("until") else None,
         )
         db.add(event)
 
