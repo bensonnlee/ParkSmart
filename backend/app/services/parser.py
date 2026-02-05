@@ -11,49 +11,36 @@ Link: https://stackoverflow.com/questions/3408097/parsing-files-ics-icalendar-us
 Multiple VEVENTS in one file (for every event/class, there is a VEVENT) """
 
 
-def parse_ics(
-    file_name: str,
-) -> list[
-    dict
-]:  # Gets file and parses through it to extract relevant components to a dictionary and returns a list of a schedule's classes and components
+def parse_ics_bytes(data: bytes) -> list[dict]:
+    """Parse raw .ics bytes and return a list of event dicts."""
     events = []
+    cal = icalendar.Calendar.from_ical(data)
 
-    with (
-        open(file_name, "rb") as file
-    ):  # Opens and reads .ics file to parse and extract relevant components; 'rb' or read binary for icalendar format
-        cal = icalendar.Calendar.from_ical(file.read())
+    for components in cal.walk():
+        if components.name == "VEVENT":
+            event = {}
+            event["class"] = components.get("SUMMARY")
+            location = components.get("LOCATION")
+            if location and "Campus: Riverside Building: " in location:
+                location = location.replace("Campus: Riverside Building: ", "")
+            event["classroom"] = location
+            event["start_time"] = components.get("DTSTART").dt
+            event["end_time"] = components.get("DTEND").dt
 
-        for components in cal.walk():
-            if (
-                components.name == "VEVENT"
-            ):  # Found a single event/class so set up a dictionary of relevant components and add to events list
-                event = {}
-                event["class"] = components.get("SUMMARY")
-                location = components.get("LOCATION")
-                if (
-                    "Campus: Riverside Building: " in location
-                ):  # identify and remove specific text 'Campus: Riverside Building: ' from location for easier readability and usage in future code
-                    location = location.replace("Campus: Riverside Building: ", "")
-                event["classroom"] = location
-                event["start_time"] = components.get(
-                    "DTSTART"
-                ).dt  # dt allows for better readability of datetime
-                event["end_time"] = components.get("DTEND").dt
+            if components.get("RRULE"):
+                if "BYDAY" in components.get("RRULE"):
+                    event["days"] = components.get("RRULE")["BYDAY"]
+                if "UNTIL" in components.get("RRULE"):
+                    event["until"] = components.get("RRULE")["UNTIL"][0]
 
-                if components.get(
-                    "RRULE"
-                ):  # Get which days of the week the class happens and when quarter ends
-                    if "BYDAY" in components.get(
-                        "RRULE"
-                    ):  # Get days in component of RRULE with BYDAY key
-                        event["days"] = components.get("RRULE")["BYDAY"]
-                    if "UNTIL" in components.get(
-                        "RRULE"
-                    ):  # Get the end date of quarter with UNTIL key in RRULE
-                        event["until"] = components.get("RRULE")["UNTIL"][0]
-
-                events.append(event)
+            events.append(event)
     return events
+
+
+def parse_ics(file_name: str) -> list[dict]:
+    """Parse an .ics file by path and return a list of event dicts."""
+    with open(file_name, "rb") as file:
+        return parse_ics_bytes(file.read())
 
 
 # Test with a sample .ics file from winter 2026 schedule

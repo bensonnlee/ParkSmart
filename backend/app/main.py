@@ -6,7 +6,7 @@ from typing import Any
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import auth, health, parking, permits
+from app.routers import auth, classrooms, health, parking, permits, schedules
 
 # Configure logging
 logging.basicConfig(
@@ -42,9 +42,11 @@ app.add_middleware(
 
 # Include routers
 app.include_router(auth.router)
+app.include_router(classrooms.router)
 app.include_router(health.router)
 app.include_router(parking.router)
 app.include_router(permits.router)
+app.include_router(schedules.router)
 
 
 @app.get("/")
