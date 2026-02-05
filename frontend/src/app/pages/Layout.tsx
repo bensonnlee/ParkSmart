@@ -47,7 +47,7 @@ export default function Layout() {
           
           <Button
             variant={location.pathname === '/' || location.pathname === '/dashboard' ? 'default' : 'ghost'}
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/dashboard')}
             className={`flex-col h-auto py-2 transition-all active:scale-95 ${
               location.pathname === '/' || location.pathname === '/dashboard' 
               ? 'bg-ucr-blue text-white hover:bg-ucr-blue-dark' 
