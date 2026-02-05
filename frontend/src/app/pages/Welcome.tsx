@@ -78,7 +78,6 @@ export default function Welcome() {
               Park Smarter,<br />Not Harder.
             </h1>
             <p className="text-blue-600 font-medium">
-              API CONNECTED VERSION (BLUE THEME)
             </p>
           </div>
 
