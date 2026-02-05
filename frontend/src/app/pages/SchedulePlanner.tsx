@@ -1,7 +1,10 @@
 import { useState } from 'react';
 import { Button } from '@/app/components/ui/button';
 import { Card, CardContent } from '@/app/components/ui/card';
-import { Upload, Globe, Info, Calendar, MapPin, ParkingCircle, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
+import { 
+  Upload, Globe, Info, Calendar, MapPin, 
+  ParkingCircle, ChevronLeft, ChevronRight 
+} from 'lucide-react';
 import { toast } from 'sonner';
 
 interface ScheduleClass {
@@ -18,9 +21,8 @@ interface ScheduleClass {
 
 export default function SchedulePlanner() {
   const [scheduleUploaded, setScheduleUploaded] = useState(false);
-  const [currentWeek, setCurrentWeek] = useState(0);
 
-  // Mock schedule data - this would come from uploaded schedule or R'Web
+  // Define mockSchedule FIRST so it is available for the calendar grid
   const mockSchedule: ScheduleClass[] = [
     {
       id: '1',
@@ -79,206 +81,142 @@ export default function SchedulePlanner() {
     }
   ];
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      toast.success(`Schedule uploaded: ${file.name}`);
-      setScheduleUploaded(true);
+  // Helper function to calculate the dynamic date range
+  const getWeekData = () => {
+    const now = new Date();
+    const dayOfWeek = now.getDay(); 
+    
+    const monday = new Date(now);
+    const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    monday.setDate(now.getDate() + diffToMonday);
+
+    const weekDates = [];
+    for (let i = 0; i < 7; i++) {
+      const day = new Date(monday);
+      day.setDate(monday.getDate() + i);
+      weekDates.push(day.getDate());
     }
+
+    const friday = new Date(monday);
+    friday.setDate(monday.getDate() + 4);
+
+    const options: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' };
+    const rangeString = `${monday.toLocaleDateString('en-US', options)} - ${friday.toLocaleDateString('en-US', options)}`;
+
+    return { weekDates, rangeString };
   };
 
-  const handleRWebConnect = () => {
-    toast.info('Redirecting to UCR Single Sign-On...');
-    // In real implementation, this would redirect to UCR SSO
-    setTimeout(() => {
-      toast.success('Connected to R\'Web Portal');
-      setScheduleUploaded(true);
-    }, 1500);
-  };
+  const { weekDates, rangeString } = getWeekData();
+  const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'OPTIMAL PLAN':
-        return 'bg-green-100 text-green-700';
-      case 'BUSY MORNING':
-        return 'bg-yellow-100 text-yellow-700';
-      case 'PEAK HOURS':
-        return 'bg-orange-100 text-orange-700';
-      case 'LOW TRAFFIC':
-        return 'bg-blue-100 text-blue-700';
-      default:
-        return 'bg-gray-100 text-gray-700';
+      case 'OPTIMAL PLAN': return 'bg-green-100 text-green-700';
+      case 'BUSY MORNING': return 'bg-yellow-100 text-yellow-700';
+      case 'PEAK HOURS': return 'bg-orange-100 text-orange-700';
+      case 'LOW TRAFFIC': return 'bg-blue-100 text-blue-700';
+      default: return 'bg-gray-100 text-gray-700';
     }
   };
 
-  const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-  const weekDates = [27, 28, 29, 30, 31, 1, 2];
-
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pb-20">
       <div className="container mx-auto px-4 py-8 max-w-7xl">
-        {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-ucr-blue mb-2">Schedule-Based Parking Planner</h1>
-          <p className="text-gray-600">
-            Upload your class schedule to generate a personalized parking plan based on historical data and real-time walk speeds.
-          </p>
+          <h1 className="text-3xl font-bold text-ucr-blue mb-2 uppercase tracking-tight">Parking Planner</h1>
+          <p className="text-gray-600">Your personalized commute schedule based on R'Web data.</p>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-6">
-          {/* Left Column - Import Schedule */}
+          {/* Import Column */}
           <div className="lg:col-span-1">
             <Card>
               <CardContent className="p-6">
                 <div className="flex items-center gap-2 mb-4">
                   <Calendar className="size-5 text-ucr-blue" />
-                  <h2 className="font-semibold text-lg">Import Your Schedule</h2>
+                  <h2 className="font-semibold text-lg">Import Schedule</h2>
+                </div>
+                
+                <div className="border-2 border-dashed border-ucr-gold rounded-lg p-8 text-center bg-amber-50 mb-4">
+                  <Upload className="size-6 text-ucr-blue mx-auto mb-3" />
+                  <p className="text-sm font-medium">Drop PDF here</p>
+                  <input type="file" className="hidden" id="pdf-upload" onChange={() => setScheduleUploaded(true)} />
+                  <label htmlFor="pdf-upload" className="mt-3 block">
+                    <Button variant="outline" size="sm" asChild>
+                      <span>Browse Files</span>
+                    </Button>
+                  </label>
                 </div>
 
-                {/* File Upload Area */}
-                <div className="mb-4">
-                  <div className="border-2 border-dashed border-ucr-gold rounded-lg p-8 text-center bg-amber-50">
-                    <div className="flex justify-center mb-3">
-                      <div className="bg-white p-3 rounded-full">
-                        <Upload className="size-6 text-ucr-blue" />
-                      </div>
-                    </div>
-                    <p className="text-sm text-gray-700 mb-1">Drop your schedule PDF here</p>
-                    <p className="text-xs text-gray-500 mb-3">or click to browse files</p>
-                    <label htmlFor="file-upload">
-                      <Button variant="outline" size="sm" className="cursor-pointer" asChild>
-                        <span className="text-xs">PDF, ICS, or Sownload</span>
-                      </Button>
-                      <input
-                        id="file-upload"
-                        type="file"
-                        className="hidden"
-                        accept=".pdf,.ics"
-                        onChange={handleFileUpload}
-                      />
-                    </label>
-                  </div>
-                </div>
-
-                <div className="text-center text-sm text-gray-500 my-3">OR</div>
-
-                {/* R'Web Connect Button */}
-                <Button
-                  onClick={handleRWebConnect}
-                  className="w-full bg-ucr-blue hover:bg-ucr-blue/90"
-                >
+                <Button onClick={() => setScheduleUploaded(true)} className="w-full bg-ucr-blue">
                   <Globe className="size-4 mr-2" />
                   Connect R'Web Portal
                 </Button>
-                <p className="text-xs text-gray-500 text-center mt-2">Secured with UCR Single Sign-On (CAS)</p>
-
-                {/* How It Works */}
-                <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-                  <div className="flex items-start gap-2">
-                    <Info className="size-4 text-ucr-blue mt-0.5 flex-shrink-0" />
-                    <div>
-                      <h3 className="text-sm font-semibold text-ucr-blue mb-1">How it works</h3>
-                      <p className="text-xs text-gray-700">
-                        We analyze your class locations and times against 5 years of parking data to predict which lots will have spaces when you arrive.
-                      </p>
-                    </div>
-                  </div>
-                </div>
               </CardContent>
             </Card>
           </div>
 
-          {/* Right Column - Predicted Schedule */}
+          {/* Schedule Column */}
           <div className="lg:col-span-2">
-            <Card>
+            <Card className="overflow-hidden">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center gap-2">
+                  <h2 className="font-bold text-xl flex items-center gap-2">
                     <Calendar className="size-5 text-ucr-gold" />
-                    <h2 className="font-semibold text-lg">Predicted Parking Schedule</h2>
-                  </div>
-                  <span className="text-sm text-gray-500">Jan 27 - Jan 31</span>
+                    Weekly Predictions
+                  </h2>
+                  <span className="text-sm font-semibold text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+                    {rangeString}
+                  </span>
                 </div>
 
                 {!scheduleUploaded ? (
-                  <div className="text-center py-12 text-gray-400">
-                    <Upload className="size-12 mx-auto mb-3 opacity-50" />
-                    <p>Upload your schedule to see personalized recommendations</p>
+                  <div className="text-center py-20 text-gray-400 border-2 border-dotted rounded-xl">
+                    <Info className="size-10 mx-auto mb-4 opacity-20" />
+                    <p>Sync your portal to see lot predictions</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {mockSchedule.map((classItem) => (
-                      <Card key={classItem.id} className="border-l-4 border-l-ucr-blue">
-                        <CardContent className="p-4">
-                          <div className="flex items-start justify-between gap-4">
-                            <div className="flex-1">
-                              {/* Day and Status */}
-                              <div className="flex items-center justify-between mb-3">
-                                <h3 className="font-semibold text-gray-900">{classItem.day}</h3>
-                                <span className={`text-xs px-2 py-1 rounded-full font-medium ${getStatusColor(classItem.status)}`}>
-                                  {classItem.status}
-                                </span>
-                              </div>
-
-                              {/* Class Info */}
-                              <div className="flex items-start gap-3 mb-3">
-                                <div className="bg-ucr-blue/10 p-2 rounded">
-                                  <Calendar className="size-5 text-ucr-blue" />
-                                </div>
-                                <div>
-                                  <p className="text-sm text-gray-500 uppercase tracking-wide">First Class</p>
-                                  <p className="font-semibold text-gray-900">{classItem.courseName}</p>
-                                  <p className="text-sm text-gray-600 flex items-center gap-1">
-                                    <MapPin className="size-3" />
-                                    {classItem.location} • {classItem.startTime}
-                                  </p>
-                                </div>
-                              </div>
-
-                              {/* Parking Target */}
-                              <div className="flex items-center gap-2 text-sm">
-                                <ParkingCircle className="size-4 text-ucr-gold" />
-                                <span className="font-medium">Target: {classItem.targetLot}</span>
-                                <span className="text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded">
-                                  {classItem.availability}% Historical Availability
-                                </span>
-                              </div>
-                            </div>
-
-                            {/* Recommended Leave Time */}
-                            <div className="bg-ucr-blue text-white rounded-lg p-4 text-center min-w-[140px]">
-                              <p className="text-xs opacity-90 mb-1">RECOMMENDED LEAVE BY</p>
-                              <p className="text-2xl font-bold">{classItem.recommendedLeaveTime}</p>
-                              <p className="text-xs opacity-75 mt-1">Includes 8 min walk + 10 min buffer</p>
-                            </div>
+                    {mockSchedule.map((item) => (
+                      <div key={item.id} className="border rounded-xl p-4 flex items-center justify-between hover:shadow-md transition-shadow">
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-bold text-ucr-blue">{item.day}</span>
+                            <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${getStatusColor(item.status)}`}>
+                              {item.status}
+                            </span>
                           </div>
-                        </CardContent>
-                      </Card>
+                          <p className="font-semibold text-gray-800">{item.courseName}</p>
+                          <div className="flex items-center gap-3 mt-2 text-xs text-gray-500">
+                            <span className="flex items-center gap-1"><MapPin className="size-3" />{item.location}</span>
+                            <span className="flex items-center gap-1"><ParkingCircle className="size-3 text-ucr-gold" />{item.targetLot}</span>
+                          </div>
+                        </div>
+                        <div className="text-right bg-ucr-blue text-white px-4 py-2 rounded-lg">
+                          <p className="text-[10px] opacity-80 uppercase">Leave By</p>
+                          <p className="text-xl font-black">{item.recommendedLeaveTime}</p>
+                        </div>
+                      </div>
                     ))}
 
-                    {/* Weekly Calendar View */}
-                    <div className="mt-6 pt-6 border-t">
+                    {/* Dynamic Calendar Grid */}
+                    <div className="mt-8 pt-6 border-t">
                       <div className="flex items-center justify-between mb-4">
-                        <h3 className="font-semibold text-gray-900">Week Overview</h3>
-                        <div className="flex items-center gap-2">
-                          <Button variant="ghost" size="sm">
-                            <ChevronLeft className="size-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm">
-                            <ChevronRight className="size-4" />
-                          </Button>
+                        <h3 className="font-bold text-gray-900">Overview</h3>
+                        <div className="flex gap-1">
+                          <Button variant="ghost" size="icon" className="size-8"><ChevronLeft /></Button>
+                          <Button variant="ghost" size="icon" className="size-8"><ChevronRight /></Button>
                         </div>
                       </div>
                       <div className="grid grid-cols-7 gap-2">
-                        {weekDays.map((day, index) => (
+                        {weekDays.map((day, i) => (
                           <div key={day} className="text-center">
-                            <p className="text-xs text-gray-500 mb-2">{day}</p>
-                            <div className="bg-white border rounded-lg p-2 min-h-[60px]">
-                              <p className="text-sm font-semibold text-gray-900 mb-1">{weekDates[index]}</p>
-                              {mockSchedule.find(c => c.day.startsWith(day.slice(0, 3))) && (
-                                <p className="text-xs text-ucr-blue font-medium">
-                                  {mockSchedule.find(c => c.day.startsWith(day.slice(0, 3)))?.targetLot}
-                                </p>
+                            <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">{day}</p>
+                            <div className="border rounded-lg py-2 bg-white">
+                              <p className="text-sm font-black">{weekDates[i]}</p>
+                              {/* Error Fix: 'c' now has a type from the mockSchedule map */}
+                              {mockSchedule.some(c => c.day.startsWith(day)) && (
+                                <div className="size-1.5 bg-ucr-gold rounded-full mx-auto mt-1" />
                               )}
                             </div>
                           </div>
