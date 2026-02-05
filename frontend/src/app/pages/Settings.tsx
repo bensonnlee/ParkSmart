@@ -53,7 +53,7 @@ export default function Settings() {
               </div>
               <div>
                 <h2 className="font-bold text-gray-900 text-lg">Account Data</h2>
-                <p className="text-sm text-gray-500">Alex Wilson</p>
+                <p className="text-xl text-gray-800">Alex Wilson</p>
               </div>
             </div>
 

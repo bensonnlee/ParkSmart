@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react'; // Added useEffect
 import { useNavigate, useLocation } from 'react-router';
 import { X, Home, Calendar, MapPin, Settings, Menu } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
@@ -11,6 +11,35 @@ interface SidebarProps {
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const navigate = useNavigate();
   const location = useLocation();
+
+  // --- DYNAMIC DATA LOGIC START ---
+  const [userName, setUserName] = useState("Alex Wilson");
+
+  useEffect(() => {
+    // Check for a saved name when the sidebar opens
+    const savedName = localStorage.getItem('userName');
+    if (savedName) {
+      setUserName(savedName);
+    }
+
+    // Listen for changes if the user updates their name in Settings
+    const handleStorageChange = () => {
+      const updatedName = localStorage.getItem('userName');
+      if (updatedName) setUserName(updatedName);
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [isOpen]); // Re-check whenever the sidebar is opened
+
+  // Generate initials (Alex Wilson -> AW)
+  const initials = userName
+    .split(' ')
+    .map(n => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+  // --- DYNAMIC DATA LOGIC END ---
 
   const menuItems = [
     { icon: Home, label: 'Dashboard', path: '/dashboard' },
@@ -61,14 +90,14 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           </Button>
         </div>
 
-        {/* User Info */}
+        {/* User Info - NOW DYNAMIC */}
         <div className="p-4 border-b bg-gray-50">
           <div className="flex items-center gap-3">
             <div className="size-12 rounded-full bg-ucr-blue text-white flex items-center justify-center font-bold">
-              JD
+              {initials}
             </div>
             <div>
-              <p className="font-semibold text-gray-900">Jane Doe</p>
+              <p className="font-semibold text-gray-900">{userName}</p>
               <p className="text-xs text-gray-500">Student</p>
             </div>
           </div>
