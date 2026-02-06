@@ -1,18 +1,22 @@
 import uuid
 from datetime import datetime
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select, and_, or_
+from sqlalchemy import and_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
-from app.models import PermitType, LotPermitAccess, ParkingLot
-from app.schemas import PermitTypeRead, ParkingLotRead
+from app.models import LotPermitAccess, ParkingLot, PermitType
+from app.schemas import ParkingLotRead, PermitTypeRead
 
 router = APIRouter(prefix="/api/permits", tags=["permits"])
 
+DbSession = Annotated[AsyncSession, Depends(get_db)]
+
 
 @router.get("", response_model=list[PermitTypeRead])
-async def list_permits(db: AsyncSession = Depends(get_db)):
+async def list_permits(db: DbSession) -> list[PermitTypeRead]:
     """Get all permit types."""
     stmt = select(PermitType).order_by(PermitType.name)
     result = await db.execute(stmt)
@@ -21,7 +25,7 @@ async def list_permits(db: AsyncSession = Depends(get_db)):
 
 
 @router.get("/{permit_id}", response_model=PermitTypeRead)
-async def get_permit(permit_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+async def get_permit(permit_id: uuid.UUID, db: DbSession) -> PermitTypeRead:
     """Get a single permit type by ID."""
     stmt = select(PermitType).where(PermitType.id == permit_id)
     result = await db.execute(stmt)
@@ -36,8 +40,8 @@ async def get_permit(permit_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
 @router.get("/{permit_id}/lots", response_model=list[ParkingLotRead])
 async def get_lots_by_permit(
     permit_id: uuid.UUID,
-    db: AsyncSession = Depends(get_db),
-):
+    db: DbSession,
+) -> list[ParkingLotRead]:
     """
     Get all parking lots accessible by a given permit at the current time/day.
     """
@@ -65,7 +69,7 @@ async def get_lots_by_permit(
                 LotPermitAccess.permit_id == permit_id,
                 or_(
                     LotPermitAccess.days_of_week.is_(None),
-                    LotPermitAccess.days_of_week.any(current_day),
+                    LotPermitAccess.days_of_week.any(current_day),  # type: ignore[arg-type]
                 ),
                 or_(
                     LotPermitAccess.access_start.is_(None),

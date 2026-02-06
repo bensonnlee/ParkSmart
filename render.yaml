@@ -16,7 +16,7 @@ services:
     runtime: python
     rootDir: backend
     buildCommand: pip install -r requirements.txt
-    schedule: "*/5 0-1,15-23 * * *"  # Every 5 min, 7am-5pm PST (UTC)
+    schedule: "*/5 0-1,15-23 * * 1-5"  # Every 5 min, 7am-6pm PST, weekdays only (UTC)
     startCommand: python -c "import asyncio; from app.services.collector import collect_parking_data; asyncio.run(collect_parking_data())"
     envVars:
       - key: DATABASE_URL
@@ -29,7 +29,20 @@ services:
     runtime: python
     rootDir: backend
     buildCommand: pip install -r requirements.txt
-    schedule: "0 2-14 * * *"  # Every hour, 6pm-6am PST (UTC)
+    schedule: "0 2-14 * * 1-5"  # Every hour, 6pm-7am PST, weekdays only (UTC)
+    startCommand: python -c "import asyncio; from app.services.collector import collect_parking_data; asyncio.run(collect_parking_data())"
+    envVars:
+      - key: DATABASE_URL
+        sync: false  # Set manually in Render dashboard
+      - key: PYTHON_VERSION
+        value: "3.12.10"
+
+  - type: cron
+    name: parksmart-collector-weekend
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    schedule: "0 * * * 0,6"  # Every hour, all day, weekends only (UTC)
     startCommand: python -c "import asyncio; from app.services.collector import collect_parking_data; asyncio.run(collect_parking_data())"
     envVars:
       - key: DATABASE_URL

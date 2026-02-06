@@ -1,10 +1,12 @@
 import logging
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from typing import Any
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import health, parking, permits
+from app.routers import auth, classrooms, health, parking, permits, schedules
 
 # Configure logging
 logging.basicConfig(
@@ -15,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Manage application startup and shutdown."""
     logger.info("Starting ParkSmart API...")
     yield
@@ -39,13 +41,16 @@ app.add_middleware(
 )
 
 # Include routers
+app.include_router(auth.router)
+app.include_router(classrooms.router)
 app.include_router(health.router)
 app.include_router(parking.router)
 app.include_router(permits.router)
+app.include_router(schedules.router)
 
 
 @app.get("/")
-async def root():
+async def root() -> dict[str, Any]:
     """Root endpoint with API info."""
     return {
         "name": "ParkSmart API",

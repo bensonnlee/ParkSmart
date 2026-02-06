@@ -1,5 +1,6 @@
-from pydantic_settings import BaseSettings
 from functools import lru_cache
+
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
@@ -8,6 +9,10 @@ class Settings(BaseSettings):
     # UCR API endpoint
     ucr_api_url: str = "https://lotspaces.ucr.edu/api/lots"
 
+    # Supabase Auth
+    supabase_url: str
+    supabase_anon_key: str
+
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
@@ -15,4 +20,4 @@ class Settings(BaseSettings):
 
 @lru_cache
 def get_settings() -> Settings:
-    return Settings()
+    return Settings()  # type: ignore[call-arg]
