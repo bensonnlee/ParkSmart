@@ -14,4 +14,4 @@ df.loc[is_dining, "Structure"] = "Dining/Retail"
 
 print(df.head())
 
-df.to_csv("Locations_updated.csv", index=False)
+df.to_csv("Locations_updated.csv", index=False, float_format="%.17f")
