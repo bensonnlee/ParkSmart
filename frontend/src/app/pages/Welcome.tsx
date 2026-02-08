@@ -22,7 +22,7 @@ export default function Welcome() {
     }
 
     setIsLoading(true);
-    const apiUrl = "https://parksmart-api.onrender.com/api/auth/login";
+    const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/api/auth/login`;
 
     try {
       const response = await fetch(apiUrl, {
@@ -34,8 +34,8 @@ export default function Welcome() {
       const data = await response.json();
       console.log("SERVER RESPONSE DATA:", data);
 
-      if (response.ok) {
-        const authToken = data.tokens?.access_token;
+      if (response.ok) { //new addition to handle multiple token structures
+        const authToken = data.access_token ?? data.token ?? data.tokens?.access_token;
         
         if (authToken) {
           localStorage.setItem("token", authToken);
@@ -146,7 +146,7 @@ export default function Welcome() {
               type="button"
               variant="outline"
               className="w-full h-12 text-base border-blue-200 text-blue-600 hover:bg-blue-50"
-              onClick={() => navigate('/onboarding/upload')}
+              onClick={() => navigate('/signup')}
               disabled={isLoading}
             >
               Create Account

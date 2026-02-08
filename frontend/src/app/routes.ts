@@ -11,6 +11,8 @@ import IcsUpload from '@/app/pages/IcsUpload';
 import SchedulePlanner from '@/app/pages/SchedulePlanner';
 import NotFound from '@/app/pages/NotFound';
 import RedirectToPlanner from '@/app/pages/RedirectToPlanner';
+import SignUp from '@/app/pages/SignUp';
+
 
 export const router = createBrowserRouter([
   {
@@ -20,6 +22,10 @@ export const router = createBrowserRouter([
   {
     path: '/welcome',
     Component: Welcome,
+  },
+  { //new addition for signup route
+  path: '/signup',
+  Component: SignUp,
   },
   {
     path: '/planner',
