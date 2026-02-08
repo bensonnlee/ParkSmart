@@ -18,9 +18,17 @@ interface TodayClass {
 }
 
 export default function Home() {
+  const storedUser = localStorage.getItem("user");
+const user = storedUser ? JSON.parse(storedUser) : null;
+
+const displayName =
+  user?.display_name || user?.name || user?.email?.split("@")?.[0] || "there";
+
   const navigate = useNavigate();
   const [hasSchedule, setHasSchedule] = useState(true);
-  const [currentTime, setCurrentTime] = useState(new Date());
+const [currentTime, setCurrentTime] = useState(new Date());
+const [todayClasses, setTodayClasses] = useState<TodayClass[]>([]);
+
 
   // Update time every second
   useEffect(() => {
@@ -30,42 +38,51 @@ export default function Home() {
     return () => clearInterval(timer);
   }, []);
 
-  // Mock today's classes with parking status
-  const todayClasses: TodayClass[] = [
-    {
-      id: '1',
-      name: 'Advanced Calculus',
-      courseCode: 'MATH 031',
-      startTime: new Date(2026, 0, 31, 10, 0),
-      endTime: new Date(2026, 0, 31, 11, 20),
-      building: 'SURGE Building',
-      room: '268',
-      imageUrl: 'modern building exterior',
-      parkingStatus: 'good'
-    },
-    {
-      id: '2',
-      name: 'History of Art',
-      courseCode: 'ART 201',
-      startTime: new Date(2026, 0, 31, 13, 0),
-      endTime: new Date(2026, 0, 31, 14, 30),
-      building: 'Arts Building',
-      room: '3107 Art',
-      imageUrl: 'architecture columns',
-      parkingStatus: 'tight'
-    },
-    {
-      id: '3',
-      name: 'Comp Sci Lab',
-      courseCode: 'CS 100',
-      startTime: new Date(2026, 0, 31, 16, 0),
-      endTime: new Date(2026, 0, 31, 17, 50),
-      building: 'Pierce Hall',
-      room: 'Tech Center',
-      imageUrl: 'student studying computer',
-      parkingStatus: 'full'
-    }
-  ];
+  useEffect(() => {
+  const storedUser = localStorage.getItem("user");
+  const user = storedUser ? JSON.parse(storedUser) : null;
+
+  const uid = user?.id || user?.user_id || user?.supabase_id;
+  const scheduleKey = uid ? `schedule:${uid}` : "schedule:guest";
+  const raw = localStorage.getItem(scheduleKey);
+
+  if (!raw) {
+    setHasSchedule(false);
+    setTodayClasses([]);
+    return;
+  }
+
+  const eventsRaw = JSON.parse(raw);
+  const events = Array.isArray(eventsRaw) ? eventsRaw : (eventsRaw.events ?? []);
+
+  const today = new Date();
+  const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+
+  const todays = events
+    .map((e: any, idx: number) => {
+      const start = new Date(e.startTime ?? e.start ?? e.dtstart);
+      const end = new Date(e.endTime ?? e.end ?? e.dtend);
+
+
+      return {
+        id: e.id || String(idx),
+        name: e.name || e.title || e.summary || "Class",
+        courseCode: e.courseCode || "",
+        startTime: start,
+        endTime: end,
+        building: e.building || "TBD",
+        room: e.room || "",
+        imageUrl: "",
+        parkingStatus: "good" as const,
+      };
+    })
+    .filter((c: any) => c.startTime >= startOfDay && c.startTime < endOfDay)
+    .sort((a: any, b: any) => a.startTime.getTime() - b.startTime.getTime());
+
+  setHasSchedule(todays.length > 0);
+  setTodayClasses(todays);
+}, []);
 
   const getNextClass = () => {
     const now = currentTime;
@@ -153,7 +170,7 @@ export default function Home() {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Welcome back, Alex</h1>
+              <h1 className="text-2xl font-bold text-gray-900">Welcome back, {displayName}</h1>
               <p className="text-sm text-gray-500">Here is your schedule and parking status for today.</p>
             </div>
             <Button
@@ -181,7 +198,7 @@ export default function Home() {
                 Upload your class schedule to get personalized parking recommendations
               </p>
               <Button
-                onClick={() => navigate('/upload')}
+                onClick={() => navigate('/dashboard/upload')}
                 className="bg-ucr-blue hover:bg-ucr-blue-dark"
               >
                 <Upload className="size-4 mr-2" />

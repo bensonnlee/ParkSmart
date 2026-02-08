@@ -10,6 +10,15 @@ import { toast } from 'sonner';
 
 export default function Settings() {
   const navigate = useNavigate();
+  const storedUser = localStorage.getItem("user");
+const user = storedUser ? JSON.parse(storedUser) : null;
+
+const displayName =
+  user?.display_name || user?.name || user?.email?.split("@")?.[0] || "User";
+
+const email = user?.email || "—";
+const studentId = user?.student_id || user?.sid || user?.id || "—";
+
   const [parkingPass, setParkingPass] = useState('blue');
   const [arrivalBuffer, setArrivalBuffer] = useState([10]);
   const [walkingSpeed, setWalkingSpeed] = useState([3]);
@@ -19,9 +28,11 @@ export default function Settings() {
   };
 
   const handleLogout = () => {
-    toast.success('Logged out successfully');
-    navigate('/welcome');
-  };
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+  toast.success("Logged out successfully");
+  navigate("/welcome");
+};
 
   return (
     /* pb-24 ensures content scrolls above the bottom navigation bar */
@@ -53,22 +64,22 @@ export default function Settings() {
               </div>
               <div>
                 <h2 className="font-bold text-gray-900 text-lg">Account Data</h2>
-                <p className="text-xl text-gray-800">Alex Wilson</p>
+                <p className="text-xl text-gray-800">{displayName}</p>
               </div>
             </div>
 
             <div className="grid md:grid-cols-2 gap-4">
               <div>
                 <Label className="text-sm text-gray-600">Full Name</Label>
-                <Input value="Alex Wilson" className="mt-1" readOnly />
+                <Input value={displayName} className="mt-1" readOnly />
               </div>
               <div>
                 <Label className="text-sm text-gray-600">Student ID</Label>
-                <Input value="861881470" className="mt-1" readOnly />
+                <Input value={String(studentId)} className="mt-1" readOnly />
               </div>
               <div>
                 <Label className="text-sm text-gray-600">Email Address</Label>
-                <Input value="alex.wilson@ucr.edu" className="mt-1" readOnly />
+                <Input value={email} className="mt-1" readOnly />
               </div>
               <div className="flex items-end">
                 <Button variant="outline" className="w-full">

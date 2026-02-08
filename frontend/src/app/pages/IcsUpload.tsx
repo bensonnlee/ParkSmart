@@ -25,28 +25,64 @@ export default function IcsUpload() {
   };
 
   const handleUpload = async () => {
-    if (!selectedFile) {
-      setMessage({ type: 'error', text: 'Please select a file first.' });
+  if (!selectedFile) {
+    setMessage({ type: 'error', text: 'Please select a file first.' });
+    return;
+  }
+
+  const token = localStorage.getItem("token");
+  if (!token) {
+    setMessage({ type: 'error', text: 'You are not logged in. Please log in again.' });
+    navigate('/welcome');
+    return;
+  }
+
+  setIsLoading(true);
+  setMessage(null);
+
+  try {
+    const form = new FormData();
+    form.append("file", selectedFile); // Swagger expects "file"
+
+    const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/schedules/upload`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        // DO NOT set Content-Type when using FormData
+      },
+      body: form,
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      setMessage({ type: 'error', text: data.detail || 'Upload failed.' });
       return;
     }
 
-    setIsLoading(true);
-    setMessage(null);
+    // Optional: store schedule response locally too (good for fast UI)
+    const storedUser = localStorage.getItem("user");
+    const user = storedUser ? JSON.parse(storedUser) : null;
+    const uid = user?.id || user?.user_id || user?.supabase_id;
+    const scheduleKey = uid ? `schedule:${uid}` : "schedule:guest";
+    localStorage.setItem(scheduleKey, JSON.stringify(data.events ?? data));
 
-    // Simulate file upload
+    setMessage({
+      type: 'success',
+      text: `File "${selectedFile.name}" uploaded successfully! Your schedule has been imported.`
+    });
+
     setTimeout(() => {
-      setMessage({
-        type: 'success',
-        text: `File "${selectedFile.name}" uploaded successfully! Your schedule has been imported.`
-      });
-      setIsLoading(false);
-      
-      // Optionally redirect after successful upload
-      setTimeout(() => {
-        navigate('/');
-      }, 2000);
-    }, 1500);
-  };
+      navigate('/dashboard'); // go to dashboard home
+    }, 800);
+
+  } catch (err) {
+    setMessage({ type: 'error', text: 'Network error. Please try again.' });
+  } finally {
+    setIsLoading(false);
+  }
+};
+
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -162,7 +198,7 @@ export default function IcsUpload() {
               )}
             </Button>
             <Button
-              onClick={() => navigate('/')}
+              onClick={() => navigate('/dashboard')}
               variant="outline"
               className="border-ucr-blue text-ucr-blue hover:bg-ucr-blue/10 font-semibold"
               disabled={isLoading}

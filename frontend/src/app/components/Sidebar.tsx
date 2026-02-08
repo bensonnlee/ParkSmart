@@ -13,24 +13,20 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const location = useLocation();
 
   // --- DYNAMIC DATA LOGIC START ---
-  const [userName, setUserName] = useState("Alex Wilson");
+  const [userName, setUserName] = useState("User");
 
-  useEffect(() => {
-    // Check for a saved name when the sidebar opens
-    const savedName = localStorage.getItem('userName');
-    if (savedName) {
-      setUserName(savedName);
-    }
+useEffect(() => {
+  const storedUser = localStorage.getItem("user");
+  const user = storedUser ? JSON.parse(storedUser) : null;
 
-    // Listen for changes if the user updates their name in Settings
-    const handleStorageChange = () => {
-      const updatedName = localStorage.getItem('userName');
-      if (updatedName) setUserName(updatedName);
-    };
+  const name =
+    user?.display_name ||
+    user?.name ||
+    user?.email?.split("@")?.[0] ||
+    "User";
 
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, [isOpen]); // Re-check whenever the sidebar is opened
+  setUserName(name);
+}, [isOpen]);
 
   // Generate initials (Alex Wilson -> AW)
   const initials = userName
