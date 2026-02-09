@@ -74,10 +74,6 @@ const studentId = user?.student_id || user?.sid || user?.id || "—";
                 <Input value={displayName} className="mt-1" readOnly />
               </div>
               <div>
-                <Label className="text-sm text-gray-600">Student ID</Label>
-                <Input value={String(studentId)} className="mt-1" readOnly />
-              </div>
-              <div>
                 <Label className="text-sm text-gray-600">Email Address</Label>
                 <Input value={email} className="mt-1" readOnly />
               </div>

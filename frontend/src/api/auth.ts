@@ -1,4 +1,3 @@
-// frontend/src/api/auth.ts
 export async function login(email: string, password: string) {
   const response = await fetch(
     "https://parksmart-api.onrender.com/api/auth/login",
