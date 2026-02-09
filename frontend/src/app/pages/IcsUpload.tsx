@@ -25,64 +25,88 @@ export default function IcsUpload() {
   };
 
   const handleUpload = async () => {
-  if (!selectedFile) {
-    setMessage({ type: 'error', text: 'Please select a file first.' });
-    return;
-  }
-
-  const token = localStorage.getItem("token");
-  if (!token) {
-    setMessage({ type: 'error', text: 'You are not logged in. Please log in again.' });
-    navigate('/welcome');
-    return;
-  }
-
-  setIsLoading(true);
-  setMessage(null);
-
-  try {
-    const form = new FormData();
-    form.append("file", selectedFile); // Swagger expects "file"
-
-    const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/schedules/upload`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        // DO NOT set Content-Type when using FormData
-      },
-      body: form,
-    });
-
-    const data = await res.json().catch(() => ({}));
-
-    if (!res.ok) {
-      setMessage({ type: 'error', text: data.detail || 'Upload failed.' });
+    if (!selectedFile) {
+      setMessage({ type: 'error', text: 'Please select a file first.' });
       return;
     }
 
-    // Optional: store schedule response locally too (good for fast UI)
-    const storedUser = localStorage.getItem("user");
-    const user = storedUser ? JSON.parse(storedUser) : null;
-    const uid = user?.id || user?.user_id || user?.supabase_id;
-    const scheduleKey = uid ? `schedule:${uid}` : "schedule:guest";
-    localStorage.setItem(scheduleKey, JSON.stringify(data.events ?? data));
+    // Getting the token you saved in Welcome.tsx
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setMessage({ type: 'error', text: 'You are not logged in. Redirecting...' });
+      setTimeout(() => navigate('/welcome'), 2000);
+      return;
+    }
 
-    setMessage({
-      type: 'success',
-      text: `File "${selectedFile.name}" uploaded successfully! Your schedule has been imported.`
-    });
+    setIsLoading(true);
+    setMessage(null);
 
-    setTimeout(() => {
-      navigate('/dashboard'); // go to dashboard home
-    }, 800);
+    try {
+      const form = new FormData();
+      // "file" matches the Request Body requirement in your Swagger screenshot
+      form.append("file", selectedFile); 
 
-  } catch (err) {
-    setMessage({ type: 'error', text: 'Network error. Please try again.' });
-  } finally {
-    setIsLoading(false);
-  }
-};
+      const baseUrl = import.meta.env.VITE_API_BASE_URL;
+      if (!baseUrl) {
+        throw new Error("VITE_API_BASE_URL is not defined in your .env file.");
+      }
 
+      // Exact path verified from your Swagger screenshot
+      const targetUrl = `${baseUrl}/api/schedules/upload`;
+      
+      console.log("Uploading to:", targetUrl);
+
+      const res = await fetch(targetUrl, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Accept": "application/json",
+          // Note: Browser automatically handles Content-Type for FormData
+        },
+        body: form,
+      });
+
+      // Safely parse JSON or handle plain text errors
+      const contentType = res.headers.get("content-type");
+      let data;
+      if (contentType && contentType.includes("application/json")) {
+        data = await res.json();
+      } else {
+        const textError = await res.text();
+        data = { detail: textError || `Error ${res.status}: ${res.statusText}` };
+      }
+
+      if (!res.ok) {
+        // This will display "Missing authentication token" or other API errors
+        setMessage({ 
+          type: 'error', 
+          text: typeof data.detail === 'string' ? data.detail : 'Upload failed. Please check your file format.' 
+        });
+        return;
+      }
+
+      // Success logic: Update local storage so dashboard can reflect changes
+      const storedUser = localStorage.getItem("user");
+      const user = storedUser ? JSON.parse(storedUser) : null;
+      const uid = user?.id || user?.user_id || "guest";
+      localStorage.setItem(`schedule:${uid}`, JSON.stringify(data.events || data));
+
+      setMessage({
+        type: 'success',
+        text: `File "${selectedFile.name}" uploaded successfully! Redirecting to dashboard...`
+      });
+
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 1500);
+
+    } catch (err: any) {
+      console.error("Upload process error:", err);
+      setMessage({ type: 'error', text: err.message || 'Network error. Is the server running?' });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -112,11 +136,10 @@ export default function IcsUpload() {
             Upload Calendar
           </CardTitle>
           <CardDescription className="text-center text-gray-600 px-2 sm:px-4">
-            Import your class schedule to receive parking recommendations based on your class times
+            Import your class schedule to receive parking recommendations
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* File Drop Zone */}
           <div
             onDrop={handleDrop}
             onDragOver={handleDragOver}
@@ -140,14 +163,13 @@ export default function IcsUpload() {
                     Click to upload or drag and drop
                   </p>
                   <p className="text-xs sm:text-sm text-gray-600">
-                    .ics calendar file (from Google Calendar, Outlook, Apple Calendar, etc.)
+                    .ics calendar file from R'Web or Google Calendar
                   </p>
                 </div>
               </div>
             </label>
           </div>
 
-          {/* Selected File Info */}
           {selectedFile && (
             <Card className="border-ucr-gold/30 bg-yellow-50">
               <CardContent className="p-4">
@@ -164,7 +186,6 @@ export default function IcsUpload() {
             </Card>
           )}
 
-          {/* Feedback Messages */}
           {message && (
             <Alert className={message.type === 'success' ? 'border-green-500 bg-green-50' : 'border-red-500 bg-red-50'}>
               {message.type === 'success' ? (
@@ -178,7 +199,6 @@ export default function IcsUpload() {
             </Alert>
           )}
 
-          {/* Upload Button */}
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
             <Button
               onClick={handleUpload}
@@ -205,21 +225,6 @@ export default function IcsUpload() {
             >
               Cancel
             </Button>
-          </div>
-
-          {/* Why upload section */}
-          <div className="bg-blue-50 border border-ucr-blue/20 rounded-lg p-4">
-            <h4 className="font-semibold text-ucr-blue mb-2 text-sm sm:text-base">Why upload your calendar?</h4>
-            <p className="text-xs sm:text-sm text-gray-700 mb-3">
-              Your uploaded schedule will be associated with your account, allowing us to automatically recommend 
-              the best parking lots based on your class times and locations. Only you can access your schedule data.
-            </p>
-            <h4 className="font-semibold text-ucr-blue mb-2 text-sm sm:text-base">How to get your .ics file:</h4>
-            <ul className="text-xs sm:text-sm text-gray-700 space-y-1 list-disc list-inside">
-              <li><strong>Google Calendar:</strong> Settings → Export calendar</li>
-              <li><strong>Outlook:</strong> File → Save Calendar → iCalendar Format (.ics)</li>
-              <li><strong>Apple Calendar:</strong> File → Export → Export</li>
-            </ul>
           </div>
         </CardContent>
       </Card>
