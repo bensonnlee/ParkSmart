@@ -1,234 +1,221 @@
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router';
 import { Button } from '@/app/components/ui/button';
 import { Card, CardContent } from '@/app/components/ui/card';
-import { 
-  Upload, Globe, Info, Calendar, MapPin, 
-  ParkingCircle, ChevronLeft, ChevronRight 
-} from 'lucide-react';
-import { toast } from 'sonner';
+import { Calendar, MapPin, Info, Upload, Settings, ChevronLeft } from 'lucide-react';
+import { format, startOfWeek, addDays } from 'date-fns';
 
-interface ScheduleClass {
+// Define the API structure
+interface ApiEvent {
   id: string;
-  day: 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday';
-  courseName: string;
-  location: string;
-  startTime: string;
-  recommendedLeaveTime: string;
-  targetLot: string;
-  availability: number;
-  status: 'OPTIMAL PLAN' | 'BUSY MORNING' | 'PEAK HOURS' | 'LOW TRAFFIC';
+  event_name: string;
+  classroom_id: string;
+  start_time: string;
+  end_time: string;
+  days_of_week: number[]; // 0 = Monday, 1 = Tuesday, etc.
 }
 
 export default function SchedulePlanner() {
-  const [scheduleUploaded, setScheduleUploaded] = useState(false);
+  const navigate = useNavigate();
+  const [events, setEvents] = useState<ApiEvent[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  // State to track selected day: 0 = Monday, 1 = Tuesday... 6 = Sunday
+  const [selectedDayIdx, setSelectedDayIdx] = useState(new Date().getDay() === 0 ? 6 : new Date().getDay() - 1);
 
-  // Define mockSchedule FIRST so it is available for the calendar grid
-  const mockSchedule: ScheduleClass[] = [
-    {
-      id: '1',
-      day: 'Monday',
-      courseName: 'CS 100 - Software Construction',
-      location: 'Olmsted Hall 2',
-      startTime: '10:00 AM',
-      recommendedLeaveTime: '9:32 AM',
-      targetLot: 'Lot 13',
-      availability: 92,
-      status: 'OPTIMAL PLAN'
-    },
-    {
-      id: '2',
-      day: 'Tuesday',
-      courseName: 'PSYC 002 - Intro Psychology',
-      location: 'UNLH 1000',
-      startTime: '8:30 AM',
-      recommendedLeaveTime: '7:55 AM',
-      targetLot: 'Big Springs 2',
-      availability: 65,
-      status: 'BUSY MORNING'
-    },
-    {
-      id: '3',
-      day: 'Wednesday',
-      courseName: 'CS 100 - Software Construction',
-      location: 'Olmsted Hall 2',
-      startTime: '10:00 AM',
-      recommendedLeaveTime: '9:32 AM',
-      targetLot: 'Lot 13',
-      availability: 92,
-      status: 'OPTIMAL PLAN'
-    },
-    {
-      id: '4',
-      day: 'Thursday',
-      courseName: 'MATH 009A - Calculus',
-      location: 'Skye Hall 268',
-      startTime: '2:00 PM',
-      recommendedLeaveTime: '1:35 PM',
-      targetLot: 'Lot 30',
-      availability: 78,
-      status: 'LOW TRAFFIC'
-    },
-    {
-      id: '5',
-      day: 'Friday',
-      courseName: 'ENGL 001A - English Composition',
-      location: 'Humanities 1500',
-      startTime: '11:00 AM',
-      recommendedLeaveTime: '10:28 AM',
-      targetLot: 'Lot 6',
-      availability: 55,
-      status: 'PEAK HOURS'
-    }
-  ];
+  useEffect(() => {
+    const fetchSchedule = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setLoading(false);
+        return;
+      }
 
-  // Helper function to calculate the dynamic date range
-  const getWeekData = () => {
-    const now = new Date();
-    const dayOfWeek = now.getDay(); 
-    
-    const monday = new Date(now);
-    const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-    monday.setDate(now.getDate() + diffToMonday);
+      try {
+        const response = await fetch('https://parksmart-api.onrender.com/api/schedules/me', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setEvents(data.events || []);
+        }
+      } catch (err) {
+        console.error("Fetch error:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchSchedule();
+  }, []);
 
-    const weekDates = [];
-    for (let i = 0; i < 7; i++) {
-      const day = new Date(monday);
-      day.setDate(monday.getDate() + i);
-      weekDates.push(day.getDate());
-    }
+  const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
-    const friday = new Date(monday);
-    friday.setDate(monday.getDate() + 4);
+  const allWeeklyClasses = useMemo(() => {
+    const result: any[] = [];
+    events.forEach(event => {
+      event.days_of_week.forEach((dayIdx: number) => {
+        result.push({
+          ...event,
+          dayName: dayNames[dayIdx],
+          dayIdx: dayIdx,
+          shortTime: event.start_time.slice(0, 5) 
+        });
+      });
+    });
+    return result.sort((a, b) => a.start_time.localeCompare(b.start_time));
+  }, [events]);
 
-    const options: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' };
-    const rangeString = `${monday.toLocaleDateString('en-US', options)} - ${friday.toLocaleDateString('en-US', options)}`;
+  const classesForSelectedDay = useMemo(() => {
+    return allWeeklyClasses.filter(c => c.dayIdx === selectedDayIdx);
+  }, [allWeeklyClasses, selectedDayIdx]);
 
-    return { weekDates, rangeString };
-  };
+  const { weekDates, rangeString } = useMemo(() => {
+    const start = startOfWeek(new Date(), { weekStartsOn: 1 });
+    const dates = Array.from({ length: 7 }, (_, i) => addDays(start, i).getDate());
+    const range = `${format(start, 'MMM d')} - ${format(addDays(start, 6), 'MMM d')}`;
+    return { weekDates: dates, rangeString: range };
+  }, []);
 
-  const { weekDates, rangeString } = getWeekData();
-  const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const weekDaysLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'OPTIMAL PLAN': return 'bg-green-100 text-green-700';
-      case 'BUSY MORNING': return 'bg-yellow-100 text-yellow-700';
-      case 'PEAK HOURS': return 'bg-orange-100 text-orange-700';
-      case 'LOW TRAFFIC': return 'bg-blue-100 text-blue-700';
-      default: return 'bg-gray-100 text-gray-700';
-    }
-  };
+  if (loading) return <div className="p-10 text-center font-bold text-ucr-blue">Loading Your Plan...</div>;
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-ucr-blue mb-2 uppercase tracking-tight">Parking Planner</h1>
-          <p className="text-gray-600">Your personalized commute schedule based on R'Web data.</p>
-        </div>
-
-        <div className="grid lg:grid-cols-3 gap-6">
-          {/* Import Column */}
-          <div className="lg:col-span-1">
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <Calendar className="size-5 text-ucr-blue" />
-                  <h2 className="font-semibold text-lg">Import Schedule</h2>
-                </div>
-                
-                <div className="border-2 border-dashed border-ucr-gold rounded-lg p-8 text-center bg-amber-50 mb-4">
-                  <Upload className="size-6 text-ucr-blue mx-auto mb-3" />
-                  <p className="text-sm font-medium">Drop PDF here</p>
-                  <input type="file" className="hidden" id="pdf-upload" onChange={() => setScheduleUploaded(true)} />
-                  <label htmlFor="pdf-upload" className="mt-3 block">
-                    <Button variant="outline" size="sm" asChild>
-                      <span>Browse Files</span>
-                    </Button>
-                  </label>
-                </div>
-
-                <Button onClick={() => setScheduleUploaded(true)} className="w-full bg-ucr-blue">
-                  <Globe className="size-4 mr-2" />
-                  Connect R'Web Portal
-                </Button>
-              </CardContent>
-            </Card>
+    <div className="min-h-screen bg-[#F6F8FB] pb-20 px-4 pt-8">
+      <div className="max-w-4xl mx-auto">
+        
+        {/* TOP NAVIGATION & ACTIONS */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+          <div className="flex items-center gap-3">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => navigate('/dashboard')}
+              className="hover:bg-gray-200"
+            >
+              <ChevronLeft className="size-5" />
+            </Button>
+            <div>
+              <h1 className="text-2xl font-black text-gray-900 tracking-tight uppercase">Weekly Plan</h1>
+              <p className="text-gray-500 text-xs font-medium italic">Optimized parking based on your schedule</p>
+            </div>
           </div>
 
-          {/* Schedule Column */}
-          <div className="lg:col-span-2">
-            <Card className="overflow-hidden">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="font-bold text-xl flex items-center gap-2">
-                    <Calendar className="size-5 text-ucr-gold" />
-                    Weekly Predictions
-                  </h2>
-                  <span className="text-sm font-semibold text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
-                    {rangeString}
-                  </span>
+          <div className="flex items-center gap-2">
+            {/* THE NEW UPDATE BUTTON */}
+            <Button 
+              onClick={() => navigate('/dashboard/upload')}
+              variant="outline"
+              className="bg-white border-gray-200 text-gray-600 hover:text-ucr-blue hover:border-ucr-blue shadow-sm transition-all"
+            >
+              <Upload className="size-4 mr-2" />
+              <span className="font-bold text-xs uppercase tracking-tight">Update ICS</span>
+            </Button>
+            
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={() => navigate('/dashboard/settings')}
+              className="text-gray-400 hover:text-gray-600"
+            >
+              <Settings className="size-5" />
+            </Button>
+          </div>
+        </div>
+
+        <Card className="shadow-xl border-none rounded-3xl overflow-hidden bg-white">
+          <CardContent className="p-0">
+            {/* HEADER BANNER */}
+            <div className="bg-ucr-blue p-6 text-white flex justify-between items-center">
+              <div>
+                <p className="text-blue-100 text-[10px] font-black uppercase tracking-[0.2em] mb-1">Current Range</p>
+                <h2 className="text-xl font-bold">{rangeString}</h2>
+              </div>
+              <Calendar className="size-8 text-blue-300 opacity-50" />
+            </div>
+
+            <div className="p-6">
+              {/* DATE SELECTOR */}
+              <div className="grid grid-cols-7 gap-2 mb-10">
+                {weekDaysLabels.map((day, i) => {
+                  const isSelected = selectedDayIdx === i;
+                  const hasClasses = allWeeklyClasses.some(c => c.dayIdx === i);
+                  return (
+                    <button
+                      key={day}
+                      onClick={() => setSelectedDayIdx(i)}
+                      className={`relative flex flex-col items-center p-3 rounded-2xl transition-all border-2 ${
+                        isSelected 
+                        ? 'border-ucr-blue bg-blue-50 shadow-md transform scale-105' 
+                        : 'border-transparent bg-gray-50 hover:bg-gray-100'
+                      }`}
+                    >
+                      <span className={`text-[10px] font-black uppercase mb-1 ${isSelected ? 'text-ucr-blue' : 'text-gray-400'}`}>
+                        {day}
+                      </span>
+                      <span className={`text-xl font-black ${isSelected ? 'text-ucr-blue' : 'text-gray-900'}`}>
+                        {weekDates[i]}
+                      </span>
+                      {hasClasses && (
+                        <div className={`absolute -top-1 -right-1 size-3 rounded-full border-2 border-white ${isSelected ? 'bg-ucr-gold' : 'bg-gray-300'}`} />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+                  
+              {/* CLASS LIST */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 mb-2">
+                    <div className="h-px bg-gray-200 flex-1" />
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-2">
+                        {dayNames[selectedDayIdx]} Events
+                    </span>
+                    <div className="h-px bg-gray-200 flex-1" />
                 </div>
 
-                {!scheduleUploaded ? (
-                  <div className="text-center py-20 text-gray-400 border-2 border-dotted rounded-xl">
-                    <Info className="size-10 mx-auto mb-4 opacity-20" />
-                    <p>Sync your portal to see lot predictions</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {mockSchedule.map((item) => (
-                      <div key={item.id} className="border rounded-xl p-4 flex items-center justify-between hover:shadow-md transition-shadow">
+                {classesForSelectedDay.length > 0 ? (
+                  classesForSelectedDay.map((item) => (
+                    <div key={item.id} className="group flex items-center justify-between p-5 border border-gray-100 rounded-2xl bg-white hover:border-ucr-blue hover:shadow-lg transition-all cursor-pointer">
+                      <div className="flex gap-4 items-center">
+                        <div className="bg-gray-50 text-gray-400 group-hover:bg-blue-50 group-hover:text-ucr-blue p-3 rounded-xl transition-colors font-black text-xs">
+                            {item.shortTime}
+                        </div>
                         <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="font-bold text-ucr-blue">{item.day}</span>
-                            <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${getStatusColor(item.status)}`}>
-                              {item.status}
+                          <h3 className="font-bold text-gray-900 text-lg group-hover:text-ucr-blue transition-colors">
+                            {item.event_name}
+                          </h3>
+                          <div className="flex items-center gap-3 text-[11px] text-gray-500 font-medium mt-1">
+                            <span className="flex items-center gap-1"><MapPin className="size-3" />Room {item.classroom_id.slice(0,4)}</span>
+                            <span className="flex items-center gap-1 bg-green-50 text-green-600 px-2 py-0.5 rounded-full font-bold">
                             </span>
                           </div>
-                          <p className="font-semibold text-gray-800">{item.courseName}</p>
-                          <div className="flex items-center gap-3 mt-2 text-xs text-gray-500">
-                            <span className="flex items-center gap-1"><MapPin className="size-3" />{item.location}</span>
-                            <span className="flex items-center gap-1"><ParkingCircle className="size-3 text-ucr-gold" />{item.targetLot}</span>
-                          </div>
-                        </div>
-                        <div className="text-right bg-ucr-blue text-white px-4 py-2 rounded-lg">
-                          <p className="text-[10px] opacity-80 uppercase">Leave By</p>
-                          <p className="text-xl font-black">{item.recommendedLeaveTime}</p>
                         </div>
                       </div>
-                    ))}
-
-                    {/* Dynamic Calendar Grid */}
-                    <div className="mt-8 pt-6 border-t">
-                      <div className="flex items-center justify-between mb-4">
-                        <h3 className="font-bold text-gray-900">Overview</h3>
-                        <div className="flex gap-1">
-                          <Button variant="ghost" size="icon" className="size-8"><ChevronLeft /></Button>
-                          <Button variant="ghost" size="icon" className="size-8"><ChevronRight /></Button>
+                      <div className="text-right">
+                        <div className="bg-blue-50/50 px-4 py-2 rounded-xl border border-blue-100">
+                          <p className="text-[8px] text-ucr-blue font-black uppercase tracking-widest mb-1">Recommended</p>
+                          <p className="font-black text-gray-900">LOT 30</p>
                         </div>
-                      </div>
-                      <div className="grid grid-cols-7 gap-2">
-                        {weekDays.map((day, i) => (
-                          <div key={day} className="text-center">
-                            <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">{day}</p>
-                            <div className="border rounded-lg py-2 bg-white">
-                              <p className="text-sm font-black">{weekDates[i]}</p>
-                              {/* Error Fix: 'c' now has a type from the mockSchedule map */}
-                              {mockSchedule.some(c => c.day.startsWith(day)) && (
-                                <div className="size-1.5 bg-ucr-gold rounded-full mx-auto mt-1" />
-                              )}
-                            </div>
-                          </div>
-                        ))}
                       </div>
                     </div>
+                  ))
+                ) : (
+                  <div className="text-center py-20 bg-gray-50/50 border-2 border-dashed border-gray-200 rounded-3xl">
+                    <Info className="size-12 mx-auto mb-4 text-gray-300" />
+                    <p className="text-gray-400 font-bold uppercase text-xs tracking-widest">No classes scheduled</p>
+                    <p className="text-gray-300 text-[10px] mt-1">Enjoy your day off!</p>
                   </div>
                 )}
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* FOOTER TIP */}
+        <p className="mt-8 text-center text-gray-400 text-xs font-medium">
+            Pro Tip: Parking Lot 30 fills up fastest between 10:00 AM and 1:00 PM.
+        </p>
       </div>
     </div>
   );
