@@ -4,6 +4,7 @@ import math
 
 # https://www.movable-type.co.uk/scripts/latlong.html
 
+
 def haversine_distance(lat1: float, long1: float, lat2: float, long2: float) -> float:
     lat1 = math.radians(lat1)
     long1 = math.radians(long1)
