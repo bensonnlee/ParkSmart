@@ -1,0 +1,576 @@
+import { ParkingLot, CampusLocation } from './ucr-types';
+
+// UCR Parking Lots data based on the provided image
+export const ucrParkingLots: ParkingLot[] = [
+  {
+    id: 'big-springs-1',
+    name: 'Big Springs 1',
+    address: '400 Big Springs Road',
+    openSpaces: 230,
+    totalSpaces: 400,
+    occupancyRate: 53,
+    coordinates: { lat: 33.9737, lng: -117.3281 },
+    permitTypes: ['Student', 'Staff'],
+  },
+  {
+    id: 'big-springs-2',
+    name: 'Big Springs 2',
+    address: '400 Big Springs Road',
+    openSpaces: 0,
+    totalSpaces: 0,
+    occupancyRate: 0,
+    coordinates: { lat: 33.9745, lng: -117.3275 },
+    permitTypes: ['Student', 'Staff'],
+  },
+  {
+    id: 'big-springs-ev',
+    name: 'Big Springs [EV Charging]',
+    address: 'Big Springs Housing',
+    openSpaces: 45,
+    totalSpaces: 60,
+    occupancyRate: 25,
+    coordinates: { lat: 33.9742, lng: -117.3278 },
+    permitTypes: ['Housing'],
+    hasEVCharging: true,
+  },
+  {
+    id: 'lot-1',
+    name: 'Lot 1 [EV Charging]',
+    address: 'Campus Drive',
+    openSpaces: 128,
+    totalSpaces: 180,
+    occupancyRate: 29,
+    coordinates: { lat: 33.9748, lng: -117.3255 },
+    permitTypes: ['Blue'],
+    hasEVCharging: true,
+  },
+  {
+    id: 'lot-3',
+    name: 'Lot 3',
+    address: 'West Campus Drive',
+    openSpaces: 92,
+    totalSpaces: 145,
+    occupancyRate: 37,
+    coordinates: { lat: 33.9755, lng: -117.3292 },
+    permitTypes: ['Red'],
+  },
+  {
+    id: 'lot-5',
+    name: 'Lot 5',
+    address: 'University Avenue',
+    openSpaces: 118,
+    totalSpaces: 165,
+    occupancyRate: 28,
+    coordinates: { lat: 33.9761, lng: -117.3267 },
+    permitTypes: ['Blue'],
+  },
+  {
+    id: 'lot-6',
+    name: 'Lot 6 [EV Charging]',
+    address: 'Lot 6',
+    openSpaces: 341,
+    totalSpaces: 487,
+    occupancyRate: 12,
+    coordinates: { lat: 33.9751, lng: -117.3253 },
+    permitTypes: ['Blue'],
+    hasEVCharging: true,
+  },
+  {
+    id: 'lot-7',
+    name: 'Lot 7',
+    address: 'East Campus Drive',
+    openSpaces: 76,
+    totalSpaces: 120,
+    occupancyRate: 37,
+    coordinates: { lat: 33.9744, lng: -117.3241 },
+    permitTypes: ['Red'],
+  },
+  {
+    id: 'lot-9',
+    name: 'Lot 9 [EV Charging]',
+    address: 'University Avenue',
+    openSpaces: 145,
+    totalSpaces: 200,
+    occupancyRate: 28,
+    coordinates: { lat: 33.9758, lng: -117.3275 },
+    permitTypes: ['Blue'],
+    hasEVCharging: true,
+  },
+  {
+    id: 'lot-10',
+    name: 'Lot 10',
+    address: 'Canyon Crest Drive',
+    openSpaces: 67,
+    totalSpaces: 95,
+    occupancyRate: 29,
+    coordinates: { lat: 33.9721, lng: -117.3258 },
+    permitTypes: ['Red'],
+  },
+  {
+    id: 'lot-11',
+    name: 'Lot 11',
+    address: 'Blaine Street',
+    openSpaces: 88,
+    totalSpaces: 130,
+    occupancyRate: 32,
+    coordinates: { lat: 33.9735, lng: -117.3249 },
+    permitTypes: ['Red'],
+  },
+  {
+    id: 'lot-12',
+    name: 'Lot 12',
+    address: 'University Avenue',
+    openSpaces: 54,
+    totalSpaces: 85,
+    occupancyRate: 36,
+    coordinates: { lat: 33.9749, lng: -117.3264 },
+    permitTypes: ['Red'],
+  },
+  {
+    id: 'lot-13',
+    name: 'Lot 13',
+    address: 'Aberdeen Drive',
+    openSpaces: 112,
+    totalSpaces: 155,
+    occupancyRate: 28,
+    coordinates: { lat: 33.9768, lng: -117.3251 },
+    permitTypes: ['Blue'],
+  },
+  {
+    id: 'lot-14',
+    name: 'Lot 14',
+    address: 'West Campus Drive',
+    openSpaces: 32,
+    totalSpaces: 45,
+    occupancyRate: 29,
+    coordinates: { lat: 33.9772, lng: -117.3286 },
+    permitTypes: ['Visitor'],
+  },
+  {
+    id: 'lot-15',
+    name: 'Lot 15 [EV Charging]',
+    address: 'Parking Services',
+    openSpaces: 78,
+    totalSpaces: 110,
+    occupancyRate: 29,
+    coordinates: { lat: 33.9757, lng: -117.3298 },
+    permitTypes: ['Red'],
+    hasEVCharging: true,
+  },
+  {
+    id: 'lot-16',
+    name: 'Lot 16',
+    address: 'Canyon Crest Drive',
+    openSpaces: 89,
+    totalSpaces: 125,
+    occupancyRate: 29,
+    coordinates: { lat: 33.9695, lng: -117.3223 },
+    permitTypes: ['Housing'],
+  },
+  {
+    id: 'lot-18',
+    name: 'Lot 18',
+    address: 'East Campus Drive',
+    openSpaces: 104,
+    totalSpaces: 140,
+    occupancyRate: 26,
+    coordinates: { lat: 33.9712, lng: -117.3197 },
+    permitTypes: ['Housing'],
+  },
+  {
+    id: 'lot-19',
+    name: 'Lot 19',
+    address: 'West Campus Drive',
+    openSpaces: 71,
+    totalSpaces: 100,
+    occupancyRate: 29,
+    coordinates: { lat: 33.9781, lng: -117.3279 },
+    permitTypes: ['Red'],
+  },
+  {
+    id: 'lot-20',
+    name: 'Lot 20 [EV Charging]',
+    address: 'Glen Mor Housing',
+    openSpaces: 156,
+    totalSpaces: 210,
+    occupancyRate: 26,
+    coordinates: { lat: 33.9702, lng: -117.3205 },
+    permitTypes: ['Housing'],
+    hasEVCharging: true,
+  },
+  {
+    id: 'lot-21',
+    name: 'Lot 21',
+    address: 'Aberdeen Drive',
+    openSpaces: 118,
+    totalSpaces: 165,
+    occupancyRate: 28,
+    coordinates: { lat: 33.9785, lng: -117.3218 },
+    permitTypes: ['Housing'],
+  },
+  {
+    id: 'lot-23',
+    name: 'Lot 23',
+    address: 'Canyon Crest Drive',
+    openSpaces: 142,
+    totalSpaces: 195,
+    occupancyRate: 27,
+    coordinates: { lat: 33.9706, lng: -117.3215 },
+    permitTypes: ['Blue'],
+  },
+  {
+    id: 'lot-24',
+    name: 'Lot 24 [EV Charging]',
+    address: 'Canyon Crest Drive',
+    openSpaces: 266,
+    totalSpaces: 496,
+    occupancyRate: 55,
+    coordinates: { lat: 33.9698, lng: -117.3211 },
+    permitTypes: ['Blue'],
+    hasEVCharging: true,
+  },
+  {
+    id: 'lot-25',
+    name: 'Lot 25',
+    address: 'Martin Luther King Blvd',
+    openSpaces: 187,
+    totalSpaces: 245,
+    occupancyRate: 24,
+    coordinates: { lat: 33.9791, lng: -117.3205 },
+    permitTypes: ['Gold'],
+  },
+  {
+    id: 'lot-26',
+    name: 'Lot 26',
+    address: 'Rustin Avenue',
+    openSpaces: 400,
+    totalSpaces: 636,
+    occupancyRate: 0,
+    coordinates: { lat: 33.9812, lng: -117.3198 },
+    permitTypes: ['Gold', 'Visitor'],
+  },
+  {
+    id: 'lot-28',
+    name: 'Lot 28',
+    address: 'University Avenue',
+    openSpaces: 28,
+    totalSpaces: 40,
+    occupancyRate: 30,
+    coordinates: { lat: 33.9745, lng: -117.3287 },
+    permitTypes: ['Visitor'],
+  },
+  {
+    id: 'lot-29',
+    name: 'Lot 29',
+    address: 'Big Springs Road',
+    openSpaces: 35,
+    totalSpaces: 50,
+    occupancyRate: 30,
+    coordinates: { lat: 33.9738, lng: -117.3294 },
+    permitTypes: ['Visitor'],
+  },
+  {
+    id: 'lot-30',
+    name: 'Lot 30 [EV Charging]',
+    address: 'Lot 30',
+    openSpaces: 1842,
+    totalSpaces: 2143,
+    occupancyRate: 16,
+    coordinates: { lat: 33.9689, lng: -117.3289 },
+    permitTypes: ['Gold', 'Visitor'],
+    hasEVCharging: true,
+  },
+  {
+    id: 'lot-31',
+    name: 'Lot 31',
+    address: 'University Avenue',
+    openSpaces: 98,
+    totalSpaces: 135,
+    occupancyRate: 27,
+    coordinates: { lat: 33.9677, lng: -117.3276 },
+    permitTypes: ['Blue'],
+  },
+  {
+    id: 'lot-32',
+    name: 'Lot 32',
+    address: 'Lot 32',
+    openSpaces: 245,
+    totalSpaces: 258,
+    occupancyRate: 5,
+    coordinates: { lat: 33.9823, lng: -117.3164 },
+    permitTypes: ['Gold'],
+  },
+  {
+    id: 'lot-41',
+    name: 'Lot 41',
+    address: 'Iowa Avenue',
+    openSpaces: 63,
+    totalSpaces: 90,
+    occupancyRate: 30,
+    coordinates: { lat: 33.9726, lng: -117.3228 },
+    permitTypes: ['Red'],
+  },
+  {
+    id: 'lot-42',
+    name: 'Lot 42',
+    address: 'Campus Drive',
+    openSpaces: 71,
+    totalSpaces: 105,
+    occupancyRate: 32,
+    coordinates: { lat: 33.9718, lng: -117.3245 },
+    permitTypes: ['Red'],
+  },
+  {
+    id: 'lot-43',
+    name: 'Lot 43',
+    address: 'University Avenue',
+    openSpaces: 115,
+    totalSpaces: 160,
+    occupancyRate: 28,
+    coordinates: { lat: 33.9732, lng: -117.3262 },
+    permitTypes: ['Blue'],
+  },
+  {
+    id: 'lot-44',
+    name: 'Lot 44',
+    address: 'West Campus Drive',
+    openSpaces: 58,
+    totalSpaces: 85,
+    occupancyRate: 32,
+    coordinates: { lat: 33.9764, lng: -117.3283 },
+    permitTypes: ['Red'],
+  },
+  {
+    id: 'lot-50',
+    name: 'Lot 50 [EV Charging]',
+    address: 'Everton Place',
+    openSpaces: 354,
+    totalSpaces: 413,
+    occupancyRate: 8,
+    coordinates: { lat: 33.9701, lng: -117.3156 },
+    permitTypes: ['Gold'],
+    hasEVCharging: true,
+  },
+  {
+    id: 'lot-51',
+    name: 'Lot 51',
+    address: 'Everton Place',
+    openSpaces: 289,
+    totalSpaces: 365,
+    occupancyRate: 21,
+    coordinates: { lat: 33.9708, lng: -117.3148 },
+    permitTypes: ['Gold'],
+  },
+  {
+    id: 'lot-60',
+    name: 'Lot 60',
+    address: 'Stadium Road',
+    openSpaces: 176,
+    totalSpaces: 245,
+    occupancyRate: 28,
+    coordinates: { lat: 33.9683, lng: -117.3265 },
+    permitTypes: ['Blue'],
+  },
+];
+
+// UCR Campus Locations
+export const campusLocations: CampusLocation[] = [
+  // Existing locations
+  { id: 'bell-tower', name: 'Bell Tower', category: 'academic', coordinates: { lat: 33.9737, lng: -117.3281 } },
+  { id: 'student-rec-center', name: 'Student Recreation Center (SRC)', category: 'recreation', coordinates: { lat: 33.9745, lng: -117.3289 } },
+  { id: 'rivera-library', name: 'Tomas Rivera Library', category: 'academic', coordinates: { lat: 33.9751, lng: -117.3253 } },
+  { id: 'sproul-hall', name: 'Sproul Hall', category: 'academic', coordinates: { lat: 33.9734, lng: -117.3248 } },
+  { id: 'hub', name: 'HUB (Highlander Union Building)', category: 'dining', coordinates: { lat: 33.9742, lng: -117.3269 } },
+  { id: 'bourns-hall', name: 'Bourns Hall (Engineering)', category: 'academic', coordinates: { lat: 33.9756, lng: -117.3281 } },
+
+  // Dining Locations
+  { id: 'panda-express', name: 'Panda Express', category: 'dining', coordinates: { lat: 33.9743, lng: -117.3270 } },
+  { id: 'chronic-tacos', name: 'Chronic Tacos', category: 'dining', coordinates: { lat: 33.9740, lng: -117.3268 } },
+  { id: 'hibachi-san', name: 'Hibachi-San', category: 'dining', coordinates: { lat: 33.9744, lng: -117.3267 } },
+  { id: 'habit-burger', name: 'The Habit Burger Grill', category: 'dining', coordinates: { lat: 33.9741, lng: -117.3271 } },
+  { id: 'subway', name: 'Subway', category: 'dining', coordinates: { lat: 33.9739, lng: -117.3269 } },
+  { id: 'coffee-bean', name: 'The Coffee Bean & Tea Leaf', category: 'dining', coordinates: { lat: 33.9742, lng: -117.3266 } },
+  { id: 'bytes', name: 'Bytes', category: 'dining', coordinates: { lat: 33.9745, lng: -117.3272 } },
+  { id: 'emerbees', name: 'Emerbees', category: 'dining', coordinates: { lat: 33.9738, lng: -117.3257 } },
+  { id: 'ivans-hinderaker', name: "Ivan's at Hinderaker", category: 'dining', coordinates: { lat: 33.9765, lng: -117.3248 } },
+  { id: 'market-glen-mor', name: 'The Market at Glen Mor', category: 'dining', coordinates: { lat: 33.9699, lng: -117.3212 } },
+  { id: 'starbucks', name: 'Starbucks', category: 'dining', coordinates: { lat: 33.9741, lng: -117.3244 } },
+  { id: 'glasgow-restaurant', name: 'Glasgow Restaurant', category: 'dining', coordinates: { lat: 33.9795, lng: -117.3207 } },
+  { id: 'lothian-restaurant', name: 'Lothian Restaurant', category: 'dining', coordinates: { lat: 33.9813, lng: -117.3199 } },
+  { id: 'the-barn', name: 'The Barn', category: 'dining', coordinates: { lat: 33.9688, lng: -117.3291 } },
+  { id: 'scottys-market', name: "Scotty's Market in HUB", category: 'dining', coordinates: { lat: 33.9743, lng: -117.3268 } },
+  { id: 'scottys-som', name: "Scotty's School of Medicine", category: 'dining', coordinates: { lat: 33.9682, lng: -117.3261 } },
+
+  // Academic & Administrative Buildings
+  { id: 'glasgow-building', name: 'Glasgow', category: 'academic', coordinates: { lat: 33.9796, lng: -117.3208 } },
+  { id: 'olmsted-hall', name: 'Olmsted Hall 1', category: 'academic', coordinates: { lat: 33.9762, lng: -117.3245 } },
+  { id: 'olmsted-hall-2', name: 'Olmsted Hall 2', category: 'academic', coordinates: { lat: 33.9763, lng: -117.3246 } },
+  { id: 'pierce-hall', name: 'Pierce Hall', category: 'academic', coordinates: { lat: 33.9719, lng: -117.3234 } },
+  { id: 'school-business', name: 'School of Business Building', category: 'academic', coordinates: { lat: 33.9740, lng: -117.3242 } },
+  { id: 'student-services', name: 'Student Services', category: 'administrative', coordinates: { lat: 33.9736, lng: -117.3255 } },
+  { id: 'student-success-center', name: 'Student Success Center', category: 'administrative', coordinates: { lat: 33.9747, lng: -117.3254 } },
+  { id: 'ucr-baseball', name: 'UCR Baseball Complex', category: 'recreation', coordinates: { lat: 33.9675, lng: -117.3273 } },
+  { id: 'ucr-extension', name: 'UCR Extension Center', category: 'academic', coordinates: { lat: 33.9752, lng: -117.3290 } },
+  { id: 'unlh-1000', name: 'University Lecture Hall (UNLH 1000)', category: 'academic', coordinates: { lat: 33.9733, lng: -117.3260 } },
+  { id: 'university-office', name: 'University Office Building', category: 'administrative', coordinates: { lat: 33.9739, lng: -117.3252 } },
+  { id: 'university-village', name: 'University Village', category: 'housing', coordinates: { lat: 33.9704, lng: -117.3158 } },
+  { id: 'university-village-theater', name: 'University Village Theater', category: 'recreation', coordinates: { lat: 33.9705, lng: -117.3160 } },
+  { id: 'usda-salinity', name: 'USDA Salinity Laboratory', category: 'academic', coordinates: { lat: 33.9780, lng: -117.3295 } },
+  { id: 'watkins-hall', name: 'Watkins Hall', category: 'academic', coordinates: { lat: 33.9768, lng: -117.3262 } },
+  { id: 'watkins-1000', name: 'Watkins 1000', category: 'academic', coordinates: { lat: 33.9769, lng: -117.3263 } },
+  { id: 'webber-hall', name: 'Webber Hall', category: 'academic', coordinates: { lat: 33.9757, lng: -117.3269 } },
+  { id: 'winston-chung', name: 'Winston Chung Hall', category: 'academic', coordinates: { lat: 33.9748, lng: -117.3287 } },
+  { id: 'chass-south', name: 'CHASS Interdisciplinary South', category: 'academic', coordinates: { lat: 33.9727, lng: -117.3263 } },
+  { id: 'chass-north', name: 'CHASS Interdisciplinary North', category: 'academic', coordinates: { lat: 33.9726, lng: -117.3262 } },
+  { id: 'bookstore', name: 'Bookstore (Campus Store)', category: 'administrative', coordinates: { lat: 33.9744, lng: -117.3265 } },
+  { id: 'aberdeen-inverness', name: 'Aberdeen-Inverness Residence Hall', category: 'housing', coordinates: { lat: 33.9786, lng: -117.3217 } },
+  { id: 'administration-hinderaker', name: 'Administration in Hinderaker Hall', category: 'administrative', coordinates: { lat: 33.9766, lng: -117.3249 } },
+  { id: 'advanced-neuroimaging', name: 'Advanced Neuroimaging', category: 'academic', coordinates: { lat: 33.9684, lng: -117.3263 } },
+  { id: 'agricultural-operations', name: 'Agricultural Operations', category: 'academic', coordinates: { lat: 33.9690, lng: -117.3293 } },
+  { id: 'alumni-visitors-center', name: 'Alumni & Visitors Center', category: 'administrative', coordinates: { lat: 33.9735, lng: -117.3256 } },
+  { id: 'anderson-hall', name: 'Anderson Hall (SoBA, AGSM) 1 & 2', category: 'administrative', coordinates: { lat: 33.9741, lng: -117.3243 } },
+  { id: 'arts-building', name: 'Arts Building', category: 'academic', coordinates: { lat: 33.9730, lng: -117.3268 } },
+  { id: 'arts-113', name: 'Arts 113-Studio Theatre', category: 'academic', coordinates: { lat: 33.9731, lng: -117.3269 } },
+  { id: 'arts-166', name: 'Arts 166-Performance Lab', category: 'academic', coordinates: { lat: 33.9728, lng: -117.3266 } },
+  { id: 'athletics-dance', name: 'Athletics & Dance Building', category: 'recreation', coordinates: { lat: 33.9727, lng: -117.3279 } },
+  { id: 'bannockburn', name: 'Bannockburn Village', category: 'housing', coordinates: { lat: 33.9792, lng: -117.3211 } },
+  { id: 'batchelor-hall', name: 'Batchelor Hall', category: 'academic', coordinates: { lat: 33.9753, lng: -117.3273 } },
+  { id: 'biological-sciences', name: 'Biological Sciences', category: 'academic', coordinates: { lat: 33.9755, lng: -117.3272 } },
+  { id: 'botanic-gardens', name: 'Botanic Gardens', category: 'recreation', coordinates: { lat: 33.9770, lng: -117.3295 } },
+  { id: 'boyce-hall', name: 'Boyce Hall', category: 'academic', coordinates: { lat: 33.9746, lng: -117.3282 } },
+  { id: 'boyden-labs', name: 'Boyden Laboratories', category: 'academic', coordinates: { lat: 33.9759, lng: -117.3278 } },
+  { id: 'campbell-hall', name: 'Campbell Hall', category: 'academic', coordinates: { lat: 33.9750, lng: -117.3268 } },
+  { id: 'campus-tours', name: 'Campus Tours (Student Services)', category: 'administrative', coordinates: { lat: 33.9737, lng: -117.3254 } },
+  { id: 'career-center', name: 'Career Center', category: 'administrative', coordinates: { lat: 33.9746, lng: -117.3255 } },
+  { id: 'chapman-hall', name: 'Chapman Hall', category: 'academic', coordinates: { lat: 33.9722, lng: -117.3252 } },
+  { id: 'chemical-sciences', name: 'Chemical Sciences', category: 'academic', coordinates: { lat: 33.9760, lng: -117.3280 } },
+  { id: 'child-development', name: 'Child Development Center', category: 'administrative', coordinates: { lat: 33.9710, lng: -117.3210 } },
+  { id: 'college-building-north', name: 'College Building North', category: 'academic', coordinates: { lat: 33.9725, lng: -117.3261 } },
+  { id: 'college-building-south', name: 'College Building South', category: 'academic', coordinates: { lat: 33.9724, lng: -117.3260 } },
+  { id: 'computing-communications', name: 'Computing & Communications', category: 'academic', coordinates: { lat: 33.9749, lng: -117.3259 } },
+  { id: 'costo-hall', name: 'Costo Hall', category: 'academic', coordinates: { lat: 33.9723, lng: -117.3275 } },
+  { id: 'cottage', name: 'Cottage', category: 'housing', coordinates: { lat: 33.9800, lng: -117.3215 } },
+  { id: 'dundee', name: 'Dundee', category: 'housing', coordinates: { lat: 33.9798, lng: -117.3212 } },
+  { id: 'east-iq', name: 'East I & Q (Insectary)', category: 'academic', coordinates: { lat: 33.9778, lng: -117.3288 } },
+  { id: 'entomology', name: 'Entomology', category: 'academic', coordinates: { lat: 33.9777, lng: -117.3287 } },
+  { id: 'entomology-museum', name: 'Entomology Museum', category: 'academic', coordinates: { lat: 33.9776, lng: -117.3286 } },
+  { id: 'falkirk', name: 'Falkirk Apts', category: 'housing', coordinates: { lat: 33.9793, lng: -117.3209 } },
+  { id: 'fawcett-lab', name: 'Fawcett Laboratory', category: 'academic', coordinates: { lat: 33.9758, lng: -117.3276 } },
+  { id: 'flagpole', name: 'Flagpole', category: 'administrative', coordinates: { lat: 33.9738, lng: -117.3280 } },
+  { id: 'fleet-services', name: 'Fleet Services Dept.', category: 'administrative', coordinates: { lat: 33.9692, lng: -117.3285 } },
+  { id: 'genomics', name: 'Genomics Building', category: 'academic', coordinates: { lat: 33.9761, lng: -117.3284 } },
+  { id: 'geology', name: 'Geology Building', category: 'academic', coordinates: { lat: 33.9747, lng: -117.3277 } },
+  { id: 'glen-mor', name: 'Glen Mor Residence Hall', category: 'housing', coordinates: { lat: 33.9698, lng: -117.3211 } },
+  { id: 'headhouse', name: 'Headhouse (Greenhouses)', category: 'academic', coordinates: { lat: 33.9775, lng: -117.3289 } },
+  { id: 'student-health', name: 'Student Health Services', category: 'administrative', coordinates: { lat: 33.9750, lng: -117.3257 } },
+  { id: 'herbarium', name: 'Herbarium', category: 'academic', coordinates: { lat: 33.9771, lng: -117.3294 } },
+  { id: 'hinderaker-hall', name: 'Hinderaker Hall', category: 'housing', coordinates: { lat: 33.9764, lng: -117.3247 } },
+  { id: 'housing-admin', name: 'Housing Administration', category: 'administrative', coordinates: { lat: 33.9697, lng: -117.3213 } },
+  { id: 'humanities', name: 'Humanities', category: 'academic', coordinates: { lat: 33.9732, lng: -117.3264 } },
+  { id: 'human-resources', name: 'Human Resources', category: 'administrative', coordinates: { lat: 33.9740, lng: -117.3251 } },
+  { id: 'international-village', name: 'International Village Housing', category: 'housing', coordinates: { lat: 33.9708, lng: -117.3155 } },
+  { id: 'keen-hall', name: 'Keen Hall', category: 'academic', coordinates: { lat: 33.9721, lng: -117.3251 } },
+  { id: 'kucr-radio', name: 'KUCR Radio', category: 'recreation', coordinates: { lat: 33.9743, lng: -117.3259 } },
+  { id: 'life-sciences', name: 'Life Sciences Building', category: 'academic', coordinates: { lat: 33.9754, lng: -117.3271 } },
+  { id: 'life-sciences-1500', name: 'Life Sciences 1500', category: 'academic', coordinates: { lat: 33.9753, lng: -117.3270 } },
+  { id: 'lothian', name: 'Lothian Residence Hall', category: 'housing', coordinates: { lat: 33.9812, lng: -117.3198 } },
+  { id: 'mail-room', name: 'Mail Room', category: 'administrative', coordinates: { lat: 33.9696, lng: -117.3214 } },
+  { id: 'materials-science', name: 'Materials Science & Engineering', category: 'academic', coordinates: { lat: 33.9757, lng: -117.3283 } },
+  { id: 'mrb-1', name: 'Multidisciplinary Research Building 1 (MRB 1)', category: 'academic', coordinates: { lat: 33.9762, lng: -117.3285 } },
+  { id: 'north-district', name: 'North District A & B', category: 'housing', coordinates: { lat: 33.9789, lng: -117.3220 } },
+  { id: 'oban', name: 'Oban Apartments', category: 'housing', coordinates: { lat: 33.9794, lng: -117.3210 } },
+  { id: 'orbach-library', name: 'Orbach Library (Science Library)', category: 'academic', coordinates: { lat: 33.9752, lng: -117.3252 } },
+  { id: 'parking-services', name: 'Parking Services', category: 'administrative', coordinates: { lat: 33.9755, lng: -117.3297 } },
+  { id: 'pentland-hills', name: 'Pentland Hills Residence Hall', category: 'housing', coordinates: { lat: 33.9790, lng: -117.3221 } },
+  { id: 'physics-dept', name: 'Department of Physics and Astronomy', category: 'academic', coordinates: { lat: 33.9763, lng: -117.3274 } },
+  { id: 'physics-2000', name: 'Physics 2000', category: 'academic', coordinates: { lat: 33.9764, lng: -117.3275 } },
+  { id: 'plant-research', name: 'Plant Research 1', category: 'academic', coordinates: { lat: 33.9779, lng: -117.3290 } },
+  { id: 'plaza-apts', name: 'Plaza Apts', category: 'housing', coordinates: { lat: 33.9797, lng: -117.3213 } },
+  { id: 'ucr-police', name: 'UCR Police Department', category: 'administrative', coordinates: { lat: 33.9691, lng: -117.3286 } },
+  { id: 'psychology', name: 'Psychology Building', category: 'academic', coordinates: { lat: 33.9720, lng: -117.3253 } },
+  { id: 'purchasing', name: 'Purchasing Dept.', category: 'administrative', coordinates: { lat: 33.9693, lng: -117.3287 } },
+  { id: 'r-garden', name: 'R Garden', category: 'recreation', coordinates: { lat: 33.9772, lng: -117.3296 } },
+  { id: 'som-education-1', name: 'SOM Education Building 1', category: 'academic', coordinates: { lat: 33.9680, lng: -117.3260 } },
+  { id: 'som-education-2', name: 'SOM Education Building 2', category: 'academic', coordinates: { lat: 33.9681, lng: -117.3262 } },
+  { id: 'student-first-credit', name: 'Student First Credit Union', category: 'administrative', coordinates: { lat: 33.9745, lng: -117.3256 } },
+  { id: 'skye-hall', name: 'Skye Hall', category: 'housing', coordinates: { lat: 33.9799, lng: -117.3214 } },
+  { id: 'science-labs-1', name: 'Science Laboratories 1', category: 'academic', coordinates: { lat: 33.9756, lng: -117.3279 } },
+  { id: 'spieth-hall', name: 'Spieth Hall', category: 'academic', coordinates: { lat: 33.9718, lng: -117.3250 } },
+  { id: 'stonehaven', name: 'Stonehaven Apts', category: 'housing', coordinates: { lat: 33.9791, lng: -117.3219 } },
+  { id: 'ai', name: 'A&I Building', category: 'academic', coordinates: { lat: 33.9689, lng: -117.3289 } },
+];
+
+// Occupancy patterns by hour of day (0-23) - percentage modifier
+const hourlyOccupancyPattern: Record<number, number> = {
+  0: 0.1, 1: 0.05, 2: 0.05, 3: 0.05, 4: 0.05, 5: 0.1,
+  6: 0.2, 7: 0.4, 8: 0.7, 9: 0.9, 10: 0.95, 11: 0.98,
+  12: 0.85, 13: 0.9, 14: 0.95, 15: 0.92, 16: 0.88, 17: 0.75,
+  18: 0.6, 19: 0.4, 20: 0.3, 21: 0.25, 22: 0.2, 23: 0.15,
+};
+
+// Day of week modifier (0 = Sunday, 6 = Saturday)
+const dayOfWeekModifier: Record<number, number> = {
+  0: 0.1, // Sunday
+  1: 1.0, // Monday
+  2: 1.0, // Tuesday
+  3: 1.0, // Wednesday
+  4: 1.0, // Thursday
+  5: 0.7, // Friday
+  6: 0.2, // Saturday
+};
+
+// Predict parking availability for a specific time
+export function predictParkingAvailability(
+  lot: ParkingLot,
+  targetTime: Date
+): { openSpaces: number; totalSpaces: number; occupancyRate: number } {
+  if (lot.totalSpaces === 0) {
+    return { openSpaces: 0, totalSpaces: 0, occupancyRate: 0 };
+  }
+
+  const hour = targetTime.getHours();
+  const dayOfWeek = targetTime.getDay();
+
+  // Get base occupancy pattern
+  const hourlyModifier = hourlyOccupancyPattern[hour] || 0.5;
+  const dayModifier = dayOfWeekModifier[dayOfWeek] || 0.5;
+
+  // Calculate predicted occupancy
+  const baseOccupancyRate = lot.occupancyRate / 100;
+  const predictedOccupancyRate = Math.min(0.98, baseOccupancyRate * hourlyModifier * dayModifier);
+  
+  const occupiedSpaces = Math.round(lot.totalSpaces * predictedOccupancyRate);
+  const openSpaces = lot.totalSpaces - occupiedSpaces;
+
+  return {
+    openSpaces,
+    totalSpaces: lot.totalSpaces,
+    occupancyRate: Math.round(predictedOccupancyRate * 100),
+  };
+}
+
+// Calculate distance between two coordinates using Haversine formula
+export function calculateDistance(
+  lat1: number,
+  lng1: number,
+  lat2: number,
+  lng2: number
+): number {
+  const R = 3959; // Earth's radius in miles
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLng / 2) *
+      Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+// Calculate walking time (assuming 3 mph average walking speed)
+export function calculateWalkingTime(distanceInMiles: number): number {
+  const walkingSpeedMph = 3;
+  return Math.round((distanceInMiles / walkingSpeedMph) * 60);
+}
