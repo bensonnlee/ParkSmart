@@ -5,6 +5,7 @@ import { RadioGroup, RadioGroupItem } from '@/app/components/ui/radio-group';
 import { Label } from '@/app/components/ui/label';
 import { CreditCard, Check } from 'lucide-react';
 import { toast } from 'sonner';
+import { useEffect } from "react";
 
 interface ParkingPass {
   id: string;
@@ -16,7 +17,45 @@ interface ParkingPass {
 
 export default function OnboardingParkingPass() {
   const navigate = useNavigate();
-  const [selectedPass, setSelectedPass] = useState('blue');
+  const storedUser = localStorage.getItem("user");
+  
+  let user: any = null;
+  try {
+    user = storedUser ? JSON.parse(storedUser) : null;
+  } catch {
+    user = null;
+  }
+
+  const uid = user?.id || user?.user_id || user?.supabase_id;
+  const prefsKey = uid ? `prefs:${uid}` : "prefs:guest";
+
+  const [selectedPass, setSelectedPass] = useState("blue");
+
+  useEffect(() => {
+    const raw = localStorage.getItem(prefsKey);
+    if (!raw) return;
+
+    try {
+      const prefs = JSON.parse(raw);
+      if (prefs.parkingPass) setSelectedPass(prefs.parkingPass);
+    } catch {
+      // ignore bad JSON
+    }
+  }, [prefsKey]);
+
+  useEffect(() => {
+    const raw = localStorage.getItem(prefsKey);
+    let prefs: any = {};
+    try {
+      prefs = raw ? JSON.parse(raw) : {};
+    } catch {
+      prefs = {};
+    }
+
+    prefs.parkingPass = selectedPass;
+    localStorage.setItem(prefsKey, JSON.stringify(prefs));
+  }, [prefsKey, selectedPass]);
+
 
   const parkingPasses: ParkingPass[] = [
     {
@@ -57,8 +96,10 @@ export default function OnboardingParkingPass() {
   ];
 
   const handleFinish = () => {
-    toast.success('Setup complete! Welcome to Campus Parking Optimizer');
-    navigate('/dashboard');
+  localStorage.setItem(prefsKey, selectedPass);
+
+  toast.success('Setup complete! Welcome to Campus Parking Optimizer');
+  navigate('/dashboard');
   };
 
   const handleBack = () => {

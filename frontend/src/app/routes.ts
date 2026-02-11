@@ -12,6 +12,7 @@ import SchedulePlanner from '@/app/pages/SchedulePlanner';
 import NotFound from '@/app/pages/NotFound';
 import RedirectToPlanner from '@/app/pages/RedirectToPlanner';
 import SignUp from '@/app/pages/SignUp';
+import ChangePassword from '@/app/pages/ChangePassword';
 
 
 export const router = createBrowserRouter([
@@ -58,6 +59,10 @@ export const router = createBrowserRouter([
       {
         path: 'settings',
         Component: Settings,
+      },
+      {
+        path: 'change-password',
+        Component: ChangePassword,
       },
       {
         path: 'planner',
