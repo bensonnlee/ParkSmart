@@ -7,6 +7,7 @@ import { Input } from '@/app/components/ui/input';
 import { Slider } from '@/app/components/ui/slider';
 import { ArrowLeft, User, CreditCard, Sliders, Calendar, LogOut, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
+import { useEffect } from "react";
 
 export default function Settings() {
   const navigate = useNavigate();
@@ -19,12 +20,46 @@ const displayName =
 const email = user?.email || "—";
 const studentId = user?.student_id || user?.sid || user?.id || "—";
 
+const uid = user?.id || user?.user_id || user?.supabase_id;
+const prefsKey = uid ? `prefs:${uid}` : "prefs:guest";
+
   const [parkingPass, setParkingPass] = useState('blue');
   const [arrivalBuffer, setArrivalBuffer] = useState([10]);
   const [walkingSpeed, setWalkingSpeed] = useState([3]);
 
+  useEffect(() => {
+  const raw = localStorage.getItem(prefsKey);
+  if (!raw) return;
+
+  try {
+    const prefs = JSON.parse(raw);
+
+    if (prefs.parkingPass) setParkingPass(prefs.parkingPass);
+    if (typeof prefs.arrivalBuffer === "number") setArrivalBuffer([prefs.arrivalBuffer]);
+    if (typeof prefs.walkingSpeed === "number") setWalkingSpeed([prefs.walkingSpeed]);
+  } catch {
+    // ignore bad JSON
+  }
+}, [prefsKey]);
+
+useEffect(() => {
+  const prefs = {
+    parkingPass,
+    arrivalBuffer: arrivalBuffer[0],
+    walkingSpeed: walkingSpeed[0],
+  };
+  localStorage.setItem(prefsKey, JSON.stringify(prefs));
+}, [prefsKey, parkingPass, arrivalBuffer, walkingSpeed]);
+
   const handleSaveChanges = () => {
-    toast.success('Settings saved successfully!');
+    const prefs = {
+    parkingPass,
+    arrivalBuffer: arrivalBuffer[0],
+    walkingSpeed: walkingSpeed[0],
+  };
+
+  localStorage.setItem(prefsKey, JSON.stringify(prefs));
+  toast.success("Settings saved successfully!");
   };
 
   const handleLogout = () => {
@@ -78,7 +113,10 @@ const studentId = user?.student_id || user?.sid || user?.id || "—";
                 <Input value={email} className="mt-1" readOnly />
               </div>
               <div className="flex items-end">
-                <Button variant="outline" className="w-full">
+                <Button variant="outline"
+                  className="w-full"
+                  onClick={() => navigate("/dashboard/change-password")}
+                >
                   Change Password
                 </Button>
               </div>
