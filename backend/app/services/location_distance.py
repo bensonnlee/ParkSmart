@@ -1,9 +1,8 @@
 import math
 
-# This is used for calculating location distance between user location and nearest parking lot with Haversine's formula
+# This is used for calculating location distance between classroom and nearest parking lots with Haversine's formula
 
 # https://www.movable-type.co.uk/scripts/latlong.html
-
 
 def haversine_distance(lat1: float, long1: float, lat2: float, long2: float) -> float:
     lat1 = math.radians(lat1)
