@@ -63,8 +63,7 @@ useEffect(() => {
   };
 
   const handleLogout = () => {
-  localStorage.removeItem("token");
-  localStorage.removeItem("user");
+  localStorage.clear();
   toast.success("Logged out successfully");
   navigate("/welcome");
 };
@@ -134,12 +133,6 @@ useEffect(() => {
               <div>
                 <h2 className="font-bold text-gray-900 text-lg">Parking Logistics</h2>
               </div>
-            </div>
-
-            <div className="mb-6">
-              <Label className="text-sm text-gray-700 mb-2 block">Current Pass</Label>
-              <Input value="Commuter Lot B Group 11" className="mb-2" readOnly />
-              <p className="text-xs text-gray-500">License plate ends with 84</p>
             </div>
 
             <div className="mb-6">
