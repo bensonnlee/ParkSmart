@@ -147,10 +147,10 @@ export default function Home() {
               variant="outline" 
               size="sm" 
               onClick={() => navigate('/dashboard/upload')}
-              className="hidden sm:flex text-gray-600 border-gray-300 hover:bg-gray-50 hover:text-ucr-blue transition-colors"
+              className="flex text-gray-600 border-gray-300 hover:bg-gray-50 hover:text-ucr-blue transition-colors"
             >
               <Upload className="size-4 mr-2" />
-              Update Schedule
+              <span className="inline-block">Update Schedule</span>
             </Button>
             <Button 
               variant="ghost" 

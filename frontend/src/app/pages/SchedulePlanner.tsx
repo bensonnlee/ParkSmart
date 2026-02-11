@@ -48,35 +48,26 @@ export default function SchedulePlanner() {
     fetchSchedule();
   }, []);
 
-  const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-
-  const allWeeklyClasses = useMemo(() => {
-    const result: any[] = [];
-    events.forEach(event => {
-      event.days_of_week.forEach((dayIdx: number) => {
-        result.push({
-          ...event,
-          dayName: dayNames[dayIdx],
-          dayIdx: dayIdx,
-          shortTime: event.start_time.slice(0, 5) 
-        });
-      });
-    });
-    return result.sort((a, b) => a.start_time.localeCompare(b.start_time));
-  }, [events]);
-
-  const classesForSelectedDay = useMemo(() => {
-    return allWeeklyClasses.filter(c => c.dayIdx === selectedDayIdx);
-  }, [allWeeklyClasses, selectedDayIdx]);
+  const WEEK_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  const WEEK_LABELS_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
   const { weekDates, rangeString } = useMemo(() => {
     const start = startOfWeek(new Date(), { weekStartsOn: 1 });
-    const dates = Array.from({ length: 7 }, (_, i) => addDays(start, i).getDate());
-    const range = `${format(start, 'MMM d')} - ${format(addDays(start, 6), 'MMM d')}`;
-    return { weekDates: dates, rangeString: range };
+    return {
+      weekDates: Array.from({ length: 7 }, (_, i) => addDays(start, i).getDate()),
+      rangeString: `${format(start, 'MMM d')} - ${format(addDays(start, 6), 'MMM d')}`
+    };
   }, []);
 
-  const weekDaysLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const classesForSelectedDay = useMemo(() => {
+    return events
+      .filter(event => event.days_of_week.includes(selectedDayIdx))
+      .map(event => ({
+        ...event,
+        shortTime: event.start_time.slice(0, 5)
+      }))
+      .sort((a, b) => a.start_time.localeCompare(b.start_time));
+  }, [events, selectedDayIdx]);
 
   if (loading) return <div className="p-10 text-center font-bold text-ucr-blue">Loading Your Plan...</div>;
 
@@ -137,9 +128,9 @@ export default function SchedulePlanner() {
             <div className="p-6">
               {/* DATE SELECTOR */}
               <div className="grid grid-cols-7 gap-2 mb-10">
-                {weekDaysLabels.map((day, i) => {
+                {WEEK_LABELS_SHORT.map((day, i) => {
                   const isSelected = selectedDayIdx === i;
-                  const hasClasses = allWeeklyClasses.some(c => c.dayIdx === i);
+                  const hasClasses = events.some(event => event.days_of_week.includes(i));
                   return (
                     <button
                       key={day}
@@ -169,7 +160,7 @@ export default function SchedulePlanner() {
                 <div className="flex items-center gap-2 mb-2">
                     <div className="h-px bg-gray-200 flex-1" />
                     <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-2">
-                        {dayNames[selectedDayIdx]} Events
+                        {WEEK_DAYS[selectedDayIdx]} Events
                     </span>
                     <div className="h-px bg-gray-200 flex-1" />
                 </div>
