@@ -22,7 +22,7 @@ export default function Welcome() {
     }
 
     setIsLoading(true);
-    const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/api/auth/login`;
+    const apiUrl = `https://parksmart-api.onrender.com/api/auth/login`;
 
     try {
       const response = await fetch(apiUrl, {
