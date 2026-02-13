@@ -2,6 +2,7 @@ import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from services.location_distance import haversine_distance
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -37,7 +38,22 @@ def _sort_lots_by_distance(
     # TODO: Calculate distances from each lot to the classroom's building
     # coordinates and return lots sorted closest to farthest.
     # Classroom -> building -> (latitude, longitude)
-    # ParkingLot -> (latitude, longitude)
+    # ParkingLot -> (latitude, longitude)  // so return in lat long tuple
+
+    classroomLatitude = classroom.building.latitude
+    classroomLongitude = classroom.building.longitude
+
+    # Calculate distance from each parking lot to classroom and return them sorted from closest to farthest (Classroom classroom and lists[Parkinglot] lots)
+    classroomLotDistances = []
+    for lot in lots:
+        distance = haversine_distance(
+            classroomLatitude, classroomLongitude, lots.latitude, lots.longitude
+        )
+        classroomLotDistances.append(
+            (lot, distance)
+        )  # Append specific lot and distance to print out later with frontend
+    classroomLotDistances.sort(key=lambda x: x[1])
+
     return lots
 
 
