@@ -44,7 +44,6 @@ export default function ParkingRecommendation() {
       currentSpots: 142,
       totalSpots: 800,
       walkingTime: 8,
-      cost: 'Permit Gold',
       badge: 'BEST MATCH'
     },
     {
@@ -54,7 +53,6 @@ export default function ParkingRecommendation() {
       currentSpots: 12,
       totalSpots: 450,
       walkingTime: 12,
-      cost: 'Permit Gold',
       badge: 'VALUE'
     }
   ];
@@ -139,7 +137,6 @@ export default function ParkingRecommendation() {
                 <div className="space-y-6">
                   {[
                     { icon: Car, label: 'Drive to UCR', time: tripDetails.driveToCampus },
-                    { icon: ParkingCircle, label: 'Park & Pay', time: tripDetails.parkAtLot },
                     { icon: Footprints, label: 'Walk to Class', time: tripDetails.walkToClass },
                   ].map((step, i) => (
                     <div key={i} className="flex items-center gap-4">
@@ -178,9 +175,6 @@ export default function ParkingRecommendation() {
                       <div className="flex items-center gap-6 text-xs font-bold text-gray-500">
                         <span className="flex items-center gap-1.5">
                           <Footprints className="size-3" /> {lot.walkingTime} min walk
-                        </span>
-                        <span className="flex items-center gap-1.5">
-                          <Car className="size-3" /> {lot.cost}
                         </span>
                       </div>
                     </div>

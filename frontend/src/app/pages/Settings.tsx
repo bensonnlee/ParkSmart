@@ -137,12 +137,6 @@ useEffect(() => {
             </div>
 
             <div className="mb-6">
-              <Label className="text-sm text-gray-700 mb-2 block">Current Pass</Label>
-              <Input value="Commuter Lot B Group 11" className="mb-2" readOnly />
-              <p className="text-xs text-gray-500">License plate ends with 84</p>
-            </div>
-
-            <div className="mb-6">
               <Label className="text-sm text-gray-700 mb-2 block">Parking Permit Type</Label>
               
               <p className="text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide">Commuter Permits</p>
@@ -181,7 +175,7 @@ useEffect(() => {
                 >
                   <div className="text-2xl mb-1">🌙</div>
                   <span className="text-xs font-semibold">Evening</span>
-                  <span className="text-[10px] opacity-75">After 5 PM</span>
+                  <span className="text-[10px] opacity-75">After 6 PM</span>
                 </Button>
               </div>
 

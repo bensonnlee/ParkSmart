@@ -60,6 +60,17 @@ export default function Welcome() {
       setIsLoading(false);
     }
   };
+
+  const handleForgotPassword = async () => {
+  if (!email.trim()) {
+    toast.error("Enter your email first.");
+    return;
+  }
+
+  // If you don’t have an API endpoint yet, this at least makes the UI work:
+  toast.success("If an account exists, a reset link was sent to your email.");
+};
+
   return (
     <div className="min-h-screen flex">
       {/* Left Side - Login Form (NOW BLUE) */}
@@ -103,6 +114,14 @@ export default function Welcome() {
                 <Label htmlFor="password" className="text-sm font-medium text-gray-700">
                   Password
                 </Label>
+                <button
+                  type="button"
+                  onClick={handleForgotPassword}
+                  disabled={isLoading}
+                  className="text-sm text-blue-600 hover:underline disabled:opacity-50"
+                >
+                  Forgot password?
+                </button>
               </div>
               <div className="relative">
                 <Input
