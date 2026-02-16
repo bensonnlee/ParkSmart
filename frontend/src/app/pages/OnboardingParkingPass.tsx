@@ -96,7 +96,17 @@ export default function OnboardingParkingPass() {
   ];
 
   const handleFinish = () => {
-  localStorage.setItem(prefsKey, selectedPass);
+  const raw = localStorage.getItem(prefsKey);
+
+  let prefs: any = {};
+  try {
+    prefs = raw ? JSON.parse(raw) : {};
+  } catch {
+    prefs = {};
+  }
+
+  prefs.parkingPass = selectedPass;
+  localStorage.setItem(prefsKey, JSON.stringify(prefs));
 
   toast.success('Setup complete! Welcome to Campus Parking Optimizer');
   navigate('/dashboard');

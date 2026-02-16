@@ -174,7 +174,7 @@ useEffect(() => {
                 >
                   <div className="text-2xl mb-1">🌙</div>
                   <span className="text-xs font-semibold">Evening</span>
-                  <span className="text-[10px] opacity-75">After 5 PM</span>
+                  <span className="text-[10px] opacity-75">After 6 PM</span>
                 </Button>
               </div>
 
