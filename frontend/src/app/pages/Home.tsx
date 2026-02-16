@@ -7,14 +7,13 @@ import { format, nextMonday, isWeekend } from 'date-fns';
 
 interface TodayClass {
   id: string;
+  classroomId: string;
   name: string;
   courseCode: string;
   startTime: Date;
   endTime: Date;
-  building: string;
   room: string;
-  imageUrl: string;
-  parkingStatus: 'good' | 'tight' | 'full';
+  buildingName: string; 
 }
 
 export default function Home() {
@@ -27,11 +26,31 @@ export default function Home() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [todayClasses, setTodayClasses] = useState<TodayClass[]>([]);
   const [isPreview, setIsPreview] = useState(false);
-
+  const [roomNames, setRoomNames] = useState<Record<string, string>>({});
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 60000);
     return () => clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    todayClasses.forEach(async (item) => {
+      if (item.classroomId && !roomNames[item.classroomId]) {
+        try {
+          const response = await fetch(`https://parksmart-api.onrender.com/api/classrooms/${item.classroomId}`);
+          if (response.ok) {
+            const data = await response.json();
+            const displayName = data.building?.name 
+              ? `${data.building.name} - ${data.location_string}`
+              : data.location_string;
+              
+            setRoomNames(prev => ({ ...prev, [item.classroomId]: displayName }));
+          }
+        } catch (error) {
+          console.error("Error fetching room name:", error);
+        }
+      }
+    });
+  }, [todayClasses]);
 
   useEffect(() => {
     const fetchSchedule = async () => {
@@ -55,16 +74,10 @@ export default function Home() {
 
         const now = new Date();
         const todayDayOfWeek = now.getDay(); 
-        
-        // Weekend logic: If Sat (6) or Sun (0), we preview Monday
         const weekend = isWeekend(now);
         setIsPreview(weekend);
         
-        // API Index: Mon=0 ... Sun=6. 
-        // If weekend, target index 0 (Monday).
         const targetDayIdx = weekend ? 0 : (todayDayOfWeek === 0 ? 6 : todayDayOfWeek - 1);
-        
-        // If weekend, set class dates to the upcoming Monday for accurate countdown
         const referenceDate = weekend ? nextMonday(now) : now;
 
         const todays = events
@@ -81,12 +94,13 @@ export default function Home() {
 
             return {
               id: e.id,
+              classroomId: e.classroom_id,
               name: e.event_name,
               courseCode: e.event_name.split(' ').slice(-2).join(' '),
               startTime: startDate,
               endTime: endDate,
               building: "TBD",
-              room: "Room " + (e.classroom_id.slice(0, 4)),
+              room: "Room " + (e.classroom_id.slice(0, 4)), 
               imageUrl: "",
               parkingStatus: "good" as const,
             };
@@ -130,7 +144,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-[#F6F8FB]">
-      {/* Updated Header with Upload Button */}
       <div className="bg-white border-b sticky top-0 z-10 px-4 py-4 shadow-sm">
         <div className="container mx-auto flex justify-between items-center">
           <div>
@@ -179,7 +192,6 @@ export default function Home() {
           </Card>
         ) : (
           <>
-            {/* Stats Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
               <Card className="p-5 border-none shadow-sm flex items-center gap-4">
                 <div className="bg-blue-50 p-3 rounded-2xl"><Calendar className="text-ucr-blue size-6" /></div>
@@ -226,7 +238,6 @@ export default function Home() {
                </Button>
             </div>
 
-            {/* Class Cards Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {todayClasses.map((item) => {
                 const isNext = nextClass?.id === item.id;
@@ -247,7 +258,6 @@ export default function Home() {
                            <div className="bg-green-50 text-green-700 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 border border-green-100">
                              <CheckCircle className="size-3.5" /> Parking Good
                            </div>
-                           
                         </div>
                       </div>
 
@@ -263,13 +273,16 @@ export default function Home() {
                           <MapPin className="size-4 text-gray-400" />
                           <div>
                             <p className="text-[9px] text-gray-400 uppercase font-bold">Location</p>
-                            <p className="text-sm font-semibold truncate max-w-[100px]">{item.room}</p>
+                            {/* LIVE DATA: Uses roomNames if available, otherwise fallback to sliced ID */}
+                            <p className="text-sm font-semibold truncate max-w-[100px]">
+                              {roomNames[item.classroomId] || item.room}
+                            </p>
                           </div>
                         </div>
                       </div>
 
                       <Button 
-                        onClick={() => navigate(`/dashboard/parking/${item.id}`)} 
+                        onClick={() => navigate(`/dashboard/parking/${item.classroomId}`)} 
                         className="w-full bg-ucr-blue hover:bg-ucr-blue-dark py-6 text-md font-bold rounded-xl shadow-lg shadow-blue-100 transition-all active:scale-[0.98]"
                       >
                         🅿️ Find Optimal Parking
