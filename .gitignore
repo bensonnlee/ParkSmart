@@ -215,3 +215,4 @@ dist/
 .vscode/
 #.ics file for testing with parser.py in backend/app/services/parser.py
 *.ics
+.vercel
