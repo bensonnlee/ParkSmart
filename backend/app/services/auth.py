@@ -13,6 +13,10 @@ from app.config import get_settings
 def get_supabase_client() -> Client:
     """Get cached Supabase client instance."""
     settings = get_settings()
+    if not settings.supabase_url or not settings.supabase_anon_key:
+        raise RuntimeError(
+            "SUPABASE_URL and SUPABASE_ANON_KEY must be set for auth operations"
+        )
     return create_client(settings.supabase_url, settings.supabase_anon_key)
 
 
