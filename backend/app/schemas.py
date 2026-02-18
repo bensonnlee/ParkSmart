@@ -2,7 +2,7 @@ import uuid
 from datetime import date, datetime, time
 from decimal import Decimal
 
-from pydantic import BaseModel, ConfigDict, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 
 class PermitTypeRead(BaseModel):
@@ -110,6 +110,16 @@ class ForgotPasswordRequest(BaseModel):
 
 
 class ForgotPasswordResponse(BaseModel):
+    message: str
+
+
+class ResetPasswordRequest(BaseModel):
+    access_token: str
+    refresh_token: str
+    new_password: str = Field(min_length=6)
+
+
+class ResetPasswordResponse(BaseModel):
     message: str
 
 

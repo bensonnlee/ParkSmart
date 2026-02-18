@@ -21,6 +21,8 @@ from app.schemas import (
     LoginRequest,
     LogoutResponse,
     RefreshTokenRequest,
+    ResetPasswordRequest,
+    ResetPasswordResponse,
     SignUpRequest,
     UserResponse,
 )
@@ -149,6 +151,24 @@ async def forgot_password(request: ForgotPasswordRequest) -> ForgotPasswordRespo
     return ForgotPasswordResponse(
         message="If an account exists with that email, a password reset link has been sent"
     )
+
+
+@router.post("/reset-password", response_model=ResetPasswordResponse)
+async def reset_password(request: ResetPasswordRequest) -> ResetPasswordResponse:
+    """Reset password using tokens from the email reset link."""
+    try:
+        await auth_service.update_password(
+            request.access_token, request.refresh_token, request.new_password
+        )
+        return ResetPasswordResponse(
+            message="Password has been reset successfully"
+        )
+    except Exception:
+        logger.warning("Password reset failed", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired reset token",
+        ) from None
 
 
 @router.post("/refresh", response_model=AuthTokens)
