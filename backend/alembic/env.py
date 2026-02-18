@@ -64,7 +64,6 @@ async def run_async_migrations() -> None:
         config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
-        connect_args={"statement_cache_size": 0},  # pgbouncer compatibility
     )
 
     async with connectable.connect() as connection:
