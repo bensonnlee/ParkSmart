@@ -81,7 +81,7 @@ async def get_nearest_lots(
 
     lots_result = await db.execute(select(ParkingLot))
     lots = list(lots_result.scalars().all())
-    sorted_lots = _sort_lots_by_distance(classroom, lots)
+    sorted_lots = await _sort_lots_by_distance(classroom, lots)
 
     return ClassroomLotsResponse(
         classroom=ClassroomWithBuilding.model_validate(classroom),
