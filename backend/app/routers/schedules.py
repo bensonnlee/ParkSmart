@@ -1,3 +1,5 @@
+import logging
+import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
@@ -7,9 +9,11 @@ from sqlalchemy.orm import selectinload
 
 from app.database import get_db
 from app.dependencies.auth import get_current_user
-from app.models import Classroom, ScheduleEvent, User, UserSchedule
+from app.models import Building, Classroom, ScheduleEvent, User, UserSchedule
 from app.schemas import UserScheduleRead
 from app.services.parser import parse_ics_bytes
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/schedules", tags=["schedules"])
 
@@ -27,6 +31,31 @@ DAY_NAME_TO_INT: dict[str, int] = {
 }
 
 
+def _extract_building_name(location_string: str) -> str | None:
+    """Extract building name from '{Name} Room: ####' format.
+
+    location_string is expected to have the 'Campus: Riverside Building: '
+    prefix already removed by the parser. See app/services/parser.py.
+    """
+    if " Room: " in location_string:
+        return location_string.split(" Room: ")[0]
+    return None
+
+
+async def _resolve_building_id(db: AsyncSession, location_string: str) -> uuid.UUID | None:
+    """Try to find a building matching the location string. Logs on miss, never raises."""
+    building_name = _extract_building_name(location_string)
+    if not building_name:
+        logger.info("Could not extract building name from location: %r", location_string)
+        return None
+    result = await db.execute(select(Building).where(Building.name == building_name))
+    building = result.scalar_one_or_none()
+    if building is None:
+        logger.info("No building found for name: %r (from location: %r)", building_name, location_string)
+        return None
+    return building.id
+
+
 async def _get_or_create_classroom(db: AsyncSession, location_string: str) -> Classroom:
     """Return existing Classroom or create a new one for the given location string."""
     result = await db.execute(
@@ -34,7 +63,8 @@ async def _get_or_create_classroom(db: AsyncSession, location_string: str) -> Cl
     )
     classroom = result.scalar_one_or_none()
     if classroom is None:
-        classroom = Classroom(location_string=location_string)
+        building_id = await _resolve_building_id(db, location_string)
+        classroom = Classroom(location_string=location_string, building_id=building_id)
         db.add(classroom)
         await db.flush()
     return classroom
