@@ -9,6 +9,7 @@ from sqlalchemy.orm import selectinload
 from app.database import get_db
 from app.models import Classroom, ParkingLot
 from app.schemas import ClassroomLotsResponse, ClassroomWithBuilding, ParkingLotRead
+from services.mapbox import get_distance_data
 
 router = APIRouter(prefix="/api/classrooms", tags=["classrooms"])
 
@@ -31,14 +32,33 @@ async def _get_classroom(classroom_id: uuid.UUID, db: AsyncSession) -> Classroom
     return classroom
 
 
-def _sort_lots_by_distance(
+async def _sort_lots_by_distance(  
     classroom: Classroom, lots: list[ParkingLot]
 ) -> list[ParkingLot]:
-    # TODO: Calculate distances from each lot to the classroom's building
+    # Calculate distances from each lot to the classroom's building
     # coordinates and return lots sorted closest to farthest.
     # Classroom -> building -> (latitude, longitude)
-    # ParkingLot -> (latitude, longitude)
-    return lots
+    # ParkingLot -> (latitude, longitude)  
+
+    #Change get distance data func to only have parking lot sorted or also return distance in miles and duration in minutes (for frontend use in future ? )
+
+    return await get_distance_data(classroom, lots)
+
+    # classroomLatitude = classroom.building.latitude
+    # classroomLongitude = classroom.building.longitude
+
+    # # Calculate distance from each parking lot to classroom and return them sorted from closest to farthest (Classroom classroom and lists[Parkinglot] lots)
+    # classroomLotDistances = []
+    # for lot in lots:
+    #     distance = haversine_distance(
+    #         classroomLatitude, classroomLongitude, lots.latitude, lots.longitude
+    #     )
+    #     classroomLotDistances.append(
+    #         (lot, distance)
+    #     )  # Append specific lot and distance to print out later with frontend
+    # classroomLotDistances.sort(key=lambda x: x[1])
+
+    # return lots
 
 
 @router.get("/{classroom_id}", response_model=ClassroomWithBuilding)

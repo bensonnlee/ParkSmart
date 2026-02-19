@@ -13,6 +13,9 @@ class Settings(BaseSettings):
     supabase_url: str = ""
     supabase_anon_key: str = ""
 
+    # Mapbox
+    mapbox_access_token: str
+
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
