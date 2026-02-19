@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router';
 import { Button } from '@/app/components/ui/button';
 import { Card, CardContent } from '@/app/components/ui/card';
 import { Calendar, MapPin, Clock, Upload, Settings, Eye, CheckCircle, AlertTriangle, XCircle } from 'lucide-react';
-import { format, nextMonday, isWeekend } from 'date-fns';
+import { format, startOfWeek, addDays, nextMonday, isWeekend } from 'date-fns';
 
 interface TodayClass {
   id: string;
@@ -27,6 +27,8 @@ export default function Home() {
   const [todayClasses, setTodayClasses] = useState<TodayClass[]>([]);
   const [isPreview, setIsPreview] = useState(false);
   const [roomNames, setRoomNames] = useState<Record<string, string>>({});
+  const [recommendedLots, setRecommendedLots] = useState<Record<string, string>>({});
+
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 60000);
     return () => clearInterval(timer);
@@ -34,7 +36,9 @@ export default function Home() {
 
   useEffect(() => {
     todayClasses.forEach(async (item) => {
-      if (item.classroomId && !roomNames[item.classroomId]) {
+      if (!item.classroomId) return;
+
+      if (!roomNames[item.classroomId]) {
         try {
           const response = await fetch(`https://parksmart-api.onrender.com/api/classrooms/${item.classroomId}`);
           if (response.ok) {
@@ -42,11 +46,27 @@ export default function Home() {
             const displayName = data.building?.name 
               ? `${data.building.name} - ${data.location_string}`
               : data.location_string;
-              
             setRoomNames(prev => ({ ...prev, [item.classroomId]: displayName }));
           }
         } catch (error) {
           console.error("Error fetching room name:", error);
+        }
+      }
+
+      if (!recommendedLots[item.classroomId]) {
+        try {
+          const lotRes = await fetch(`https://parksmart-api.onrender.com/api/classrooms/${item.classroomId}/lots`);
+          if (lotRes.ok) {
+            const lotData = await lotRes.json();
+            const topLot = lotData.lots && lotData.lots.length > 0
+            ? lotData.lots[0].name 
+            : "Lot 30"; 
+
+          setRecommendedLots(prev => ({ ...prev, [item.classroomId]: topLot }));
+          }
+        } catch (error) {
+          console.error("Error fetching lots:", error);
+          setRecommendedLots(prev => ({ ...prev, [item.classroomId]: "Lot 30" }));
         }
       }
     });
@@ -256,7 +276,8 @@ export default function Home() {
                         </div>
                         <div className="flex flex-col items-end gap-2">
                            <div className="bg-green-50 text-green-700 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 border border-green-100">
-                             <CheckCircle className="size-3.5" /> Parking Good
+                             <CheckCircle className="size-3.5" /> 
+                             {recommendedLots[item.classroomId] || "Lot 30"}
                            </div>
                         </div>
                       </div>
@@ -273,7 +294,6 @@ export default function Home() {
                           <MapPin className="size-4 text-gray-400" />
                           <div>
                             <p className="text-[9px] text-gray-400 uppercase font-bold">Location</p>
-                            {/* LIVE DATA: Uses roomNames if available, otherwise fallback to sliced ID */}
                             <p className="text-sm font-semibold truncate max-w-[100px]">
                               {roomNames[item.classroomId] || item.room}
                             </p>

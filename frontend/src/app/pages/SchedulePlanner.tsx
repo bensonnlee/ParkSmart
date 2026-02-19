@@ -21,6 +21,7 @@ export default function SchedulePlanner() {
   const [selectedDayIdx, setSelectedDayIdx] = useState(new Date().getDay() === 0 ? 6 : new Date().getDay() - 1);
   
   const [roomNames, setRoomNames] = useState<Record<string, string>>({});
+  const [recommendedLots, setRecommendedLots] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const fetchSchedule = async () => {
@@ -59,10 +60,21 @@ export default function SchedulePlanner() {
           
           setRoomNames(prev => ({ ...prev, [event.classroom_id]: displayName }));
         } else {
-          setRoomNames(prev => ({ ...prev, [event.classroom_id]: `Room ${event.classroom_id.slice(0, 4)} (unlisted)` }));
+          setRoomNames(prev => ({ ...prev, [event.classroom_id]: `Room ${event.classroom_id.slice(0, 4)}` }));
         }
+
+        const lotRes = await fetch(`https://parksmart-api.onrender.com/api/classrooms/${event.classroom_id}/lots`);
+        if (lotRes.ok) {
+          const lotData = await lotRes.json();
+          const topLot = lotData.lots && lotData.lots.length > 0
+          ? lotData.lots[0].name 
+          : "Lot 30"; 
+
+        setRecommendedLots(prev => ({ ...prev, [event.classroom_id]: topLot }));
+        }
+
       } catch (e) {
-        console.warn("Could not fetch room details for:", event.classroom_id);
+        console.warn("Could not fetch details for:", event.classroom_id);
       }
     });
   }, [events]);
@@ -165,30 +177,33 @@ export default function SchedulePlanner() {
                   classesForSelectedDay.map((item) => (
                     <div 
                       key={item.id} 
-                      onClick={() => navigate(`/dashboard/parking/${item.classroom_id}`)} // Updated to pass real ID
-                      className="group flex items-center justify-between p-5 border border-gray-100 rounded-2xl bg-white hover:border-ucr-blue hover:shadow-lg transition-all cursor-pointer"
+                      onClick={() => navigate(`/dashboard/parking/${item.classroom_id}`)}
+                      className="group flex flex-wrap sm:flex-nowrap items-center justify-between p-5 border border-gray-100 rounded-2xl bg-white hover:border-ucr-blue hover:shadow-lg transition-all cursor-pointer gap-4"
                     >
-                      <div className="flex gap-4 items-center">
-                        <div className="bg-gray-50 text-gray-400 group-hover:bg-blue-50 group-hover:text-ucr-blue p-3 rounded-xl transition-colors font-black text-xs">
+                      <div className="flex gap-4 items-center flex-1 min-w-0">
+                        <div className="flex-shrink-0 bg-gray-50 text-gray-400 group-hover:bg-blue-50 group-hover:text-ucr-blue p-3 rounded-xl transition-colors font-black text-xs">
                             {item.shortTime}
                         </div>
-                        <div>
-                          <h3 className="font-bold text-gray-900 text-lg group-hover:text-ucr-blue transition-colors">
+                        <div className="min-w-0">
+                          <h3 className="font-bold text-gray-900 text-lg group-hover:text-ucr-blue transition-colors truncate">
                             {item.event_name}
                           </h3>
                           <div className="flex items-center gap-3 text-[11px] text-gray-500 font-medium mt-1">
                             <span className="flex items-center gap-1">
                               <MapPin className="size-3" />
-                              {/* UPDATED: Show live name from roomNames, fallback to original logic */}
                               {roomNames[item.classroom_id] || `Room ${item.classroom_id.slice(0,4)}`}
                             </span>
                           </div>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <div className="bg-blue-50/50 px-4 py-2 rounded-xl border border-blue-100">
+                      
+                      <div className="flex-shrink-0 ml-auto sm:ml-0">
+                        <div className="bg-blue-50/50 px-4 py-2 rounded-xl border border-blue-100 text-center min-w-[100px]">
                           <p className="text-[8px] text-ucr-blue font-black uppercase tracking-widest mb-1">Recommended</p>
-                          <p className="font-black text-gray-900">LOT 30</p>
+                          <p className="font-black text-gray-900">
+                            {/* UPDATED: Dynamic lot name display */}
+                            {recommendedLots[item.classroom_id] || "LOT 30"}
+                          </p>
                         </div>
                       </div>
                     </div>
