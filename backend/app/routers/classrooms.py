@@ -9,7 +9,7 @@ from sqlalchemy.orm import selectinload
 from app.database import get_db
 from app.models import Classroom, ParkingLot
 from app.schemas import ClassroomLotsResponse, ClassroomWithBuilding, ParkingLotRead
-from services.mapbox import get_distance_data
+from app.services.mapbox import get_distance_data
 
 router = APIRouter(prefix="/api/classrooms", tags=["classrooms"])
 
