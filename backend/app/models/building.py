@@ -19,6 +19,7 @@ class Building(Base, UUIDMixin, TimestampMixin):
     __tablename__ = "buildings"
 
     name: Mapped[str] = mapped_column(String, unique=True, nullable=False)
+    nickname: Mapped[str] = mapped_column(String, unique=True, nullable=False)
     latitude: Mapped[Decimal] = mapped_column(Numeric(10, 7), nullable=False)
     longitude: Mapped[Decimal] = mapped_column(Numeric(10, 7), nullable=False)
 
@@ -28,4 +29,4 @@ class Building(Base, UUIDMixin, TimestampMixin):
     )
 
     def __repr__(self) -> str:
-        return f"<Building(name={self.name!r}, lat={self.latitude}, lng={self.longitude})>"
+        return f"<Building(name={self.name!r}, nickname={self.nickname!r}, lat={self.latitude}, lng={self.longitude})>"
