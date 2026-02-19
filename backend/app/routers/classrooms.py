@@ -79,6 +79,12 @@ async def get_nearest_lots(
     """Get a classroom with its building info and all parking lots sorted by distance."""
     classroom = await _get_classroom(classroom_id, db)
 
+    if classroom.building is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Classroom has no mapped building; cannot calculate distances",
+        )
+
     lots_result = await db.execute(select(ParkingLot))
     lots = list(lots_result.scalars().all())
     sorted_lots = await _sort_lots_by_distance(classroom, lots)
