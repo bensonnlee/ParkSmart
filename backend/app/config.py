@@ -16,6 +16,12 @@ class Settings(BaseSettings):
     # Mapbox
     mapbox_access_token: str
 
+    # Python version
+    python_version: str = "3.12.10"
+    
+    # Frontend URL (used for password reset redirect)
+    frontend_url: str = "http://localhost:5173"
+
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"

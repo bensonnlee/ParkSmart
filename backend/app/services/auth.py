@@ -47,3 +47,21 @@ async def refresh_session(refresh_token: str) -> GoTrueAuthResponse:
     return await asyncio.to_thread(
         get_supabase_client().auth.refresh_session, refresh_token
     )
+
+
+async def reset_password(email: str, redirect_url: str) -> None:
+    """Send a password reset email via Supabase Auth."""
+    await asyncio.to_thread(
+        lambda: get_supabase_client().auth.reset_password_email(
+            email, options={"redirect_to": redirect_url}
+        )
+    )
+
+
+async def update_password(
+    access_token: str, refresh_token: str, new_password: str
+) -> None:
+    """Set a new password using reset tokens from the email link."""
+    client = get_supabase_client()
+    await asyncio.to_thread(client.auth.set_session, access_token, refresh_token)
+    await asyncio.to_thread(client.auth.update_user, {"password": new_password})

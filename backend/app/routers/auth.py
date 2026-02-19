@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -11,16 +12,23 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 from app.dependencies.auth import get_current_user, security
 from app.models import User
+from app.config import get_settings
 from app.schemas import (
     AuthResponse,
     AuthTokens,
+    ForgotPasswordRequest,
+    ForgotPasswordResponse,
     LoginRequest,
     LogoutResponse,
     RefreshTokenRequest,
+    ResetPasswordRequest,
+    ResetPasswordResponse,
     SignUpRequest,
     UserResponse,
 )
 from app.services import auth as auth_service
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -129,6 +137,38 @@ async def logout(
 async def get_me(user: CurrentUser) -> UserResponse:
     """Get current authenticated user info."""
     return UserResponse.model_validate(user)
+
+
+@router.post("/forgot-password", response_model=ForgotPasswordResponse)
+async def forgot_password(request: ForgotPasswordRequest) -> ForgotPasswordResponse:
+    """Send a password reset email if the account exists."""
+    try:
+        settings = get_settings()
+        redirect_url = f"{settings.frontend_url.rstrip('/')}/reset-password"
+        await auth_service.reset_password(request.email, redirect_url)
+    except Exception:
+        logger.warning("Failed to send password reset email", exc_info=True)
+    return ForgotPasswordResponse(
+        message="If an account exists with that email, a password reset link has been sent"
+    )
+
+
+@router.post("/reset-password", response_model=ResetPasswordResponse)
+async def reset_password(request: ResetPasswordRequest) -> ResetPasswordResponse:
+    """Reset password using tokens from the email reset link."""
+    try:
+        await auth_service.update_password(
+            request.access_token, request.refresh_token, request.new_password
+        )
+        return ResetPasswordResponse(
+            message="Password has been reset successfully"
+        )
+    except Exception:
+        logger.warning("Password reset failed", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired reset token",
+        ) from None
 
 
 @router.post("/refresh", response_model=AuthTokens)
