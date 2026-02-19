@@ -2,7 +2,7 @@ import uuid
 from datetime import date, datetime, time
 from decimal import Decimal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 
 class PermitTypeRead(BaseModel):
@@ -63,13 +63,13 @@ class CollectionResponse(BaseModel):
 
 # Auth schemas
 class SignUpRequest(BaseModel):
-    email: str
+    email: EmailStr
     password: str
     display_name: str | None = None
 
 
 class LoginRequest(BaseModel):
-    email: str
+    email: EmailStr
     password: str
 
 
@@ -102,6 +102,24 @@ class AuthResponse(BaseModel):
 
 
 class LogoutResponse(BaseModel):
+    message: str
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class ForgotPasswordResponse(BaseModel):
+    message: str
+
+
+class ResetPasswordRequest(BaseModel):
+    access_token: str
+    refresh_token: str
+    new_password: str = Field(min_length=6)
+
+
+class ResetPasswordResponse(BaseModel):
     message: str
 
 
