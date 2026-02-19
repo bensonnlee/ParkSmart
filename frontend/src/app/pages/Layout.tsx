@@ -28,7 +28,7 @@ export default function Layout() {
       <header className="sticky top-0 z-40 bg-ucr-blue text-white py-3 shadow-md">
         <div className="container mx-auto px-4 flex items-center gap-3">
           <SidebarToggle onClick={() => setSidebarOpen(true)} />
-          <div onClick={() => navigate('/')} className="cursor-pointer">
+          <div onClick={() => navigate('/dashboard')} className="cursor-pointer">
             <h1 className="text-lg font-bold uppercase tracking-wider text-white">UC Riverside</h1>
             <p className="text-[10px] opacity-80 uppercase text-white">Parking Optimizer</p>
           </div>

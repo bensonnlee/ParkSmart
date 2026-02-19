@@ -25,89 +25,44 @@ export default function IcsUpload() {
   };
 
   const handleUpload = async () => {
-    if (!selectedFile) {
-      setMessage({ type: 'error', text: 'Please select a file first.' });
-      return;
-    }
-
-    // Getting the token you saved in Welcome.tsx
     const token = localStorage.getItem("token");
     if (!token) {
-      setMessage({ type: 'error', text: 'You are not logged in. Redirecting...' });
+      setMessage({ type: 'error', text: 'Session expired. Redirecting...' });
       setTimeout(() => navigate('/welcome'), 2000);
       return;
     }
-
+  
     setIsLoading(true);
     setMessage(null);
-
+  
     try {
-      const form = new FormData();
-      // "file" matches the Request Body requirement in your Swagger screenshot
-      form.append("file", selectedFile); 
-
       const baseUrl = import.meta.env.VITE_API_BASE_URL;
-      if (!baseUrl) {
-        throw new Error("VITE_API_BASE_URL is not defined in your .env file.");
-      }
-
-      // Exact path verified from your Swagger screenshot
-      const targetUrl = `${baseUrl}/api/schedules/upload`;
-      
-      console.log("Uploading to:", targetUrl);
-
-      const res = await fetch(targetUrl, {
+      const form = new FormData();
+      form.append("file", selectedFile!); 
+  
+      const res = await fetch(`${baseUrl}/api/schedules/upload`, {
         method: "POST",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Accept": "application/json",
-          // Note: Browser automatically handles Content-Type for FormData
-        },
+        headers: { "Authorization": `Bearer ${token}` },
         body: form,
       });
-
-      // Safely parse JSON or handle plain text errors
-      const contentType = res.headers.get("content-type");
-      let data;
-      if (contentType && contentType.includes("application/json")) {
-        data = await res.json();
-      } else {
-        const textError = await res.text();
-        data = { detail: textError || `Error ${res.status}: ${res.statusText}` };
-      }
-
+  
+      const data = await res.json();
+  
       if (!res.ok) {
-        // This will display "Missing authentication token" or other API errors
-        setMessage({ 
-          type: 'error', 
-          text: typeof data.detail === 'string' ? data.detail : 'Upload failed. Please check your file format.' 
-        });
-        return;
+        throw new Error(data.detail || 'Upload failed');
       }
-
-      // Success logic: Update local storage so dashboard can reflect changes
-      const storedUser = localStorage.getItem("user");
-      const user = storedUser ? JSON.parse(storedUser) : null;
-      const uid = user?.id || user?.user_id || "guest";
-      localStorage.setItem(`schedule:${uid}`, JSON.stringify(data.events || data));
-
-      setMessage({
-        type: 'success',
-        text: `File "${selectedFile.name}" uploaded successfully! Redirecting to dashboard...`
-      });
-
-      setTimeout(() => {
-        navigate('/dashboard');
-      }, 1500);
-
+  
+      setMessage({ type: 'success', text: "Schedule updated! Redirecting..." });
+      setTimeout(() => navigate('/dashboard'), 1500);
+  
     } catch (err: any) {
-      console.error("Upload process error:", err);
-      setMessage({ type: 'error', text: err.message || 'Network error. Is the server running?' });
+      setMessage({ type: 'error', text: err.message || 'Network error.' });
     } finally {
       setIsLoading(false);
     }
   };
 
+  // handleDrop remains the same - it just prepares the file for handleUpload
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     const file = e.dataTransfer.files?.[0];
@@ -136,7 +91,7 @@ export default function IcsUpload() {
             Upload Calendar
           </CardTitle>
           <CardDescription className="text-center text-gray-600 px-2 sm:px-4">
-            Import your class schedule to receive parking recommendations
+            Import your class schedule for current quarter to receive parking recommendations
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
