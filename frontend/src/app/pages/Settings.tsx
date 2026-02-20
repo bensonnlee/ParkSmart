@@ -143,38 +143,31 @@ useEffect(() => {
                 <Button
                   variant={parkingPass === 'gold-plus' ? 'default' : 'outline'}
                   onClick={() => setParkingPass('gold-plus')}
-                  className={`flex-col h-auto py-4 ${parkingPass === 'gold-plus' ? 'bg-gradient-to-br from-yellow-500 to-amber-600 text-white border-transparent' : ''}`}
+                  className={`flex-col h-auto py-6 ${parkingPass === 'gold-plus' ? 'bg-gradient-to-br from-yellow-500 to-amber-600 text-white border-transparent' : ''}`}
                 >
-                  <div className="text-2xl mb-1">👑</div>
-                  <span className="text-xs font-semibold">Gold Plus</span>
-                  <span className="text-[10px] opacity-75">Premium</span>
+                  <span className="text-[20px] font-semibold">Gold Plus</span>
                 </Button>
                 <Button
                   variant={parkingPass === 'gold' ? 'default' : 'outline'}
                   onClick={() => setParkingPass('gold')}
-                  className={`flex-col h-auto py-4 ${parkingPass === 'gold' ? 'bg-gradient-to-br from-yellow-400 to-yellow-600 text-white border-transparent' : ''}`}
+                  className={`flex-col h-auto py-6 ${parkingPass === 'gold' ? 'bg-gradient-to-br from-yellow-400 to-yellow-600 text-white border-transparent' : ''}`}
                 >
-                  <div className="text-2xl mb-1">⭐</div>
-                  <span className="text-xs font-semibold">Gold</span>
-                  <span className="text-[10px] opacity-75">Standard</span>
+                  <span className="text-[20px] font-semibold">Gold</span>
                 </Button>
                 <Button
-                  variant={parkingPass === 'blue' ? 'default' : 'outline'}
-                  onClick={() => setParkingPass('blue')}
-                  className={`flex-col h-auto py-4 ${parkingPass === 'blue' ? 'bg-gradient-to-br from-blue-500 to-blue-700 text-white border-transparent' : ''}`}
+                  variant={parkingPass === 'orange' ? 'default' : 'outline'}
+                  onClick={() => setParkingPass('orange')}
+                  className={`flex-col h-auto py-4 ${parkingPass === 'orange' ? 'bg-gradient-to-br from-orange-500 to-orange-700 text-white border-transparent' : ''}`}
                 >
-                  <div className="text-2xl mb-1">🅿️</div>
-                  <span className="text-xs font-semibold">Blue</span>
-                  <span className="text-[10px] opacity-75">Basic</span>
+                  <span className="text-[20px] font-semibold">Orange</span>
                 </Button>
                 <Button
                   variant={parkingPass === 'evening' ? 'default' : 'outline'}
                   onClick={() => setParkingPass('evening')}
                   className={`flex-col h-auto py-4 ${parkingPass === 'evening' ? 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white border-transparent' : ''}`}
                 >
-                  <div className="text-2xl mb-1">🌙</div>
-                  <span className="text-xs font-semibold">Evening</span>
-                  <span className="text-[10px] opacity-75">After 6 PM</span>
+                  <span className="text-[20px] font-semibold">Evening</span>
+                  <span className="text-[12px] opacity-75">After 6 PM</span>
                 </Button>
               </div>
 
@@ -183,18 +176,16 @@ useEffect(() => {
                 <Button
                   variant={parkingPass === 'residence-hall' ? 'default' : 'outline'}
                   onClick={() => setParkingPass('residence-hall')}
-                  className={`flex-col h-auto py-4 ${parkingPass === 'residence-hall' ? 'bg-gradient-to-br from-green-500 to-emerald-600 text-white border-transparent' : ''}`}
+                  className={`flex-col h-auto py-6 ${parkingPass === 'residence-hall' ? 'bg-gradient-to-br from-green-500 to-emerald-600 text-white border-transparent' : ''}`}
                 >
-                  <div className="text-2xl mb-1">🏠</div>
-                  <span className="text-xs font-semibold">Residence Hall</span>
+                  <span className="text-[20px] font-semibold">Residence Hall</span>
                 </Button>
                 <Button
                   variant={parkingPass === 'apartment' ? 'default' : 'outline'}
                   onClick={() => setParkingPass('apartment')}
-                  className={`flex-col h-auto py-4 ${parkingPass === 'apartment' ? 'bg-gradient-to-br from-teal-500 to-cyan-600 text-white border-transparent' : ''}`}
+                  className={`flex-col h-auto py-6 ${parkingPass === 'apartment' ? 'bg-gradient-to-br from-teal-500 to-cyan-600 text-white border-transparent' : ''}`}
                 >
-                  <div className="text-2xl mb-1">🏢</div>
-                  <span className="text-xs font-semibold">Apartment</span>
+                  <span className="text-[20px] font-semibold">Apartment</span>
                 </Button>
               </div>
 
@@ -203,20 +194,16 @@ useEffect(() => {
                 <Button
                   variant={parkingPass === 'red' ? 'default' : 'outline'}
                   onClick={() => setParkingPass('red')}
-                  className={`flex-col h-auto py-4 ${parkingPass === 'red' ? 'bg-gradient-to-br from-red-500 to-red-700 text-white border-transparent' : ''}`}
+                  className={`flex-col h-auto py-6 ${parkingPass === 'red' ? 'bg-gradient-to-br from-red-500 to-red-700 text-white border-transparent' : ''}`}
                 >
-                  <div className="text-2xl mb-1">🎓</div>
-                  <span className="text-xs font-semibold">Red</span>
-                  <span className="text-[10px] opacity-75">Grad/Faculty</span>
+                  <span className="text-[20px] font-semibold">Red</span>
                 </Button>
                 <Button
-                  variant={parkingPass === 'orange' ? 'default' : 'outline'}
-                  onClick={() => setParkingPass('orange')}
-                  className={`flex-col h-auto py-4 ${parkingPass === 'orange' ? 'bg-gradient-to-br from-orange-500 to-orange-700 text-white border-transparent' : ''}`}
+                  variant={parkingPass === 'blue' ? 'default' : 'outline'}
+                  onClick={() => setParkingPass('blue')}
+                  className={`flex-col h-auto py-6 ${parkingPass === 'blue' ? 'bg-gradient-to-br from-blue-500 to-blue-700 text-white border-transparent' : ''}`}
                 >
-                  <div className="text-2xl mb-1">🏫</div>
-                  <span className="text-xs font-semibold">Orange</span>
-                  <span className="text-[10px] opacity-75">Staff/Service</span>
+                  <span className="text-[20px] font-semibold">Blue</span>
                 </Button>
               </div>
             </div>
