@@ -13,6 +13,7 @@ All models use UUID primary keys. See base.py for shared mixins.
 from app.models.base import Base
 from app.models.building import Building
 from app.models.classroom import Classroom
+from app.models.lot_building_distance import LotBuildingDistance
 from app.models.parking_lot import ParkingLot
 from app.models.permit import LotPermitAccess, PermitType
 from app.models.schedule import ScheduleEvent, UserSchedule
@@ -23,6 +24,7 @@ __all__ = [
     "Base",
     "Building",
     "Classroom",
+    "LotBuildingDistance",
     "ParkingLot",
     "PermitType",
     "LotPermitAccess",
