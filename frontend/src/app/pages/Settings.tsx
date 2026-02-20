@@ -8,6 +8,7 @@ import { Slider } from '@/app/components/ui/slider';
 import { ArrowLeft, User, CreditCard, Sliders, Calendar, LogOut, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import { useEffect } from "react";
+import ChangePassword from '@/app/pages/ChangePassword';
 
 export default function Settings() {
   const navigate = useNavigate();

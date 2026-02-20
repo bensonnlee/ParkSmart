@@ -32,16 +32,16 @@ export default function ChangePassword() {
     passwordsMatch && 
     !passwordTooShort;
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+ const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
 
-    if (!canSubmit) {
-      return;
-    }
+  if (!canSubmit) return;
 
-  const token = localStorage.getItem("token");
-  if (!token) {
-    toast.error("You are not logged in. Please log in again.");
+  const accessToken = localStorage.getItem("token");
+  const refreshToken = localStorage.getItem("refresh_token");
+
+  if (!accessToken || !refreshToken) {
+    toast.error("Missing session tokens. Please log in again.");
     navigate("/welcome");
     return;
   }
@@ -49,36 +49,43 @@ export default function ChangePassword() {
   setIsSubmitting(true);
 
   try {
-    const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/change-password`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        old_password: oldPassword,
-        new_password: newPassword,
-      }),
-    });
+    const res = await fetch(
+      `${import.meta.env.VITE_API_BASE_URL}/api/auth/reset-password`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+          new_password: newPassword,
+        }),
+      }
+    );
 
     const data = await res.json().catch(() => ({}));
 
     if (!res.ok) {
-      toast.error(data.detail || "Password change failed.");
+      toast.error(data.detail || data.message || "Password reset failed.");
       return;
     }
 
-    toast.success("Password changed successfully!", {
-      description: "Please use your new password the next time you sign in.",
+    // IMPORTANT: invalidate local session so app doesn't crash on protected pages
+    localStorage.removeItem("token");
+    localStorage.removeItem("refresh_token");
+    localStorage.removeItem("user");
+
+    toast.success("Password changed!", {
+      description: "Please log in again with your new password.",
     });
 
-    navigate("/dashboard/settings");
+    navigate("/welcome");
   } catch (err) {
     toast.error("Network error. Please try again.");
   } finally {
     setIsSubmitting(false);
   }
 };
+
 
   return (
     <div className="min-h-screen bg-gray-50">

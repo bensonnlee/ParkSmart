@@ -35,10 +35,14 @@ export default function Welcome() {
       console.log("SERVER RESPONSE DATA:", data);
 
       if (response.ok) { //new addition to handle multiple token structures
-        const authToken = data.access_token ?? data.token ?? data.tokens?.access_token;
+        const accessToken = data.access_token ?? data.token ?? data.tokens?.access_token;
         
-        if (authToken) {
-          localStorage.setItem("token", authToken);
+        const refreshToken = data.refresh_token ?? data.tokens?.refresh_token;
+        if (accessToken) {
+          localStorage.setItem("token", accessToken);
+          if (refreshToken) {
+            localStorage.setItem("refresh_token", JSON.stringify(refreshToken));
+          }
           
           if (data.user) {
             localStorage.setItem("user", JSON.stringify(data.user));

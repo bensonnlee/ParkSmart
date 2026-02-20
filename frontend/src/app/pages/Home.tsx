@@ -275,7 +275,7 @@ export default function Home() {
                           </h3>
                         </div>
                         <div className="flex flex-col items-end gap-2">
-                           <div className="bg-green-50 text-green-700 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 border border-green-100">
+                           <div className="bg-green-50 text-green-700 px-2 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 border border-green-100">
                              <CheckCircle className="size-3.5" /> 
                              {recommendedLots[item.classroomId] || "Lot 30"}
                            </div>
