@@ -34,14 +34,14 @@ class LotBuildingDistance(Base, UUIDMixin, TimestampMixin):
         UUID(as_uuid=True), ForeignKey("parking_lots.id", ondelete="CASCADE"), nullable=False
     )
     building_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("buildings.id", ondelete="CASCADE"), nullable=False
+        UUID(as_uuid=True), ForeignKey("buildings.id", ondelete="CASCADE"), nullable=False, index=True
     )
     distance_miles: Mapped[Decimal] = mapped_column(Numeric(6, 3), nullable=False)
     duration_minutes: Mapped[Decimal] = mapped_column(Numeric(6, 2), nullable=False)
 
     # Relationships
-    lot: Mapped["ParkingLot"] = relationship("ParkingLot")
-    building: Mapped["Building"] = relationship("Building")
+    lot: Mapped["ParkingLot"] = relationship("ParkingLot", back_populates="distances")
+    building: Mapped["Building"] = relationship("Building", back_populates="distances")
 
     def __repr__(self) -> str:
         return (

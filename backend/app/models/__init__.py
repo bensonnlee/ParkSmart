@@ -5,6 +5,7 @@ Models:
 - ParkingLot, ParkingSnapshot: Lots and real-time occupancy data
 - PermitType, LotPermitAccess: Permit types and lot access rules
 - Building, Classroom: Campus locations for proximity calculations
+- LotBuildingDistance: Precomputed walking distances from lots to buildings
 - User, UserSchedule, ScheduleEvent: Users and their class schedules
 
 All models use UUID primary keys. See base.py for shared mixins.
