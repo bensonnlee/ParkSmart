@@ -11,6 +11,7 @@ from app.models.base import Base, TimestampMixin, UUIDMixin
 
 if TYPE_CHECKING:
     from app.models.classroom import Classroom
+    from app.models.lot_building_distance import LotBuildingDistance
 
 
 class Building(Base, UUIDMixin, TimestampMixin):
@@ -26,6 +27,9 @@ class Building(Base, UUIDMixin, TimestampMixin):
     # Relationships
     classrooms: Mapped[list["Classroom"]] = relationship(
         "Classroom", back_populates="building"
+    )
+    distances: Mapped[list["LotBuildingDistance"]] = relationship(
+        "LotBuildingDistance", back_populates="building", cascade="all, delete-orphan"
     )
 
     def __repr__(self) -> str:
