@@ -69,7 +69,7 @@ export default function ParkingRecommendation() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => navigate('/dashboard')}
+                onClick={() => navigate('/dashboard/planner')}
                 className="text-gray-400 hover:text-ucr-blue"
               >
                 <ArrowLeft className="size-6" />
@@ -116,18 +116,6 @@ export default function ParkingRecommendation() {
                    Arrive 5 mins early to ensure a spot in {recommendations[0].name}.
                 </div>
                 
-                <div className="flex gap-2">
-                  <Button
-                    onClick={() => toast.success("Reminder set!")}
-                    className="flex-1 bg-ucr-gold hover:bg-yellow-500 text-blue-900 font-bold border-none"
-                  >
-                    <Bell className="size-4 mr-2" />
-                    Notify Me
-                  </Button>
-                  <Button variant="ghost" className="bg-white/10 hover:bg-white/20 text-white">
-                    <Share2 className="size-4" />
-                  </Button>
-                </div>
               </CardContent>
             </Card>
 

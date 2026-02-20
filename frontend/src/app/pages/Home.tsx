@@ -28,6 +28,7 @@ export default function Home() {
   const [isPreview, setIsPreview] = useState(false);
   const [roomNames, setRoomNames] = useState<Record<string, string>>({});
   const [recommendedLots, setRecommendedLots] = useState<Record<string, string>>({});
+  const [isScheduleLoading, setIsScheduleLoading] = useState(true);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 60000);
@@ -72,71 +73,76 @@ export default function Home() {
     });
   }, [todayClasses]);
 
-  useEffect(() => {
-    const fetchSchedule = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        setHasSchedule(false);
-        return;
-      }
+useEffect(() => {
+  const fetchSchedule = async () => {
+    setIsScheduleLoading(true);
 
-      try {
-        const response = await fetch('https://parksmart-api.onrender.com/api/schedules/me', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setHasSchedule(false);
+      setTodayClasses([]);
+      setIsScheduleLoading(false);
+      return;
+    }
 
-        if (!response.ok) throw new Error("Failed to fetch");
-        const data = await response.json();
-        const events = data.events || [];
+    try {
+      const response = await fetch('https://parksmart-api.onrender.com/api/schedules/me', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
 
-        const now = new Date();
-        const todayDayOfWeek = now.getDay(); 
-        const weekend = isWeekend(now);
-        setIsPreview(weekend);
-        
-        const targetDayIdx = weekend ? 0 : (todayDayOfWeek === 0 ? 6 : todayDayOfWeek - 1);
-        const referenceDate = weekend ? nextMonday(now) : now;
+      if (!response.ok) throw new Error("Failed to fetch");
 
-        const todays = events
-          .filter((e: any) => e.days_of_week.includes(targetDayIdx))
-          .map((e: any) => {
-            const [hours, minutes] = e.start_time.split(':');
-            const [eHours, eMinutes] = e.end_time.split(':');
-            
-            const startDate = new Date(referenceDate);
-            startDate.setHours(parseInt(hours), parseInt(minutes), 0);
-            
-            const endDate = new Date(referenceDate);
-            endDate.setHours(parseInt(eHours), parseInt(eMinutes), 0);
+      const data = await response.json();
+      const events = data.events || [];
 
-            return {
-              id: e.id,
-              classroomId: e.classroom_id,
-              name: e.event_name,
-              courseCode: e.event_name.split(' ').slice(-2).join(' '),
-              startTime: startDate,
-              endTime: endDate,
-              building: "TBD",
-              room: "Room " + (e.classroom_id.slice(0, 4)), 
-              imageUrl: "",
-              parkingStatus: "good" as const,
-            };
-          })
-          .sort((a: any, b: any) => a.startTime.getTime() - b.startTime.getTime());
+      const now = new Date();
+      const todayDayOfWeek = now.getDay();
+      const weekend = isWeekend(now);
+      setIsPreview(weekend);
 
-        setTodayClasses(todays);
-        setHasSchedule(todays.length > 0);
-      } catch (error) {
-        console.error("Error:", error);
-        setHasSchedule(false);
-      }
-    };
+      const targetDayIdx = weekend ? 0 : (todayDayOfWeek === 0 ? 6 : todayDayOfWeek - 1);
+      const referenceDate = weekend ? nextMonday(now) : now;
 
-    fetchSchedule();
-  }, []);
+      const todays = events
+        .filter((e: any) => e.days_of_week.includes(targetDayIdx))
+        .map((e: any) => {
+          const [hours, minutes] = e.start_time.split(':');
+          const [eHours, eMinutes] = e.end_time.split(':');
+
+          const startDate = new Date(referenceDate);
+          startDate.setHours(parseInt(hours), parseInt(minutes), 0);
+
+          const endDate = new Date(referenceDate);
+          endDate.setHours(parseInt(eHours), parseInt(eMinutes), 0);
+
+          return {
+            id: e.id,
+            classroomId: e.classroom_id,
+            name: e.event_name,
+            courseCode: e.event_name.split(' ').slice(-2).join(' '),
+            startTime: startDate,
+            endTime: endDate,
+            room: "Room " + (e.classroom_id?.slice(0, 4) || ""),
+            buildingName: "",
+          } as TodayClass;
+        })
+
+      setTodayClasses(todays);
+      setHasSchedule(events.length > 0);
+    } catch (error) {
+      console.error("Error:", error);
+
+    } finally {
+      setIsScheduleLoading(false);
+    }
+  };
+
+  fetchSchedule();
+}, []);
+
 
   const getTimeUntilClass = (classItem: TodayClass) => {
     const diff = classItem.startTime.getTime() - currentTime.getTime();
@@ -198,7 +204,13 @@ export default function Home() {
       </div>
 
       <div className="container mx-auto px-4 py-6 max-w-6xl">
-        {!hasSchedule ? (
+        {isScheduleLoading ? (
+          <Card className="mt-8 text-center p-12">
+            <h2 className="text-xl font-bold text-gray-900 mb-2">Loading schedule...</h2>
+            <p className="text-gray-500">Fetching your classes.</p>
+          </Card>
+        ) : !hasSchedule ? (
+
           <Card className="mt-8 text-center p-12 border-dashed border-2">
             <div className="bg-blue-50 size-16 rounded-full flex items-center justify-center mx-auto mb-4">
               <Calendar className="size-8 text-ucr-blue" />
@@ -216,7 +228,9 @@ export default function Home() {
               <Card className="p-5 border-none shadow-sm flex items-center gap-4">
                 <div className="bg-blue-50 p-3 rounded-2xl"><Calendar className="text-ucr-blue size-6" /></div>
                 <div>
-                  <p className="text-[11px] text-gray-400 uppercase font-black tracking-wider">Date</p>
+                  <p className="w-full text-center text-[11px] text-gray-400 uppercase font-black tracking-wider"> Date
+            </p>
+
                   <p className="text-lg font-bold text-gray-900">{format(currentTime, 'MMM d, yyyy')}</p>
                 </div>
               </Card>
@@ -224,7 +238,8 @@ export default function Home() {
               <Card className="p-5 border-none shadow-sm flex items-center gap-4">
                 <div className="bg-blue-50 p-3 rounded-2xl"><Eye className="text-ucr-blue size-6" /></div>
                 <div>
-                  <p className="text-[11px] text-gray-400 uppercase font-black tracking-wider">Events</p>
+                  <p className="w-full text-center text-[11px] text-gray-400 uppercase font-black tracking-wider"> Events </p>
+
                   <p className="text-lg font-bold text-gray-900">{todayClasses.length} {todayClasses.length === 1 ? 'Class' : 'Classes'}
                   <span className="text-sm font-normal text-gray-500 ml-1">
                   {isPreview ? 'Monday' : 'Today'}

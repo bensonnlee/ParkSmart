@@ -10,15 +10,33 @@ export default function SignUp() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const BASE = import.meta.env.VITE_API_BASE_URL || "https://parksmart-api.onrender.com";
 
+  const passwordValid =
+    password.length >= 8 &&
+    /[A-Z]/.test(password) &&
+    /[a-z]/.test(password) &&
+    /[0-9]/.test(password);
+
+
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password || !displayName) {
       toast.error("Please fill out all fields");
+      return;
+    }
+
+    if (!passwordValid) {
+      toast.error("Password must be 8+ chars and include uppercase, lowercase, and a number.");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      toast.error("Passwords do not match");
       return;
     }
 
@@ -69,6 +87,49 @@ export default function SignUp() {
           <Label>Password</Label>
           <Input value={password} onChange={(e) => setPassword(e.target.value)} type="password" required />
         </div>
+
+        <div>
+          <Label>Confirm Password</Label>
+          <Input
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            type="password"
+            required
+          />
+          {confirmPassword && password !== confirmPassword && (
+            <p className="text-xs text-red-600 mt-1">Passwords do not match</p>
+          )}
+        </div>
+
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p className="text-sm font-semibold text-gray-900 mb-2">Password Requirements:</p>
+                <ul className="text-xs text-gray-600 space-y-1">
+                  <li className="flex items-start gap-2">
+                    <span className={passwordValid ? 'text-green-600' : 'text-gray-400'}>
+                      {passwordValid ? '✓' : '○'}
+                    </span>
+                    At least 8 characters long
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className={/[A-Z]/.test(password) ? 'text-green-600' : 'text-gray-400'}>
+                      {/[A-Z]/.test(password) ? '✓' : '○'}
+                    </span>
+                    Contains at least one uppercase letter
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className={/[a-z]/.test(password) ? 'text-green-600' : 'text-gray-400'}>
+                      {/[a-z]/.test(password) ? '✓' : '○'}
+                    </span>
+                    Contains at least one lowercase letter
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className={/[0-9]/.test(password) ? 'text-green-600' : 'text-gray-400'}>
+                      {/[0-9]/.test(password) ? '✓' : '○'}
+                    </span>
+                    Contains at least one number
+                  </li>
+                </ul>
+              </div>
 
         <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading ? "Creating..." : "Create Account"}
