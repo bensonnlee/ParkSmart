@@ -9,7 +9,7 @@ from sqlalchemy.orm import selectinload
 from app.database import get_db
 from app.models import Classroom, ParkingLot
 from app.schemas import ClassroomLotsResponse, ClassroomWithBuilding, ParkingLotRead
-from app.services.mapbox import get_distance_data
+from app.services.location_distance import driving_distance_to_lots
 
 router = APIRouter(prefix="/api/classrooms", tags=["classrooms"])
 
@@ -34,31 +34,16 @@ async def _get_classroom(classroom_id: uuid.UUID, db: AsyncSession) -> Classroom
 
 async def _sort_lots_by_distance(  
     classroom: Classroom, lots: list[ParkingLot]
-) -> list[ParkingLot]:
+) -> list[tuple[ParkingLot, float, float]]:
     # Calculate distances from each lot to the classroom's building
-    # coordinates and return lots sorted closest to farthest.
+    # coordinates and return lots sorted closest to farthest, distance in miles, and duration in minutes
     # Classroom -> building -> (latitude, longitude)
     # ParkingLot -> (latitude, longitude)  
 
-    #Change get distance data func to only have parking lot sorted or also return distance in miles and duration in minutes (for frontend use in future ? )
-
-    return await get_distance_data(classroom, lots)
-
-    # classroomLatitude = classroom.building.latitude
-    # classroomLongitude = classroom.building.longitude
-
-    # # Calculate distance from each parking lot to classroom and return them sorted from closest to farthest (Classroom classroom and lists[Parkinglot] lots)
-    # classroomLotDistances = []
-    # for lot in lots:
-    #     distance = haversine_distance(
-    #         classroomLatitude, classroomLongitude, lots.latitude, lots.longitude
-    #     )
-    #     classroomLotDistances.append(
-    #         (lot, distance)
-    #     )  # Append specific lot and distance to print out later with frontend
-    # classroomLotDistances.sort(key=lambda x: x[1])
-
-    # return lots
+    lotDistances = await driving_distance_to_lots(classroom, lots) #gets distance and duration data so convert units here and then sort it
+    lotDistances.sort(key=lambda x: x[1]) #Sort by distance (index 1 in tuple)
+    
+    return lotDistances #Return list of tuples with lot, distance, and duration sorted by distance
 
 
 @router.get("/{classroom_id}", response_model=ClassroomWithBuilding)
@@ -81,9 +66,9 @@ async def get_nearest_lots(
 
     lots_result = await db.execute(select(ParkingLot))
     lots = list(lots_result.scalars().all())
-    sorted_lots = _sort_lots_by_distance(classroom, lots)
+    sorted_lots = await _sort_lots_by_distance(classroom, lots)
 
     return ClassroomLotsResponse(
         classroom=ClassroomWithBuilding.model_validate(classroom),
-        lots=[ParkingLotRead.model_validate(lot) for lot in sorted_lots],
+        lots=[ParkingLotRead.model_validate(lot) for lot, _, _ in sorted_lots], #Changed this part to only return lot info (we can change it or revert it later if the distance and duration is useful or not)
     )
