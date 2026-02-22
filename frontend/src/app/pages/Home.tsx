@@ -2,8 +2,9 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router';
 import { Button } from '@/app/components/ui/button';
 import { Card, CardContent } from '@/app/components/ui/card';
-import { Calendar, MapPin, Clock, Upload, Settings, Eye, CheckCircle, AlertTriangle, XCircle } from 'lucide-react';
+import { Calendar, MapPin, Clock, Upload, Settings, Eye, CheckCircle, AlertTriangle, XCircle, Edit2, Check } from 'lucide-react';
 import { format, startOfWeek, addDays, nextMonday, isWeekend } from 'date-fns';
+import { useLocation } from '../hooks/useLocation';
 
 interface TodayClass {
   id: string;
@@ -22,12 +23,34 @@ export default function Home() {
   const displayName = user?.display_name || user?.name || user?.email?.split("@")?.[0] || "there";
 
   const navigate = useNavigate();
+  
+  // Location States
+  const { latitude, longitude, error: locError, loading: locLoading } = useLocation();
+  const [address, setAddress] = useState<string>("Locating...");
+  const [isEditing, setIsEditing] = useState(false);
+  const [manualAddress, setManualAddress] = useState("");
+
   const [hasSchedule, setHasSchedule] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [todayClasses, setTodayClasses] = useState<TodayClass[]>([]);
   const [isPreview, setIsPreview] = useState(false);
   const [roomNames, setRoomNames] = useState<Record<string, string>>({});
   const [recommendedLots, setRecommendedLots] = useState<Record<string, string>>({});
+
+  // Reverse Geocoding Effect
+  useEffect(() => {
+    if (latitude && longitude && !manualAddress) {
+      fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`)
+        .then(res => res.json())
+        .then(data => {
+          const road = data.address.road || "";
+          const city = data.address.city || data.address.town || data.address.village || data.address.suburb || "";
+          const displayStr = road ? `${road}, ${city}` : city;
+          setAddress(displayStr || "Location Found");
+        })
+        .catch(() => setAddress("Location Found"));
+    }
+  }, [latitude, longitude, manualAddress]);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 60000);
@@ -52,17 +75,17 @@ export default function Home() {
           console.error("Error fetching room name:", error);
         }
       }
-
       if (!recommendedLots[item.classroomId]) {
         try {
           const lotRes = await fetch(`https://parksmart-api.onrender.com/api/classrooms/${item.classroomId}/lots`);
           if (lotRes.ok) {
             const lotData = await lotRes.json();
-            const topLot = lotData.lots && lotData.lots.length > 0
-            ? lotData.lots[0].name 
-            : "Lot 30"; 
-
-          setRecommendedLots(prev => ({ ...prev, [item.classroomId]: topLot }));
+            if (lotData.lots && lotData.lots.length > 0) {
+              const topLotName = lotData.lots[0].name; 
+              setRecommendedLots(prev => ({ ...prev, [item.classroomId]: topLotName }));
+            } else {
+              setRecommendedLots(prev => ({ ...prev, [item.classroomId]: "Lot 30" }));
+            }
           }
         } catch (error) {
           console.error("Error fetching lots:", error);
@@ -125,7 +148,7 @@ export default function Home() {
               parkingStatus: "good" as const,
             };
           })
-          .sort((a: any, b: any) => a.startTime.getTime() - b.startTime.getTime());
+          .sort((a: TodayClass, b: TodayClass) => a.startTime.getTime() - b.startTime.getTime());
 
         setTodayClasses(todays);
         setHasSchedule(todays.length > 0);
@@ -212,7 +235,7 @@ export default function Home() {
           </Card>
         ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
               <Card className="p-5 border-none shadow-sm flex items-center gap-4">
                 <div className="bg-blue-50 p-3 rounded-2xl"><Calendar className="text-ucr-blue size-6" /></div>
                 <div>
@@ -226,10 +249,10 @@ export default function Home() {
                 <div>
                   <p className="text-[11px] text-gray-400 uppercase font-black tracking-wider">Events</p>
                   <p className="text-lg font-bold text-gray-900">{todayClasses.length} {todayClasses.length === 1 ? 'Class' : 'Classes'}
-                  <span className="text-sm font-normal text-gray-500 ml-1">
-                  {isPreview ? 'Monday' : 'Today'}
-                  </span>
-                </p>
+                    <span className="text-sm font-normal text-gray-500 ml-1">
+                      {isPreview ? 'Monday' : 'Today'}
+                    </span>
+                  </p>
                 </div>
               </Card>
 
@@ -240,6 +263,47 @@ export default function Home() {
                   <p className={`text-lg font-bold ${timeInfo?.color || 'text-gray-400'}`}>
                     {timeInfo?.text || "--:--"}
                   </p>
+                </div>
+              </Card>
+
+              <Card 
+                className="p-5 border-none shadow-sm flex items-center gap-4 cursor-pointer group relative"
+                onClick={() => !isEditing && setIsEditing(true)}
+              >
+                <div className="bg-blue-50 p-3 rounded-2xl"><MapPin className="text-ucr-blue size-6" /></div>
+                <div className="flex-1 overflow-hidden">
+                  <p className="text-[11px] text-gray-400 uppercase font-black flex justify-between items-center">
+                    My Location
+                    {!isEditing && <Edit2 className="size-3 opacity-0 group-hover:opacity-100 transition-opacity" />}
+                  </p>
+                  
+                  {isEditing ? (
+                    <div className="flex items-center gap-2 mt-1" onClick={(e) => e.stopPropagation()}>
+                      <input 
+                        autoFocus
+                        className="text-sm font-bold bg-gray-50 border-b-2 border-ucr-blue outline-none w-full py-0.5"
+                        value={manualAddress}
+                        placeholder="Type city..."
+                        onChange={(e) => setManualAddress(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && setIsEditing(false)}
+                        onBlur={() => setIsEditing(false)}
+                      />
+                      <button onClick={() => setIsEditing(false)} className="text-ucr-blue">
+                        <Check className="size-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col">
+                      <p className="text-sm font-bold text-gray-900 leading-tight">
+                        {manualAddress || (locLoading ? "Locating..." : locError ? "Location Hidden" : address)}
+                      </p>
+                      {!manualAddress && !locLoading && !locError && (
+                        <p className="text-[10px] text-gray-400 font-medium mt-0.5">
+                          ({latitude?.toFixed(4)}, {longitude?.toFixed(4)})
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
               </Card>
             </div>
@@ -305,7 +369,7 @@ export default function Home() {
                         onClick={() => navigate(`/dashboard/parking/${item.classroomId}`)} 
                         className="w-full bg-ucr-blue hover:bg-ucr-blue-dark py-6 text-md font-bold rounded-xl shadow-lg shadow-blue-100 transition-all active:scale-[0.98]"
                       >
-                        🅿️ Find Optimal Parking
+                      Find Optimal Parking
                       </Button>
                     </div>
                   </Card>
