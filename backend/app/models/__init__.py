@@ -7,6 +7,7 @@ Models:
 - Building, Classroom: Campus locations for proximity calculations
 - LotBuildingDistance: Precomputed walking distances from lots to buildings
 - User, UserSchedule, ScheduleEvent: Users and their class schedules
+- LotBuildingDistances: Precomputed walking distances from lots to buildings 
 
 All models use UUID primary keys. See base.py for shared mixins.
 """
