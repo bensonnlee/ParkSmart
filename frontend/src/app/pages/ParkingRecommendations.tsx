@@ -112,21 +112,8 @@ export default function ParkingRecommendation() {
                     {format(leaveByTime, 'a')}
                   </span>
                 </div>
-                <div className="bg-white/10 rounded-2xl p-4 text-xs font-medium mb-6 backdrop-blur-sm text-center">
+                <div className="bg-yellow-500/100 rounded-2xl p-4 text-xs font-medium mb-6 backdrop-blur-sm text-center">
                    Arrive 5 mins early to ensure a spot in {recommendations[0].name}.
-                </div>
-                
-                <div className="flex gap-2">
-                  <Button
-                    onClick={() => toast.success("Reminder set!")}
-                    className="flex-1 bg-ucr-gold hover:bg-yellow-500 text-blue-900 font-bold border-none"
-                  >
-                    <Bell className="size-4 mr-2" />
-                    Notify Me
-                  </Button>
-                  <Button variant="ghost" className="bg-white/10 hover:bg-white/20 text-white">
-                    <Share2 className="size-4" />
-                  </Button>
                 </div>
               </CardContent>
             </Card>
