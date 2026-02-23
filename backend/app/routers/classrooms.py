@@ -108,5 +108,5 @@ async def get_nearest_lots(
 
     return ClassroomLotsResponse(
         classroom=ClassroomWithBuilding.model_validate(classroom),
-        lots=[ParkingLotRead.model_validate(lot) for lot in sorted_lots],
+        lots=[ParkingLotRead.model_validate(lot) for lot, _, _ in sorted_lots], #Changed this part to only return lot info (we can change it or revert it later if the distance and duration is useful or not)
     )
