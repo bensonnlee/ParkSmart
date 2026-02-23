@@ -58,6 +58,8 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    if (!latitude || !longitude) return;
+
     todayClasses.forEach(async (item) => {
       if (!item.classroomId) return;
 
@@ -77,11 +79,11 @@ export default function Home() {
       }
       if (!recommendedLots[item.classroomId]) {
         try {
-          const lotRes = await fetch(`https://parksmart-api.onrender.com/api/lots/from-location?lat=${latitude}&lon=${longitude}`);
+          const lotRes = await fetch(`https://parksmart-api.onrender.com/api/classrooms/lots/from-location?latitude=${latitude}&longitude=${longitude}`);
           if (lotRes.ok) {
             const lotData = await lotRes.json();
-            if (lotData.lots && lotData.lots.length > 0) {
-              const topLotName = lotData.lots[0].name; 
+            if (Array.isArray(lotData) && lotData.length > 0) {
+              const topLotName = lotData[0].name; 
               setRecommendedLots(prev => ({ ...prev, [item.classroomId]: topLotName }));
             } else {
               setRecommendedLots(prev => ({ ...prev, [item.classroomId]: "Lot 30" }));
@@ -93,7 +95,7 @@ export default function Home() {
         }
       }
     });
-  }, [todayClasses]);
+  }, [todayClasses, latitude, longitude]);
 
   useEffect(() => {
     const fetchSchedule = async () => {
