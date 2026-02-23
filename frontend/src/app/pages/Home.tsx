@@ -77,7 +77,7 @@ export default function Home() {
       }
       if (!recommendedLots[item.classroomId]) {
         try {
-          const lotRes = await fetch(`https://parksmart-api.onrender.com/api/classrooms/${item.classroomId}/lots`);
+          const lotRes = await fetch(`https://parksmart-api.onrender.com/api/lots/from-location?lat=${latitude}&lon=${longitude}`);
           if (lotRes.ok) {
             const lotData = await lotRes.json();
             if (lotData.lots && lotData.lots.length > 0) {
