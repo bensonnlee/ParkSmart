@@ -54,9 +54,7 @@ export default function SchedulePlanner() {
         
         if (res.ok) {
           const data = await res.json();
-          const displayName = data.building?.name 
-            ? `${data.building.name}: ${data.location_string}`
-            : data.location_string;
+          const displayName = data.location_string;
           
           setRoomNames(prev => ({ ...prev, [event.classroom_id]: displayName }));
         } else {
