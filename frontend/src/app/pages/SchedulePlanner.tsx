@@ -54,9 +54,7 @@ export default function SchedulePlanner() {
         
         if (res.ok) {
           const data = await res.json();
-          const displayName = data.building?.name 
-            ? `${data.building.name}: ${data.location_string}`
-            : data.location_string;
+          const displayName = data.location_string;
           
           setRoomNames(prev => ({ ...prev, [event.classroom_id]: displayName }));
         } else {
@@ -123,7 +121,7 @@ export default function SchedulePlanner() {
               className="bg-white border-gray-200 text-gray-600 hover:text-ucr-blue hover:border-ucr-blue shadow-sm transition-all"
             >
               <Upload className="size-4 mr-2" />
-              <span className="font-bold text-xs uppercase tracking-tight">Update ICS</span>
+              <span className="font-bold text-xs uppercase tracking-tight">Update Schedule</span>
             </Button>
             <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard/settings')} className="text-gray-400 hover:text-gray-600">
               <Settings className="size-5" />
