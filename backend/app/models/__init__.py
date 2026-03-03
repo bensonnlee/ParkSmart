@@ -7,7 +7,8 @@ Models:
 - Building, Classroom: Campus locations for proximity calculations
 - LotBuildingDistance: Precomputed walking distances from lots to buildings
 - User, UserSchedule, ScheduleEvent: Users and their class schedules
-- LotBuildingDistances: Precomputed walking distances from lots to buildings 
+- LotBuildingDistances: Precomputed walking distances from lots to buildings
+- ParkingForecast: Pre-computed Prophet predictions for lot availability
 
 All models use UUID primary keys. See base.py for shared mixins.
 """
@@ -15,6 +16,7 @@ All models use UUID primary keys. See base.py for shared mixins.
 from app.models.base import Base
 from app.models.building import Building
 from app.models.classroom import Classroom
+from app.models.forecast import ParkingForecast
 from app.models.lot_building_distance import LotBuildingDistance
 from app.models.parking_lot import ParkingLot
 from app.models.permit import LotPermitAccess, PermitType
@@ -27,6 +29,7 @@ __all__ = [
     "Building",
     "Classroom",
     "LotBuildingDistance",
+    "ParkingForecast",
     "ParkingLot",
     "PermitType",
     "LotPermitAccess",

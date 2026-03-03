@@ -42,6 +42,26 @@ class ParkingLotWithAvailability(ParkingLotRead):
     availability_updated_at: datetime | None = None
 
 
+class ParkingForecastRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    lot_id: uuid.UUID
+    forecast_time: datetime
+    predicted_free_spaces: int
+    predicted_free_spaces_lower: int
+    predicted_occupancy_pct: Decimal | None = None
+    model_version: str
+    generated_at: datetime
+
+
+class ForecastResponse(BaseModel):
+    lot_id: uuid.UUID
+    lot_name: str
+    generated_at: datetime | None = None
+    forecasts: list[ParkingForecastRead]
+
+
 class PaginatedSnapshots(BaseModel):
     items: list[ParkingSnapshotRead]
     total: int
