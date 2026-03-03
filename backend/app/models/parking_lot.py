@@ -11,6 +11,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import Base, TimestampMixin, UUIDMixin
 
 if TYPE_CHECKING:
+    from app.models.forecast import ParkingForecast
     from app.models.lot_building_distance import LotBuildingDistance
     from app.models.permit import LotPermitAccess
     from app.models.snapshot import ParkingSnapshot
@@ -36,6 +37,9 @@ class ParkingLot(Base, UUIDMixin, TimestampMixin):
     )
     distances: Mapped[list["LotBuildingDistance"]] = relationship(
         "LotBuildingDistance", back_populates="lot", cascade="all, delete-orphan"
+    )
+    forecasts: Mapped[list["ParkingForecast"]] = relationship(
+        "ParkingForecast", back_populates="lot", cascade="all, delete-orphan"
     )
 
     def __repr__(self) -> str:

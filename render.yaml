@@ -51,6 +51,19 @@ services:
         value: "3.12.10"
 
   - type: cron
+    name: parksmart-forecast-generator
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    schedule: "0 5 * * *"  # Daily at 5am UTC (~9-10pm Pacific) — after day's data collection
+    startCommand: python -c "import asyncio; from app.services.forecasting import generate_forecasts; asyncio.run(generate_forecasts())"
+    envVars:
+      - key: DATABASE_URL
+        sync: false  # Set manually in Render dashboard
+      - key: PYTHON_VERSION
+        value: "3.12.10"
+
+  - type: cron
     name: parksmart-collector-weekend
     runtime: python
     rootDir: backend
