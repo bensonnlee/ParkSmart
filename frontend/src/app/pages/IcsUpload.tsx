@@ -49,6 +49,22 @@ export default function IcsUpload() {
       const data = await res.json();
   
       if (!res.ok) {
+        // Auto-clear logic for invalid tokens
+        if (res.status === 401 || data.detail === "Invalid authentication token") {
+          localStorage.clear(); 
+
+          setMessage({ 
+            type: 'error', 
+            text: 'Invalid session. Clearing cache and redirecting to login...' 
+          });
+          
+          setTimeout(() => {
+            navigate('/welcome');
+            window.location.reload(); // Refreshes the page to clear any remaining app state
+          }, 2000);
+          return;
+        }
+
         throw new Error(data.detail || 'Upload failed');
       }
   

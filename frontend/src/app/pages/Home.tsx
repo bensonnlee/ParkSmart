@@ -30,7 +30,8 @@ export default function Home() {
   const [isEditing, setIsEditing] = useState(false);
   const [manualAddress, setManualAddress] = useState("");
 
-  const [hasSchedule, setHasSchedule] = useState(true);
+  // Added hasAnyData to distinguish between "No Schedule Uploaded" and "No Classes Today"
+  const [hasAnyData, setHasAnyData] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [todayClasses, setTodayClasses] = useState<TodayClass[]>([]);
   const [isPreview, setIsPreview] = useState(false);
@@ -101,7 +102,7 @@ export default function Home() {
     const fetchSchedule = async () => {
       const token = localStorage.getItem("token");
       if (!token) {
-        setHasSchedule(false);
+        setHasAnyData(false); 
         return;
       }
 
@@ -116,6 +117,8 @@ export default function Home() {
         if (!response.ok) throw new Error("Failed to fetch");
         const data = await response.json();
         const events = data.events || [];
+
+        setHasAnyData(events.length > 0);
 
         const now = new Date();
         const todayDayOfWeek = now.getDay(); 
@@ -153,10 +156,9 @@ export default function Home() {
           .sort((a: TodayClass, b: TodayClass) => a.startTime.getTime() - b.startTime.getTime());
 
         setTodayClasses(todays);
-        setHasSchedule(todays.length > 0);
       } catch (error) {
         console.error("Error:", error);
-        setHasSchedule(false);
+        setHasAnyData(false);
       }
     };
 
@@ -223,7 +225,7 @@ export default function Home() {
       </div>
 
       <div className="container mx-auto px-4 py-6 max-w-6xl">
-        {!hasSchedule ? (
+        {!hasAnyData ? (
           <Card className="mt-8 text-center p-12 border-dashed border-2">
             <div className="bg-blue-50 size-16 rounded-full flex items-center justify-center mx-auto mb-4">
               <Calendar className="size-8 text-ucr-blue" />
@@ -324,60 +326,66 @@ export default function Home() {
                </Button>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {todayClasses.map((item) => {
-                const isNext = nextClass?.id === item.id;
-                return (
-                  <Card key={item.id} className={`group relative overflow-hidden transition-all hover:shadow-md ${isNext ? 'ring-2 ring-ucr-blue ring-offset-2' : ''}`}>
-                    <div className="bg-ucr-blue h-1.5 w-full" />
-                    <div className="p-6">
-                      <div className="flex justify-between items-start mb-4">
-                        <div>
-                          <span className="text-[10px] font-bold text-ucr-blue uppercase tracking-widest bg-blue-50 px-2 py-1 rounded">
-                            {item.courseCode}
-                          </span>
-                          <h3 className="font-extrabold text-xl text-gray-900 mt-2 group-hover:text-ucr-blue transition-colors">
-                            {item.name}
-                          </h3>
-                        </div>
-                        <div className="flex flex-col items-end gap-2">
-                           <div className="bg-green-50 text-green-700 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 border border-green-100">
-                             <CheckCircle className="size-3.5" /> 
-                             {recommendedLots[item.classroomId] || "Lot 30"}
-                           </div>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-3 mb-6">
-                        <div className="bg-gray-50 p-3 rounded-xl flex items-center gap-3">
-                          <Clock className="size-4 text-gray-400" />
+            {todayClasses.length === 0 ? (
+              <Card className="p-12 text-center bg-white shadow-sm border-2 border-dashed">
+                <p className="text-gray-500 font-medium">No classes scheduled for {isPreview ? "this Monday" : "today"}.</p>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {todayClasses.map((item) => {
+                  const isNext = nextClass?.id === item.id;
+                  return (
+                    <Card key={item.id} className={`group relative overflow-hidden transition-all hover:shadow-md ${isNext ? 'ring-2 ring-ucr-blue ring-offset-2' : ''}`}>
+                      <div className="bg-ucr-blue h-1.5 w-full" />
+                      <div className="p-6">
+                        <div className="flex justify-between items-start mb-4">
                           <div>
-                            <p className="text-[9px] text-gray-400 uppercase font-bold">Time</p>
-                            <p className="text-sm font-semibold">{format(item.startTime, 'h:mm a')}</p>
+                            <span className="text-[10px] font-bold text-ucr-blue uppercase tracking-widest bg-blue-50 px-2 py-1 rounded">
+                              {item.courseCode}
+                            </span>
+                            <h3 className="font-extrabold text-xl text-gray-900 mt-2 group-hover:text-ucr-blue transition-colors">
+                              {item.name}
+                            </h3>
+                          </div>
+                          <div className="flex flex-col items-end gap-2">
+                             <div className="bg-green-50 text-green-700 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 border border-green-100">
+                               <CheckCircle className="size-3.5" /> 
+                               {recommendedLots[item.classroomId] || "Lot 30"}
+                             </div>
                           </div>
                         </div>
-                        <div className="bg-gray-50 p-3 rounded-xl flex items-center gap-3">
-                          <MapPin className="size-4 text-gray-400" />
-                          <div>
-                            <p className="text-[9px] text-gray-400 uppercase font-bold">Location</p>
-                            <p className="text-sm font-semibold truncate max-w-[100px]">
-                              {roomNames[item.classroomId] || item.room}
-                            </p>
+
+                        <div className="grid grid-cols-2 gap-3 mb-6">
+                          <div className="bg-gray-50 p-3 rounded-xl flex items-center gap-3">
+                            <Clock className="size-4 text-gray-400" />
+                            <div>
+                              <p className="text-[9px] text-gray-400 uppercase font-bold">Time</p>
+                              <p className="text-sm font-semibold">{format(item.startTime, 'h:mm a')}</p>
+                            </div>
+                          </div>
+                          <div className="bg-gray-50 p-3 rounded-xl flex items-center gap-3">
+                            <MapPin className="size-4 text-gray-400" />
+                            <div>
+                              <p className="text-[9px] text-gray-400 uppercase font-bold">Location</p>
+                              <p className="text-sm font-semibold truncate max-w-[100px]">
+                                {roomNames[item.classroomId] || item.room}
+                              </p>
+                            </div>
                           </div>
                         </div>
-                      </div>
 
-                      <Button 
-                        onClick={() => navigate(`/dashboard/parking/${item.classroomId}`)} 
-                        className="w-full bg-ucr-blue hover:bg-ucr-blue-dark py-6 text-md font-bold rounded-xl shadow-lg shadow-blue-100 transition-all active:scale-[0.98]"
-                      >
-                      Find Optimal Parking
-                      </Button>
-                    </div>
-                  </Card>
-                );
-              })}
-            </div>
+                        <Button 
+                          onClick={() => navigate(`/dashboard/parking/${item.classroomId}`)} 
+                          className="w-full bg-ucr-blue hover:bg-ucr-blue-dark py-6 text-md font-bold rounded-xl shadow-lg shadow-blue-100 transition-all active:scale-[0.98]"
+                        >
+                        Find Optimal Parking
+                        </Button>
+                      </div>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
           </>
         )}
       </div>
