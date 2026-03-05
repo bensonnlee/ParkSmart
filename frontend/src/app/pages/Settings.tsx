@@ -1,65 +1,117 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router';
+import { useState, useEffect, useMemo } from 'react';
+import { useNavigate, useBlocker } from 'react-router';
 import { Button } from '@/app/components/ui/button';
 import { Card, CardContent } from '@/app/components/ui/card';
 import { Label } from '@/app/components/ui/label';
 import { Input } from '@/app/components/ui/input';
 import { Slider } from '@/app/components/ui/slider';
-import { ArrowLeft, User, CreditCard, Sliders, Calendar, LogOut, ExternalLink } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from '@/app/components/ui/alert-dialog';
+import { ArrowLeft, User, CreditCard, SlidersHorizontal, LogOut, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
+
+interface Prefs {
+  parkingPass: string;
+  arrivalBuffer: number;
+  walkingSpeed: number;
+}
+
+const DEFAULT_PREFS: Prefs = {
+  parkingPass: 'blue',
+  arrivalBuffer: 10,
+  walkingSpeed: 2,
+};
+
+function loadPrefs(key: string): Prefs {
+  const raw = localStorage.getItem(key);
+  if (!raw) return DEFAULT_PREFS;
+  try {
+    const parsed = JSON.parse(raw);
+    return {
+      parkingPass: parsed.parkingPass ?? DEFAULT_PREFS.parkingPass,
+      arrivalBuffer: typeof parsed.arrivalBuffer === 'number' ? parsed.arrivalBuffer : DEFAULT_PREFS.arrivalBuffer,
+      walkingSpeed: typeof parsed.walkingSpeed === 'number' ? parsed.walkingSpeed : DEFAULT_PREFS.walkingSpeed,
+    };
+  } catch {
+    return DEFAULT_PREFS;
+  }
+}
+
+const WALKING_SPEEDS = [
+  { value: 1, label: 'Slow'},
+  { value: 2, label: 'Medium' },
+  { value: 3, label: 'Fast' },
+] as const;
 
 export default function Settings() {
   const navigate = useNavigate();
-  const storedUser = localStorage.getItem("user");
-  const user = storedUser ? JSON.parse(storedUser) : null;
+
+  const user = useMemo(() => {
+    const raw = localStorage.getItem("user");
+    return raw ? JSON.parse(raw) : null;
+  }, []);
 
   const displayName = user?.display_name || user?.name || user?.email?.split("@")?.[0] || "User";
   const email = user?.email || "—";
-  
+
   const uid = user?.id || user?.user_id || user?.supabase_id;
   const prefsKey = uid ? `prefs:${uid}` : "prefs:guest";
 
-  const [parkingPass, setParkingPass] = useState('blue');
-  const [arrivalBuffer, setArrivalBuffer] = useState([10]);
-  const [walkingSpeed, setWalkingSpeed] = useState([2]); 
+  // Saved state — what's currently persisted in localStorage
+  const [savedPrefs, setSavedPrefs] = useState<Prefs>(() => loadPrefs(prefsKey));
 
-  const getWalkingLabel = (val: number) => {
-    if (val === 1) return "Slow";
-    if (val === 3) return "Fast";
-    return "Medium";
-  };
+  // Draft state — what the user is actively editing
+  const [parkingPass, setParkingPass] = useState(savedPrefs.parkingPass);
+  const [arrivalBuffer, setArrivalBuffer] = useState(savedPrefs.arrivalBuffer);
+  const [walkingSpeed, setWalkingSpeed] = useState(savedPrefs.walkingSpeed);
 
+  const isDirty =
+    parkingPass !== savedPrefs.parkingPass ||
+    arrivalBuffer !== savedPrefs.arrivalBuffer ||
+    walkingSpeed !== savedPrefs.walkingSpeed;
+
+  // Re-sync if prefsKey changes (e.g. user switch)
   useEffect(() => {
-    const raw = localStorage.getItem(prefsKey);
-    if (!raw) return;
-
-    try {
-      const prefs = JSON.parse(raw);
-      if (prefs.parkingPass) setParkingPass(prefs.parkingPass);
-      if (typeof prefs.arrivalBuffer === "number") setArrivalBuffer([prefs.arrivalBuffer]);
-      if (typeof prefs.walkingSpeed === "number") setWalkingSpeed([prefs.walkingSpeed]);
-    } catch {
-    }
+    const prefs = loadPrefs(prefsKey);
+    setSavedPrefs(prefs);
+    setParkingPass(prefs.parkingPass);
+    setArrivalBuffer(prefs.arrivalBuffer);
+    setWalkingSpeed(prefs.walkingSpeed);
   }, [prefsKey]);
 
+  // Browser tab close / refresh guard
   useEffect(() => {
-    const prefs = {
-      parkingPass,
-      arrivalBuffer: arrivalBuffer[0],
-      walkingSpeed: walkingSpeed[0],
+    if (!isDirty) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
     };
-    localStorage.setItem(prefsKey, JSON.stringify(prefs));
-  }, [prefsKey, parkingPass, arrivalBuffer, walkingSpeed]);
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [isDirty]);
+
+  // In-app navigation guard
+  const blocker = useBlocker(isDirty);
 
   const handleSaveChanges = () => {
-    const prefs = {
-      parkingPass,
-      arrivalBuffer: arrivalBuffer[0],
-      walkingSpeed: walkingSpeed[0],
-    };
-
+    const prefs: Prefs = { parkingPass, arrivalBuffer, walkingSpeed };
     localStorage.setItem(prefsKey, JSON.stringify(prefs));
+    setSavedPrefs(prefs);
     toast.success("Settings saved successfully!");
+  };
+
+  const handleDiscardChanges = () => {
+    setParkingPass(savedPrefs.parkingPass);
+    setArrivalBuffer(savedPrefs.arrivalBuffer);
+    setWalkingSpeed(savedPrefs.walkingSpeed);
+    toast("Changes discarded");
   };
 
   const handleLogout = () => {
@@ -83,141 +135,203 @@ export default function Settings() {
             Dashboard
           </Button>
           <h1 className="text-2xl font-bold text-gray-900">Account Settings</h1>
-          <p className="text-sm text-gray-500">Manage your account data and parking preferences</p>
+          <p className="text-sm text-muted-foreground">Manage your account data and parking preferences</p>
         </div>
+
+        {/* Unsaved changes banner */}
+        {isDirty && (
+          <div className="bg-amber-50 border-t border-amber-200 px-4 py-3">
+            <div className="container mx-auto flex items-center justify-between gap-4">
+              <p className="text-sm font-medium text-amber-800">You have unsaved changes</p>
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="sm" onClick={handleDiscardChanges} className="text-amber-800 hover:bg-amber-100">
+                  Discard
+                </Button>
+                <Button size="sm" onClick={handleSaveChanges} className="bg-primary hover:bg-ucr-blue-dark text-white">
+                  Save Changes
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
-      <div className="container mx-auto px-4 py-6 max-w-4xl">
+      <div className="container mx-auto px-4 py-6 max-w-4xl space-y-6">
         {/* Account Data */}
-        <Card className="mb-6">
+        <Card>
           <CardContent className="p-6">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="bg-green-100 rounded-full p-3">
-                <User className="size-6 text-green-600" />
+            <div className="flex items-center gap-4 mb-6">
+              <div className="bg-blue-50 rounded-full p-3">
+                <User className="size-5 text-primary" />
               </div>
               <div>
-                <h2 className="font-bold text-gray-900 text-lg">Account Data</h2>
-                <p className="text-xl text-gray-800">{displayName}</p>
+                <h2 className="font-bold text-gray-900 text-lg leading-tight">Account Data</h2>
+                <p className="text-muted-foreground text-sm">{email}</p>
               </div>
             </div>
 
             <div className="grid md:grid-cols-2 gap-4">
               <div>
-                <Label className="text-sm text-gray-600">Full Name</Label>
+                <Label className="text-sm text-muted-foreground">Full Name</Label>
                 <Input value={displayName} className="mt-1" readOnly />
               </div>
               <div>
-                <Label className="text-sm text-gray-600">Email Address</Label>
+                <Label className="text-sm text-muted-foreground">Email Address</Label>
                 <Input value={email} className="mt-1" readOnly />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Parking Logistics - Gold Plus, Gold, and Blue */}
-        <Card className="mb-6">
+        {/* Parking Permit */}
+        <Card>
           <CardContent className="p-6">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="bg-green-100 rounded-full p-3">
-                <CreditCard className="size-6 text-green-600" />
+            <div className="flex items-center gap-4 mb-6">
+              <div className="bg-blue-50 rounded-full p-3">
+                <CreditCard className="size-5 text-primary" />
               </div>
               <div>
-                <h2 className="font-bold text-gray-900 text-lg">Parking Permit</h2>
+                <h2 className="font-bold text-gray-900 text-lg leading-tight">Parking Permit</h2>
+                <p className="text-muted-foreground text-sm">Select the permit type linked to your vehicle</p>
               </div>
             </div>
 
-            <div className="mb-6">
-              <Label className="text-sm text-gray-700 mb-4 block font-semibold">Select Your Permit Type</Label>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <Button
-                  variant={parkingPass === 'gold-plus' ? 'default' : 'outline'}
-                  onClick={() => setParkingPass('gold-plus')}
-                  className={`flex-col h-auto py-8 ${parkingPass === 'gold-plus' ? 'bg-linear-to-br from-yellow-500 to-amber-600 text-white border-transparent' : ''}`}
-                >
-                  <span className="text-[20px] font-bold">Gold Plus</span>
-                </Button>
-                <Button
-                  variant={parkingPass === 'gold' ? 'default' : 'outline'}
-                  onClick={() => setParkingPass('gold')}
-                  className={`flex-col h-auto py-8 ${parkingPass === 'gold' ? 'bg-linear-to-br from-yellow-400 to-yellow-600 text-white border-transparent' : ''}`}
-                >
-                  <span className="text-[20px] font-bold">Gold</span>
-                </Button>
-                <Button
-                  variant={parkingPass === 'blue' ? 'default' : 'outline'}
-                  onClick={() => setParkingPass('blue')}
-                  className={`flex-col h-auto py-8 ${parkingPass === 'blue' ? 'bg-linear-to-br from-blue-500 to-blue-700 text-white border-transparent' : ''}`}
-                >
-                  <span className="text-[20px] font-bold">Blue</span>
-                </Button>
-              </div>
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
-              <Button 
-                variant="link" 
-                size="sm" 
-                className="text-blue-600 px-0 h-auto justify-start"
-                onClick={() => window.open('https://transportation.ucr.edu/undergrad/undergrad-commuter', '_blank')}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+              <button
+                onClick={() => setParkingPass('gold-plus')}
+                className={`rounded-lg border-2 py-6 text-center transition-all cursor-pointer ${
+                  parkingPass === 'gold-plus'
+                    ? 'border-amber-400 bg-linear-to-br from-yellow-500 to-amber-600 text-white shadow-md'
+                    : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                }`}
               >
-                View UCR permit details <ExternalLink className="size-3 ml-1" />
-              </Button>
+                <span className="text-lg font-bold block">Gold Plus</span>
+              </button>
+              <button
+                onClick={() => setParkingPass('gold')}
+                className={`rounded-lg border-2 py-6 text-center transition-all cursor-pointer ${
+                  parkingPass === 'gold'
+                    ? 'border-yellow-400 bg-linear-to-br from-yellow-400 to-yellow-600 text-white shadow-md'
+                    : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <span className="text-lg font-bold block">Gold</span>
+              </button>
+              <button
+                onClick={() => setParkingPass('blue')}
+                className={`rounded-lg border-2 py-6 text-center transition-all cursor-pointer ${
+                  parkingPass === 'blue'
+                    ? 'border-blue-400 bg-linear-to-br from-blue-500 to-blue-700 text-white shadow-md'
+                    : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <span className="text-lg font-bold block">Blue</span>
+              </button>
             </div>
+
+            <Button
+              variant="link"
+              size="sm"
+              className="text-primary px-0 h-auto"
+              onClick={() => window.open('https://transportation.ucr.edu/undergrad/undergrad-commuter', '_blank')}
+            >
+              View UCR permit details <ExternalLink className="size-3 ml-1" />
+            </Button>
           </CardContent>
         </Card>
 
         {/* Optimization Preferences */}
-        <Card className="mb-6">
+        <Card>
           <CardContent className="p-6">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="bg-green-100 rounded-full p-3">
-                <Sliders className="size-6 text-green-600" />
+            <div className="flex items-center gap-4 mb-6">
+              <div className="bg-blue-50 rounded-full p-3">
+                <SlidersHorizontal className="size-5 text-primary" />
               </div>
-              <h2 className="font-bold text-gray-900 text-lg">Optimization Preferences</h2>
+              <div>
+                <h2 className="font-bold text-gray-900 text-lg leading-tight">Optimization Preferences</h2>
+                <p className="text-muted-foreground text-sm">Fine-tune how we recommend parking spots</p>
+              </div>
             </div>
 
-            <div className="mb-10">
+            {/* Arrival Buffer */}
+            <div className="mb-8">
               <div className="flex items-center justify-between mb-3">
-                <Label className="text-sm text-gray-700">Arrival Buffer</Label>
-                <span className="text-sm font-bold text-green-600">{arrivalBuffer[0]} min</span>
+                <Label className="text-sm text-gray-700 font-semibold">Arrival Buffer</Label>
+                <span className="text-sm font-bold text-primary tabular-nums">{arrivalBuffer} min</span>
               </div>
-              <Slider value={arrivalBuffer} onValueChange={setArrivalBuffer} max={30} step={5} />
+              <Slider value={[arrivalBuffer]} onValueChange={([v]) => setArrivalBuffer(v)} max={30} step={5} />
+              <div className="flex justify-between mt-2 px-1 text-[10px] text-muted-foreground font-medium uppercase tracking-wide">
+                <span>0 min</span>
+                <span>30 min</span>
+              </div>
             </div>
 
-            <div className="mb-6">
-              <div className="flex items-center justify-between mb-3">
-                <Label className="text-sm text-gray-700">Walking Speed</Label>
-                <span className="text-sm font-bold text-green-600 uppercase tracking-widest">
-                  {getWalkingLabel(walkingSpeed[0])}
-                </span>
-              </div>
-              <Slider 
-                value={walkingSpeed} 
-                onValueChange={setWalkingSpeed} 
-                max={3} 
-                min={1} 
-                step={1} 
-              />
-              <div className="flex justify-between mt-2 px-1 text-[10px] text-gray-400 font-bold uppercase">
-                <span>Slow</span>
-                <span>Medium</span>
-                <span>Fast</span>
+            {/* Walking Speed */}
+            <div>
+              <Label className="text-sm text-gray-700 font-semibold mb-3 block">Walking Speed</Label>
+              <div className="grid grid-cols-3 gap-3">
+                {WALKING_SPEEDS.map((speed) => (
+                  <button
+                    key={speed.value}
+                    onClick={() => setWalkingSpeed(speed.value)}
+                    className={`rounded-lg border-2 py-4 px-3 text-center transition-all cursor-pointer ${
+                      walkingSpeed === speed.value
+                        ? 'border-primary bg-blue-50 text-primary shadow-sm'
+                        : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                    }`}
+                  >
+                    <span className="block text-base font-bold">{speed.label}</span>
+                  </button>
+                ))}
               </div>
             </div>
           </CardContent>
         </Card>
 
         {/* Logout and Save */}
-        <div className="flex justify-between items-center mt-8">
+        <div className="flex justify-between items-center pt-2">
           <Button variant="ghost" onClick={handleLogout} className="text-red-600 hover:bg-red-50">
             <LogOut className="size-4 mr-2" /> Logout
           </Button>
-          <Button onClick={handleSaveChanges} className="bg-green-500 hover:bg-green-600 px-8">
-            Save Changes
-          </Button>
+          <div className="flex items-center gap-3">
+            {isDirty && (
+              <Button variant="outline" onClick={handleDiscardChanges}>
+                Discard
+              </Button>
+            )}
+            <Button
+              onClick={handleSaveChanges}
+              disabled={!isDirty}
+              className="bg-primary hover:bg-ucr-blue-dark px-8 disabled:opacity-50"
+            >
+              Save Changes
+            </Button>
+          </div>
         </div>
       </div>
+
+      {/* Navigation guard dialog */}
+      <AlertDialog open={blocker.state === 'blocked'}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Unsaved Changes</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have unsaved changes that will be lost if you leave this page.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => blocker.reset?.()}>
+              Stay
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => blocker.proceed?.()}
+              className="bg-red-500 hover:bg-red-600"
+            >
+              Discard & Leave
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
