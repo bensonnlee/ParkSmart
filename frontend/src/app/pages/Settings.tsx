@@ -25,24 +25,35 @@ interface Prefs {
 }
 
 const DEFAULT_PREFS: Prefs = {
-  parkingPass: 'blue',
+  parkingPass: 'gold',
   arrivalBuffer: 10,
   walkingSpeed: 2,
 };
 
-function loadPrefs(key: string): Prefs {
-  const raw = localStorage.getItem(key);
-  if (!raw) return DEFAULT_PREFS;
-  try {
-    const parsed = JSON.parse(raw);
-    return {
-      parkingPass: parsed.parkingPass ?? DEFAULT_PREFS.parkingPass,
-      arrivalBuffer: typeof parsed.arrivalBuffer === 'number' ? parsed.arrivalBuffer : DEFAULT_PREFS.arrivalBuffer,
-      walkingSpeed: typeof parsed.walkingSpeed === 'number' ? parsed.walkingSpeed : DEFAULT_PREFS.walkingSpeed,
-    };
-  } catch {
-    return DEFAULT_PREFS;
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://parksmart-api.onrender.com";
+
+function loadPrefs(key: string, user: Record<string, unknown> | null): Prefs {
+  // Priority: user object fields (DB-backed) > localStorage prefs > defaults
+  const localRaw = localStorage.getItem(key);
+  let localPrefs: Partial<Prefs> = {};
+  if (localRaw) {
+    try {
+      localPrefs = JSON.parse(localRaw);
+    } catch {
+      // ignore
+    }
   }
+
+  // DB-backed values from user object (stored after successful API save)
+  const dbParkingPass = user && typeof user.parking_pass_slug === 'string' ? user.parking_pass_slug : undefined;
+  const dbArrivalBuffer = user && typeof user.arrival_buffer === 'number' ? user.arrival_buffer : undefined;
+  const dbWalkingSpeed = user && typeof user.walking_speed === 'number' ? user.walking_speed : undefined;
+
+  return {
+    parkingPass: dbParkingPass ?? localPrefs.parkingPass ?? DEFAULT_PREFS.parkingPass,
+    arrivalBuffer: dbArrivalBuffer ?? (typeof localPrefs.arrivalBuffer === 'number' ? localPrefs.arrivalBuffer : DEFAULT_PREFS.arrivalBuffer),
+    walkingSpeed: dbWalkingSpeed ?? (typeof localPrefs.walkingSpeed === 'number' ? localPrefs.walkingSpeed : DEFAULT_PREFS.walkingSpeed),
+  };
 }
 
 const WALKING_SPEEDS = [
@@ -65,8 +76,8 @@ export default function Settings() {
   const uid = user?.id || user?.user_id || user?.supabase_id;
   const prefsKey = uid ? `prefs:${uid}` : "prefs:guest";
 
-  // Saved state — what's currently persisted in localStorage
-  const [savedPrefs, setSavedPrefs] = useState<Prefs>(() => loadPrefs(prefsKey));
+  // Saved state — what's currently persisted in localStorage / DB
+  const [savedPrefs, setSavedPrefs] = useState<Prefs>(() => loadPrefs(prefsKey, user));
 
   // Draft state — what the user is actively editing
   const [parkingPass, setParkingPass] = useState(savedPrefs.parkingPass);
@@ -80,12 +91,12 @@ export default function Settings() {
 
   // Re-sync if prefsKey changes (e.g. user switch)
   useEffect(() => {
-    const prefs = loadPrefs(prefsKey);
+    const prefs = loadPrefs(prefsKey, user);
     setSavedPrefs(prefs);
     setParkingPass(prefs.parkingPass);
     setArrivalBuffer(prefs.arrivalBuffer);
     setWalkingSpeed(prefs.walkingSpeed);
-  }, [prefsKey]);
+  }, [prefsKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Browser tab close / refresh guard
   useEffect(() => {
@@ -100,11 +111,53 @@ export default function Settings() {
   // In-app navigation guard
   const blocker = useBlocker(isDirty);
 
-  const handleSaveChanges = () => {
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSaveChanges = async () => {
     const prefs: Prefs = { parkingPass, arrivalBuffer, walkingSpeed };
+
+    // Always save to localStorage for immediate local access
     localStorage.setItem(prefsKey, JSON.stringify(prefs));
     setSavedPrefs(prefs);
-    toast.success("Settings saved successfully!");
+
+    // Persist to DB if user is authenticated
+    const token = localStorage.getItem("token");
+    if (token) {
+      setIsSaving(true);
+      try {
+        const res = await fetch(`${API_BASE}/api/auth/me/preferences`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            parking_pass: parkingPass,
+            arrival_buffer: arrivalBuffer,
+            walking_speed: walkingSpeed,
+          }),
+        });
+
+        if (!res.ok) {
+          throw new Error("Failed to save preferences");
+        }
+
+        const data = await res.json();
+        // Update localStorage user object with DB-backed values
+        if (user) {
+          const updated = { ...user, arrival_buffer: data.arrival_buffer, walking_speed: data.walking_speed, preferred_permit_id: data.preferred_permit_id, parking_pass_slug: parkingPass };
+          localStorage.setItem("user", JSON.stringify(updated));
+        }
+
+        toast.success("Settings saved successfully!");
+      } catch {
+        toast.error("Settings saved locally, but failed to sync to server.");
+      } finally {
+        setIsSaving(false);
+      }
+    } else {
+      toast.success("Settings saved successfully!");
+    }
   };
 
   const handleDiscardChanges = () => {
@@ -147,8 +200,8 @@ export default function Settings() {
                 <Button variant="ghost" size="sm" onClick={handleDiscardChanges} className="text-amber-800 hover:bg-amber-100">
                   Discard
                 </Button>
-                <Button size="sm" onClick={handleSaveChanges} className="bg-primary hover:bg-ucr-blue-dark text-white">
-                  Save Changes
+                <Button size="sm" onClick={handleSaveChanges} disabled={isSaving} className="bg-primary hover:bg-ucr-blue-dark text-white">
+                  {isSaving ? "Saving…" : "Save Changes"}
                 </Button>
               </div>
             </div>
@@ -301,10 +354,10 @@ export default function Settings() {
             )}
             <Button
               onClick={handleSaveChanges}
-              disabled={!isDirty}
+              disabled={!isDirty || isSaving}
               className="bg-primary hover:bg-ucr-blue-dark px-8 disabled:opacity-50"
             >
-              Save Changes
+              {isSaving ? "Saving…" : "Save Changes"}
             </Button>
           </div>
         </div>

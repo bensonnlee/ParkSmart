@@ -1,6 +1,7 @@
 import uuid
 from datetime import date, datetime, time
 from decimal import Decimal
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
@@ -104,6 +105,15 @@ class AuthTokens(BaseModel):
     expires_in: int
 
 
+PermitSlug = Literal["gold", "gold-plus", "blue"]
+
+
+class UpdatePreferencesRequest(BaseModel):
+    parking_pass: PermitSlug | None = None
+    arrival_buffer: int | None = Field(None, ge=0, le=30)
+    walking_speed: int | None = Field(None, ge=1, le=3)
+
+
 class UserResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -112,6 +122,8 @@ class UserResponse(BaseModel):
     email: str
     display_name: str | None = None
     preferred_permit_id: uuid.UUID | None = None
+    arrival_buffer: int | None = None
+    walking_speed: int | None = None
     created_at: datetime
     updated_at: datetime
 
