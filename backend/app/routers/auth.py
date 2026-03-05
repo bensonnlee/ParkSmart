@@ -13,6 +13,7 @@ from app.database import get_db
 from app.dependencies.auth import get_current_user, security
 from app.models import User
 from app.config import get_settings
+from app.models.permit import PermitType
 from app.schemas import (
     AuthResponse,
     AuthTokens,
@@ -24,6 +25,7 @@ from app.schemas import (
     ResetPasswordRequest,
     ResetPasswordResponse,
     SignUpRequest,
+    UpdatePreferencesRequest,
     UserResponse,
 )
 from app.services import auth as auth_service
@@ -136,6 +138,47 @@ async def logout(
 @router.get("/me", response_model=UserResponse)
 async def get_me(user: CurrentUser) -> UserResponse:
     """Get current authenticated user info."""
+    return UserResponse.model_validate(user)
+
+
+PERMIT_SLUG_MAP: dict[str, str] = {
+    "gold": "Gold Permit",
+    "gold-plus": "Gold Plus Permit",
+    "blue": "Blue Permit",
+}
+
+
+@router.patch("/me/preferences", response_model=UserResponse)
+async def update_preferences(
+    request: UpdatePreferencesRequest, user: CurrentUser, db: DbSession
+) -> UserResponse:
+    """Update the current user's parking preferences."""
+    if request.parking_pass is not None:
+        permit_name = PERMIT_SLUG_MAP.get(request.parking_pass)
+        if not permit_name:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Unknown permit type: {request.parking_pass}",
+            )
+        result = await db.execute(
+            select(PermitType).where(PermitType.name == permit_name)
+        )
+        permit = result.scalar_one_or_none()
+        if not permit:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Permit type '{permit_name}' not found",
+            )
+        user.preferred_permit_id = permit.id
+
+    if request.arrival_buffer is not None:
+        user.arrival_buffer = request.arrival_buffer
+
+    if request.walking_speed is not None:
+        user.walking_speed = request.walking_speed
+
+    await db.commit()
+    await db.refresh(user)
     return UserResponse.model_validate(user)
 
 
