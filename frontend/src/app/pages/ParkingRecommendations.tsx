@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Button } from '@/app/components/ui/button';
 import { Card, CardContent } from '@/app/components/ui/card';
 import { ArrowLeft, MapPin, Footprints, CheckCircle, Navigation } from 'lucide-react';
@@ -7,8 +7,12 @@ import { format, subMinutes } from 'date-fns';
 import { cachedFetch } from '@/api/apiCache';
 
 export default function ParkingRecommendations() {
-  const { classId } = useParams<{ classId: string }>(); 
+  const { classId } = useParams<{ classId: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const userLat = searchParams.get('lat');
+  const userLng = searchParams.get('lng');
+  const usingUserLocation = !!(userLat && userLng);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -25,12 +29,17 @@ export default function ParkingRecommendations() {
       try {
         const baseUrl = "https://parksmart-api.onrender.com/api";
 
-        // We fetch both the classroom details and the list of associated parking lots
+        // Fetch classroom details, and lots sorted by either driving distance (user location) or walking distance (classroom)
+        const lotsUrl = userLat && userLng
+          ? `${baseUrl}/classrooms/lots/from-location?latitude=${userLat}&longitude=${userLng}`
+          : `${baseUrl}/classrooms/${classId}/lots`;
+
         const [classData, listData] = await Promise.all([
           cachedFetch(`${baseUrl}/classrooms/${classId}`),
-          cachedFetch(`${baseUrl}/classrooms/${classId}/lots`)
+          cachedFetch(lotsUrl)
         ]);
-        const rawLots = listData.lots || [];
+        // from-location returns flat array; /{classId}/lots wraps in { lots: [...] }
+        const rawLots = Array.isArray(listData) ? listData : (listData.lots || []);
 
 
          // fetch the specific details for the top 3 recommended lots.
@@ -57,7 +66,7 @@ export default function ParkingRecommendations() {
           walkingTime: lot.walking_distance_minutes ?? 5,
           lat: lot.latitude,
           lng: lot.longitude,
-          badge: index === 0 ? "BEST MATCH" : "VALUE"
+          badge: index === 0 ? (usingUserLocation ? "CLOSEST DRIVE" : "BEST MATCH") : "VALUE"
         }));
 
         setRecommendations(formattedLots);
@@ -71,7 +80,7 @@ export default function ParkingRecommendations() {
     };
 
     fetchData();
-  }, [classId]);
+  }, [classId, userLat, userLng]);
 
   // Opens Google Maps in a new tab with the lot coordinates
   const handleNavigate = (lat: string, lng: string) => {
@@ -107,9 +116,12 @@ export default function ParkingRecommendations() {
           <p className="text-6xl font-black">{format(leaveByTime, 'h:mm a')}</p>
         </Card>
 
-        <h2 className="text-sm font-black text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+        <h2 className="text-sm font-black text-gray-400 uppercase tracking-widest mb-1 flex items-center gap-2">
           <CheckCircle className="size-4 text-green-500" /> Optimal Parking Lots
         </h2>
+        <p className="text-xs text-gray-400 mb-4">
+          {usingUserLocation ? "Sorted by driving distance from your location" : "Sorted by walking distance from classroom"}
+        </p>
 
         {/* Lot Recommendation List */}
         {recommendations.map((lot) => (

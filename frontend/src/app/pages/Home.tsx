@@ -1,9 +1,9 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { Button } from '@/app/components/ui/button';
-import { Card, CardContent } from '@/app/components/ui/card';
-import { Calendar, MapPin, Clock, Upload, Settings, Eye, Edit2, Check } from 'lucide-react';
-import { format, startOfWeek, addDays, nextMonday, isWeekend } from 'date-fns';
+import { Card } from '@/app/components/ui/card';
+import { Calendar, MapPin, Clock, Upload, Settings, Eye } from 'lucide-react';
+import { format, nextMonday, isWeekend } from 'date-fns';
 import { useLocation } from '../hooks/useLocation';
 import { cachedFetch } from '@/api/apiCache';
 
@@ -26,10 +26,9 @@ export default function Home() {
   const navigate = useNavigate();
   
   // Location States
-  const { latitude, longitude, error: locError, loading: locLoading } = useLocation();
-  const [address, setAddress] = useState<string>("Locating...");
-  const [isEditing, setIsEditing] = useState(false);
-  const [manualAddress, setManualAddress] = useState("");
+  const { latitude, longitude, loading: locLoading, requestLocation } = useLocation();
+  const [address, setAddress] = useState<string>("");
+  const locationAvailable = !!(latitude && longitude);
 
   // Added hasAnyData to distinguish between "No Schedule Uploaded" and "No Classes Today"
   const [hasAnyData, setHasAnyData] = useState(true);
@@ -40,7 +39,7 @@ export default function Home() {
 
   // Reverse Geocoding Effect
   useEffect(() => {
-    if (latitude && longitude && !manualAddress) {
+    if (latitude && longitude) {
       cachedFetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`)
         .then(data => {
           const road = data.address.road || "";
@@ -50,7 +49,7 @@ export default function Home() {
         })
         .catch(() => setAddress("Location Found"));
     }
-  }, [latitude, longitude, manualAddress]);
+  }, [latitude, longitude]);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 60000);
@@ -244,47 +243,51 @@ export default function Home() {
                 </div>
               </Card>
 
-              <Card 
-                className="p-5 border-none shadow-sm flex items-center gap-4 cursor-pointer group relative"
-                onClick={() => !isEditing && setIsEditing(true)}
-              >
-                <div className="bg-blue-50 p-3 rounded-2xl"><MapPin className="text-ucr-blue size-6" /></div>
-                <div className="flex-1 overflow-hidden">
-                  <p className="text-[11px] text-gray-400 uppercase font-black flex justify-between items-center">
-                    My Location
-                    {!isEditing && <Edit2 className="size-3 opacity-0 group-hover:opacity-100 transition-opacity" />}
-                  </p>
-                  
-                  {isEditing ? (
-                    <div className="flex items-center gap-2 mt-1" onClick={(e) => e.stopPropagation()}>
-                      <input 
-                        autoFocus
-                        className="text-sm font-bold bg-gray-50 border-b-2 border-ucr-blue outline-none w-full py-0.5"
-                        value={manualAddress}
-                        placeholder="Type city..."
-                        onChange={(e) => setManualAddress(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && setIsEditing(false)}
-                        onBlur={() => setIsEditing(false)}
-                      />
-                      <button onClick={() => setIsEditing(false)} className="text-ucr-blue">
-                        <Check className="size-4" />
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col">
-                      <p className="text-sm font-bold text-gray-900 leading-tight">
-                        {manualAddress || (locLoading ? "Locating..." : locError ? "Location Hidden" : address)}
-                      </p>
-                      {!manualAddress && !locLoading && !locError && (
-                        <p className="text-[10px] text-gray-400 font-medium mt-0.5">
-                          ({latitude?.toFixed(4)}, {longitude?.toFixed(4)})
-                        </p>
-                      )}
-                    </div>
-                  )}
+              {locationAvailable ? (
+                <Card className="p-5 border-none shadow-sm flex items-center gap-4">
+                  <div className="bg-blue-50 p-3 rounded-2xl"><MapPin className="text-ucr-blue size-6" /></div>
+                  <div className="flex-1 overflow-hidden">
+                    <p className="text-[11px] text-gray-400 uppercase font-black tracking-wider">My Location</p>
+                    <p className="text-sm font-bold text-gray-900 leading-tight">
+                      {locLoading ? "Locating..." : address}
+                    </p>
+                    <p className="text-[10px] text-gray-400 font-medium mt-0.5">
+                      ({latitude?.toFixed(4)}, {longitude?.toFixed(4)})
+                    </p>
+                  </div>
+                </Card>
+              ) : (
+                <Card
+                  className="p-5 border border-amber-200 shadow-sm flex items-center gap-4 cursor-pointer hover:bg-amber-50/50 transition-colors"
+                  onClick={requestLocation}
+                >
+                  <div className="bg-amber-50 p-3 rounded-2xl"><MapPin className="text-amber-600 size-6" /></div>
+                  <div className="flex-1 overflow-hidden">
+                    <p className="text-[11px] text-amber-600 uppercase font-black tracking-wider">
+                      {locLoading ? "Locating..." : "Location Required"}
+                    </p>
+                    <p className="text-sm font-bold text-gray-900 leading-tight">
+                      {locLoading ? "Checking permissions..." : "Tap to enable location"}
+                    </p>
+                  </div>
+                </Card>
+              )}
+            </div>
+
+            {!locLoading && !locationAvailable && (
+              <Card className="mb-8 border border-amber-200 bg-amber-50 p-5">
+                <div className="flex items-start gap-4">
+                  <div className="bg-amber-100 p-2 rounded-xl shrink-0">
+                    <MapPin className="text-amber-600 size-5" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm text-gray-600">
+                      ParkSmart needs your location to find the closest parking lots. Enable location in your browser settings or tap the location card above to try again.
+                    </p>
+                  </div>
                 </div>
               </Card>
-            </div>
+            )}
 
             <div className="flex items-center justify-between mb-6">
                <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
@@ -341,11 +344,18 @@ export default function Home() {
                           </div>
                         </div>
 
-                        <Button 
-                          onClick={() => navigate(`/dashboard/parking/${item.classroomId}`)} 
-                          className="w-full bg-ucr-blue hover:bg-ucr-blue-dark py-6 text-md font-bold rounded-xl shadow-lg shadow-blue-100 transition-all active:scale-[0.98]"
+                        <Button
+                          onClick={locationAvailable
+                            ? () => navigate(`/dashboard/parking/${item.classroomId}?lat=${latitude}&lng=${longitude}`)
+                            : requestLocation}
+                          disabled={!locationAvailable && locLoading}
+                          className={`w-full py-6 text-md font-bold rounded-xl transition-all active:scale-[0.98] ${
+                            locationAvailable
+                              ? 'bg-ucr-blue hover:bg-ucr-blue-dark shadow-lg shadow-blue-100'
+                              : 'bg-gray-400 hover:bg-gray-500'
+                          }`}
                         >
-                        Find Optimal Parking
+                          {locationAvailable ? "Find Optimal Parking" : locLoading ? "Locating..." : "Allow Location to Find Parking"}
                         </Button>
                       </div>
                     </Card>

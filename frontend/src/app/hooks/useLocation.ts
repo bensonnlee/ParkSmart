@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 interface LocationState {
   latitude: number | null;
@@ -15,11 +15,13 @@ export const useLocation = () => {
     loading: true,
   });
 
-  useEffect(() => {
+  const requestLocation = useCallback(() => {
     if (!navigator.geolocation) {
       setState(s => ({ ...s, error: "Geolocation not supported", loading: false }));
       return;
     }
+
+    setState(s => ({ ...s, loading: true }));
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -33,9 +35,13 @@ export const useLocation = () => {
       (error) => {
         setState(s => ({ ...s, error: error.message, loading: false }));
       },
-      { enableHighAccuracy: true }
+      { enableHighAccuracy: true, timeout: 10000 }
     );
   }, []);
 
-  return state;
+  useEffect(() => {
+    requestLocation();
+  }, [requestLocation]);
+
+  return { ...state, requestLocation };
 };
