@@ -8,10 +8,20 @@ from sqlalchemy.orm import selectinload
 
 from app.database import get_db
 from app.models import Classroom, ParkingLot, LotBuildingDistance
-from app.schemas import ClassroomLotsResponse, ClassroomWithBuilding, ParkingLotRead
+from app.schemas import ClassroomLotsResponse, ClassroomWithBuilding, ParkingLotWithDistance
 from app.services.loc_distance import driving_distance_to_lots
 
 router = APIRouter(prefix="/api/classrooms", tags=["classrooms"])
+
+
+def _to_lot_responses(lot_tuples: list[tuple[ParkingLot, float]]) -> list[ParkingLotWithDistance]:
+    """Convert (lot, duration_minutes) tuples to ParkingLotWithDistance schemas."""
+    result = []
+    for lot, duration in lot_tuples:
+        item = ParkingLotWithDistance.model_validate(lot)
+        item.travel_minutes = round(duration, 1)
+        result.append(item)
+    return result
 
 DbSession = Annotated[AsyncSession, Depends(get_db)]
 
@@ -32,50 +42,43 @@ async def _get_classroom(classroom_id: uuid.UUID, db: AsyncSession) -> Classroom
     return classroom
 
 
-async def _sort_lots_by_walking_distance(  
+async def _sort_lots_by_walking_distance(
     classroom: Classroom, lots: list[ParkingLot], db: AsyncSession
-) -> list[ParkingLot]:
+) -> list[tuple[ParkingLot, float]]:
     # Calculate walking distances from each lot to the classroom's building
     # coordinates and return lots sorted closest to farthest.
-    # Classroom -> building -> (latitude, longitude)
-    # ParkingLot -> (latitude, longitude)  
 
-    #Gets each lot from database
-    lotID = []
-    for lot in lots:
-        lotID.append(lot.id)
-
-    #Each classroom is associated with a building so get that buildingID from database
+    lotID = [lot.id for lot in lots]
     buildingID = classroom.building.id
 
-    #Get precomputed walking distances from lots that match lotID to specific building that matches buildingID and then convert results into a list for easier access
     result = await db.execute(select(LotBuildingDistance).where(LotBuildingDistance.building_id == buildingID).where(LotBuildingDistance.lot_id.in_(lotID)))
     precomputed_distances = result.scalars().all()
 
-    #Create map/dictionary and only store the precomputed walking distances we found (since not all lots can have precomputed walking distance ?); also has quick lookup
-    distance_map = {}
+    # Store (distance_miles, duration_minutes) per lot for sorting and response
+    distance_map: dict[uuid.UUID, tuple[float, float]] = {}
     for distance in precomputed_distances:
-        distance_map[distance.lot_id] = float(distance.distance_miles)
+        distance_map[distance.lot_id] = (float(distance.distance_miles), float(distance.duration_minutes))
 
-    #Add lots and sort lots from closest to farthest via walking distance
+    # Sort lots from closest to farthest via walking distance, return (lot, duration_minutes)
     lotData = []
     for lot in lots:
         if lot.id in distance_map:
-            lotData.append((lot, distance_map[lot.id]))
-    
-    lotData.sort(key=lambda x: x[1]) #Sort by distance (index 1 in tuple)
-    return [lot for lot, _ in lotData] #Only return sorted lots; ignore distance
+            dist, duration = distance_map[lot.id]
+            lotData.append((lot, dist, duration))
 
-@router.get("/lots/from-location", response_model=list[ParkingLotRead])
-async def get_nearest_lots_from_location(latitude: float, longitude: float, db: DbSession) -> list[ParkingLotRead]:
+    lotData.sort(key=lambda x: x[1])  # Sort by distance
+    return [(lot, duration) for lot, _, duration in lotData]
+
+@router.get("/lots/from-location", response_model=list[ParkingLotWithDistance])
+async def get_nearest_lots_from_location(latitude: float, longitude: float, db: DbSession) -> list[ParkingLotWithDistance]:
     #Get lots from database db
     lotResults = await db.execute(select(ParkingLot))
     lots = list(lotResults.scalars().all())
 
     #Call function that does Mapbox API call and sorts them
-    sortedLots = await driving_distance_to_lots(latitude, longitude, lots)
+    sorted_lot_tuples = await driving_distance_to_lots(latitude, longitude, lots)
 
-    return [ParkingLotRead.model_validate(lot) for lot in sortedLots]
+    return _to_lot_responses(sorted_lot_tuples)
 
 
 @router.get("/{classroom_id}", response_model=ClassroomWithBuilding)
@@ -104,9 +107,9 @@ async def get_nearest_lots(
 
     lots_result = await db.execute(select(ParkingLot))
     lots = list(lots_result.scalars().all())
-    sorted_lots = await _sort_lots_by_walking_distance(classroom, lots, db)
+    sorted_lot_tuples = await _sort_lots_by_walking_distance(classroom, lots, db)
 
     return ClassroomLotsResponse(
         classroom=ClassroomWithBuilding.model_validate(classroom),
-        lots=[ParkingLotRead.model_validate(lot) for lot in sorted_lots], 
+        lots=_to_lot_responses(sorted_lot_tuples),
     )

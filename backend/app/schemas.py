@@ -37,6 +37,10 @@ class ParkingLotRead(BaseModel):
     updated_at: datetime
 
 
+class ParkingLotWithDistance(ParkingLotRead):
+    travel_minutes: float | None = None  # driving or walking time to/from this lot
+
+
 class ParkingLotWithAvailability(ParkingLotRead):
     free_spaces: int | None = None
     occupancy_pct: Decimal | None = None
@@ -183,7 +187,7 @@ class ClassroomWithBuilding(ClassroomRead):
 
 class ClassroomLotsResponse(BaseModel):
     classroom: ClassroomWithBuilding
-    lots: list[ParkingLotRead]
+    lots: list[ParkingLotWithDistance]
 
 
 # Schedule schemas

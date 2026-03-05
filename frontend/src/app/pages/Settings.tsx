@@ -17,44 +17,9 @@ import {
 } from '@/app/components/ui/alert-dialog';
 import { ArrowLeft, User, CreditCard, SlidersHorizontal, LogOut, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
-
-interface Prefs {
-  parkingPass: string;
-  arrivalBuffer: number;
-  walkingSpeed: number;
-}
-
-const DEFAULT_PREFS: Prefs = {
-  parkingPass: 'gold',
-  arrivalBuffer: 10,
-  walkingSpeed: 2,
-};
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://parksmart-api.onrender.com";
-
-function loadPrefs(key: string, user: Record<string, unknown> | null): Prefs {
-  // Priority: user object fields (DB-backed) > localStorage prefs > defaults
-  const localRaw = localStorage.getItem(key);
-  let localPrefs: Partial<Prefs> = {};
-  if (localRaw) {
-    try {
-      localPrefs = JSON.parse(localRaw);
-    } catch {
-      // ignore
-    }
-  }
-
-  // DB-backed values from user object (stored after successful API save)
-  const dbParkingPass = user && typeof user.parking_pass_slug === 'string' ? user.parking_pass_slug : undefined;
-  const dbArrivalBuffer = user && typeof user.arrival_buffer === 'number' ? user.arrival_buffer : undefined;
-  const dbWalkingSpeed = user && typeof user.walking_speed === 'number' ? user.walking_speed : undefined;
-
-  return {
-    parkingPass: dbParkingPass ?? localPrefs.parkingPass ?? DEFAULT_PREFS.parkingPass,
-    arrivalBuffer: dbArrivalBuffer ?? (typeof localPrefs.arrivalBuffer === 'number' ? localPrefs.arrivalBuffer : DEFAULT_PREFS.arrivalBuffer),
-    walkingSpeed: dbWalkingSpeed ?? (typeof localPrefs.walkingSpeed === 'number' ? localPrefs.walkingSpeed : DEFAULT_PREFS.walkingSpeed),
-  };
-}
+import { API_BASE } from '@/api/config';
+import { loadPrefs } from '@/lib/prefs';
+import type { Prefs } from '@/lib/prefs';
 
 const WALKING_SPEEDS = [
   { value: 1, label: 'Slow'},
