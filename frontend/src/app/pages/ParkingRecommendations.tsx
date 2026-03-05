@@ -1,26 +1,17 @@
-import { useState, useEffect, useMemo } from 'react';
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router';
 import { Button } from '@/app/components/ui/button';
 import { Card, CardContent } from '@/app/components/ui/card';
-import { ArrowLeft, MapPin, Footprints, Car, CheckCircle, Navigation, AlertCircle, TrendingDown, TrendingUp, Clock, type LucideIcon } from 'lucide-react';
-import { format, subMinutes, closestIndexTo } from 'date-fns';
-import { cachedFetch } from '@/api/apiCache';
-import { API_BASE } from '@/api/config';
-import { loadPrefs } from '@/lib/prefs';
+import { 
+  ArrowLeft, Clock, MapPin, Car, 
+  ParkingCircle, Footprints, Bell, 
+  Share2, Info, CheckCircle 
+} from 'lucide-react';
+import { format, subMinutes } from 'date-fns';
+import { toast } from 'sonner';
 
-const WALK_SPEED_MULTIPLIER: Record<number, number> = { 1: 1.5, 2: 1.0, 3: 0.75 };
-
-function TimelineConnector({ icon: Icon }: { icon: LucideIcon }) {
-  return (
-    <div className="flex-1 relative flex items-center justify-center">
-      <div className="absolute inset-x-0 top-1/2 border-t border-dashed border-gray-300" />
-      <Icon className="size-3.5 text-gray-400 bg-gray-50 px-0.5 relative z-10" />
-    </div>
-  );
-}
-
-export default function ParkingRecommendations() {
-  const { classId } = useParams<{ classId: string }>();
+export default function ParkingRecommendation() {
+  const { id } = useParams();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const userLat = searchParams.get('lat');
