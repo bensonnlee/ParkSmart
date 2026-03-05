@@ -4,6 +4,7 @@ import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
 import { MapPin, Eye, EyeOff, Loader2 } from 'lucide-react';
+import campusBg from '@/assets/ucr_background_login.webp';
 import { toast } from 'sonner';
 
 export default function Welcome() {
@@ -73,15 +74,13 @@ export default function Welcome() {
 
   return (
     <div className="min-h-screen flex">
-      {/* Left Side - Login Form (NOW BLUE) */}
       <div className="w-full lg:w-1/2 flex flex-col justify-center p-8 lg:p-16 bg-white">
         <div className="max-w-md mx-auto w-full">
-          {/* Logo - Changed to Blue */}
           <div className="flex items-center gap-2 mb-8">
             <div className="bg-blue-600 rounded-lg p-2">
               <MapPin className="size-6 text-white" />
             </div>
-            <span className="text-xl font-bold text-gray-900">Campus Parking Optimizer</span>
+            <span className="text-xl font-bold text-gray-900">ParkSmart</span>
           </div>
 
           <div className="mb-8">
@@ -144,7 +143,6 @@ export default function Welcome() {
               </div>
             </div>
 
-            {/* Button - Changed from Green to Blue */}
             <Button
               type="submit"
               className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white text-base font-medium"
@@ -154,7 +152,7 @@ export default function Welcome() {
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Connecting to Render...
+                  Logging in...
                 </>
               ) : (
                 'Log In'
@@ -174,26 +172,10 @@ export default function Welcome() {
         </div>
       </div>
 
-      {/* Right Side - Changed Gradient to Blue */}
-      <div className="hidden lg:block lg:w-1/2 relative bg-gradient-to-br from-blue-100 to-blue-50">
-        <div className="absolute inset-0 flex items-center justify-center p-16">
-          <div className="text-center">
-            <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md">
-              <div className="mb-4">
-                <div className="w-full h-64 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg flex items-center justify-center text-white">
-                  <div className="text-center">
-                    <MapPin className="size-20 mx-auto mb-4" />
-                    <p className="text-sm opacity-90">UCR Campus Map</p>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
-                <p className="text-sm font-semibold text-blue-900">REAL-TIME API CONNECTION ACTIVE</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <div
+        className="hidden lg:block lg:w-1/2 relative bg-cover"
+        style={{ backgroundImage: `url(${campusBg})`, backgroundPosition: '70% center' }}
+      />
     </div>
   );
 }
