@@ -2,11 +2,22 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Button } from '@/app/components/ui/button';
 import { Card, CardContent } from '@/app/components/ui/card';
-import { ArrowLeft, MapPin, Footprints, Car, CheckCircle, Navigation, AlertCircle } from 'lucide-react';
-import { format, subMinutes } from 'date-fns';
+import { ArrowLeft, MapPin, Footprints, Car, CheckCircle, Navigation, AlertCircle, TrendingDown, TrendingUp, Clock, type LucideIcon } from 'lucide-react';
+import { format, subMinutes, closestIndexTo } from 'date-fns';
 import { cachedFetch } from '@/api/apiCache';
 import { API_BASE } from '@/api/config';
 import { loadPrefs } from '@/lib/prefs';
+
+const WALK_SPEED_MULTIPLIER: Record<number, number> = { 1: 1.5, 2: 1.0, 3: 0.75 };
+
+function TimelineConnector({ icon: Icon }: { icon: LucideIcon }) {
+  return (
+    <div className="flex-1 relative flex items-center justify-center">
+      <div className="absolute inset-x-0 top-1/2 border-t border-dashed border-gray-300" />
+      <Icon className="size-3.5 text-gray-400 bg-gray-50 px-0.5 relative z-10" />
+    </div>
+  );
+}
 
 export default function ParkingRecommendations() {
   const { classId } = useParams<{ classId: string }>();
@@ -21,6 +32,9 @@ export default function ParkingRecommendations() {
   const [error, setError] = useState<string | null>(null);
   const [classInfo, setClassInfo] = useState<any>(null);
   const [recommendations, setRecommendations] = useState<any[]>([]);
+
+  const prefs = useMemo(() => loadPrefs(), []);
+  const walkMultiplier = WALK_SPEED_MULTIPLIER[prefs.walkingSpeed] ?? 1.0;
 
   useEffect(() => {
     if (!classId) return;
@@ -55,11 +69,14 @@ export default function ParkingRecommendations() {
         const walkTimeMap = new Map(walkLots.map((lot: any) => [lot.id, lot.travel_minutes]));
         const driveTimeMap = new Map(driveLots.map((lot: any) => [lot.id, lot.travel_minutes]));
 
-        // Fetch specific details (availability) for the top 3 recommended lots
+        // Fetch specific details (availability) + forecasts for the top 3 recommended lots
         const settledResults = await Promise.allSettled(
           rawLots.slice(0, 3).map(async (lot: any) => {
-            const detail = await cachedFetch(`${API_BASE}/api/lots/${lot.id}`, { ttl: 60_000 });
-            return detail;
+            const [detail, forecast] = await Promise.all([
+              cachedFetch(`${API_BASE}/api/lots/${lot.id}`, { ttl: 60_000 }),
+              cachedFetch(`${API_BASE}/api/lots/${lot.id}/forecast`, { ttl: 60_000 }).catch(() => ({ forecasts: [] })),
+            ]);
+            return { ...detail, forecasts: forecast.forecasts ?? [] };
           })
         );
 
@@ -71,20 +88,46 @@ export default function ParkingRecommendations() {
         setClassInfo({
           name: classData.building?.name || "Building",
           room: classData.location_string?.split('Room:')[1]?.trim() || classData.location_string || "",
-          startTime: startTimeParam ? new Date(Number(startTimeParam)) : null,
         });
 
         // Mapping hydrated API data into our UI component's expected structure
-        const formattedLots = detailedLots.map((lot: any) => ({
-          id: lot.id,
-          name: lot.name,
-          currentSpots: lot.free_spaces ?? 0,
-          totalSpots: lot.total_spaces ?? 0,
-          walkMinutes: walkTimeMap.get(lot.id) ?? null,
-          driveMinutes: driveTimeMap.get(lot.id) ?? null,
-          lat: lot.latitude,
-          lng: lot.longitude,
-        }));
+        const now = Date.now();
+        const classStart = startTimeParam ? new Date(Number(startTimeParam)) : null;
+        const formattedLots = detailedLots.map((lot: any) => {
+          const driveMin = driveTimeMap.get(lot.id) ?? 0;
+          const rawWalk = walkTimeMap.get(lot.id);
+          const walkMin = rawWalk != null ? Math.round(rawWalk * walkMultiplier) : 0;
+
+          // Arrival at lot: schedule-based when class start is known, otherwise "if you leave now"
+          const arrivalTime = classStart
+            ? subMinutes(classStart, prefs.arrivalBuffer + walkMin)
+            : (driveMin > 0 ? new Date(now + driveMin * 60_000) : null);
+
+          // Find forecast entry closest to arrival time
+          let predictedSpots: number | null = null;
+          if (arrivalTime && lot.forecasts?.length) {
+            const idx = closestIndexTo(arrivalTime, lot.forecasts.map((f: any) => new Date(f.forecast_time)));
+            if (idx != null) {
+              predictedSpots = lot.forecasts[idx].predicted_free_spaces;
+            }
+          }
+
+          return {
+            id: lot.id,
+            name: lot.name,
+            currentSpots: lot.free_spaces ?? 0,
+            totalSpots: lot.total_spaces ?? 0,
+            walkMinutes: rawWalk != null ? walkMin : null,
+            driveMinutes: driveTimeMap.get(lot.id) ?? null,
+            lat: lot.latitude,
+            lng: lot.longitude,
+            predictedSpots,
+            arrivalTime,
+            leaveByTime: classStart
+              ? subMinutes(classStart, prefs.arrivalBuffer + walkMin + driveMin)
+              : null,
+          };
+        });
 
         setRecommendations(formattedLots);
 
@@ -97,20 +140,12 @@ export default function ParkingRecommendations() {
     };
 
     fetchData();
-  }, [classId, userLat, userLng, startTimeParam]);
+  }, [classId, userLat, userLng, startTimeParam, walkMultiplier]);
 
   // Opens Google Maps in a new tab with the lot coordinates
   const handleNavigate = (lat: string, lng: string) => {
     window.open(`https://www.google.com/maps?q=${lat},${lng}`, '_blank');
   };
-
-  // Compute "Leave By" time from user prefs (memoized to avoid repeated localStorage reads)
-  // Must be called before early returns to satisfy React's rules of hooks
-  const prefs = useMemo(() => loadPrefs(), []);
-  const hasStartTime = !!classInfo?.startTime;
-  const leaveByTime = hasStartTime
-    ? subMinutes(classInfo.startTime, prefs.arrivalBuffer + (recommendations[0]?.walkMinutes || 0) + (recommendations[0]?.driveMinutes || 0))
-    : null;
 
   if (loading) return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-[#F6F8FB]">
@@ -142,20 +177,6 @@ export default function ParkingRecommendations() {
           {classInfo?.name}{classInfo?.room ? ` Room ${classInfo.room}` : ''}
         </h1>
 
-        {/* Hero Leave Time Card */}
-        {leaveByTime ? (
-          <Card className="mb-8 border-none shadow-lg bg-blue-700 text-white p-10 text-center rounded-[2.5rem]">
-            <p className="text-blue-100 text-xs font-bold uppercase tracking-widest mb-2">Leave By</p>
-            <p className="text-6xl font-black">{format(leaveByTime, 'h:mm a')}</p>
-          </Card>
-        ) : (
-          <Card className="mb-8 border-dashed border-2 border-gray-300 bg-gray-50 p-10 text-center rounded-[2.5rem]">
-            <p className="text-gray-400 text-xs font-bold uppercase tracking-widest mb-2">Leave By</p>
-            <p className="text-3xl font-bold text-gray-300">—</p>
-            <p className="text-xs text-gray-400 mt-2">Navigate from your schedule for departure times</p>
-          </Card>
-        )}
-
         <h2 className="text-sm font-black text-gray-400 uppercase tracking-widest mb-1 flex items-center gap-2">
           <CheckCircle className="size-4 text-green-500" /> Optimal Parking Lots
         </h2>
@@ -172,47 +193,107 @@ export default function ParkingRecommendations() {
           </Card>
         ) : (
           /* Lot Recommendation List */
-          recommendations.map((lot) => (
-            <Card key={lot.id} className="mb-4 border-none shadow-sm rounded-2xl overflow-hidden">
-              <CardContent className="p-0">
-                <div className="p-6 flex justify-between items-center">
-                  <div>
+          recommendations.map((lot) => {
+            const classArrival = lot.arrivalTime && lot.walkMinutes != null
+              ? new Date(lot.arrivalTime.getTime() + lot.walkMinutes * 60_000)
+              : null;
+
+            return (
+              <Card key={lot.id} className="mb-4 border-none shadow-sm rounded-2xl overflow-hidden">
+                <CardContent className="p-0 [&:last-child]:pb-0">
+                  {/* Zone 1 — Leave By banner */}
+                  {lot.leaveByTime && (
+                    <div className="bg-blue-600 px-6 py-3 flex items-center justify-between rounded-t-2xl">
+                      <span className="text-blue-200 text-xs font-bold uppercase tracking-widest flex items-center gap-1.5">
+                        <Clock className="size-3.5" /> Leave By
+                      </span>
+                      <span className="text-white text-2xl font-black">{format(lot.leaveByTime, 'h:mm a')}</span>
+                    </div>
+                  )}
+
+                  {/* Zone 2 — Lot name + durations */}
+                  <div className="px-4 sm:px-6 pt-5 pb-4">
                     <h3 className="font-bold text-lg text-gray-900 mb-1">{lot.name}</h3>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1.5 text-sm text-gray-400 flex-wrap">
                       {lot.driveMinutes != null && (
-                        <p className="text-sm text-gray-400 flex items-center gap-1">
-                          <Car className="size-4" /> ~{Math.round(lot.driveMinutes)} min drive
-                        </p>
+                        <span className="flex items-center gap-1 whitespace-nowrap">
+                          <Car className="size-3.5 shrink-0" /> ~{Math.round(lot.driveMinutes)} min drive
+                        </span>
+                      )}
+                      {lot.driveMinutes != null && lot.walkMinutes != null && (
+                        <span className="text-gray-300">{'\u00B7'}</span>
                       )}
                       {lot.walkMinutes != null && (
-                        <p className="text-sm text-gray-400 flex items-center gap-1">
-                          <Footprints className="size-4" /> ~{Math.round(lot.walkMinutes)} min walk
-                        </p>
+                        <span className="flex items-center gap-1 whitespace-nowrap">
+                          <Footprints className="size-3.5 shrink-0" /> ~{Math.round(lot.walkMinutes)} min walk
+                        </span>
                       )}
                       {lot.driveMinutes == null && lot.walkMinutes == null && (
-                        <p className="text-sm text-gray-400 flex items-center gap-1">
-                          <Footprints className="size-4" /> —
-                        </p>
+                        <span className="flex items-center gap-1">
+                          <Footprints className="size-3.5" /> —
+                        </span>
                       )}
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-2xl font-black text-gray-900">
-                      {lot.currentSpots}<span className="text-sm text-gray-300 font-bold">/{lot.totalSpots}</span>
-                    </p>
-                    <p className="text-[10px] text-gray-400 font-bold uppercase">Spots Left</p>
-                  </div>
-                </div>
 
-                <button
-                  onClick={() => handleNavigate(lot.lat, lot.lng)}
-                  className="w-full bg-gray-50 py-3 border-t border-gray-100 flex items-center justify-center gap-2 text-[11px] font-bold text-gray-500 hover:bg-blue-50 hover:text-blue-700 transition-all uppercase"
-                >
-                  <Navigation className="size-3" /> Start Navigation
-                </button>
-              </CardContent>
-            </Card>
-          ))
+                  {/* Availability strip */}
+                  <div className="flex items-center bg-gray-50 rounded-xl mx-4 sm:mx-6 mb-3 px-4 py-3 gap-4">
+                    <div className="flex-1">
+                      <p className="text-[10px] text-gray-400 font-bold uppercase mb-0.5">Now</p>
+                      <p className="text-xl font-black text-gray-900">
+                        {lot.currentSpots}<span className="text-xs text-gray-300 font-bold">/{lot.totalSpots}</span>
+                      </p>
+                    </div>
+                    <div className="w-px h-9 bg-gray-200" />
+                    <div className="flex-1">
+                      <p className="text-[10px] text-gray-400 font-bold uppercase mb-0.5">At Arrival</p>
+                      {lot.predictedSpots != null ? (
+                        <p className="text-xl font-black text-gray-900 flex items-center gap-1">
+                          {lot.predictedSpots < lot.currentSpots && <TrendingDown className="size-3.5 text-red-400" />}
+                          {lot.predictedSpots > lot.currentSpots && <TrendingUp className="size-3.5 text-green-500" />}
+                          {lot.predictedSpots}<span className="text-xs text-gray-300 font-bold">/{lot.totalSpots}</span>
+                        </p>
+                      ) : (
+                        <p className="text-xl font-black text-gray-300">—</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Journey timeline */}
+                  {lot.arrivalTime && (
+                    <div className="flex items-center gap-1.5 sm:gap-2 text-xs bg-gray-50 rounded-xl mx-4 sm:mx-6 mb-4 px-3 sm:px-4 py-3">
+                      <div className="text-center shrink-0">
+                        <p className="font-bold text-gray-900">{format(lot.leaveByTime || lot.arrivalTime, 'h:mm a')}</p>
+                        <p className="text-gray-400">Depart</p>
+                      </div>
+                      <TimelineConnector icon={Car} />
+                      <div className="text-center shrink-0">
+                        <p className="font-bold text-gray-900">{format(lot.arrivalTime, 'h:mm a')}</p>
+                        <p className="text-gray-400">At Lot</p>
+                      </div>
+                      {classArrival && (
+                        <>
+                          <TimelineConnector icon={Footprints} />
+                          <div className="text-center shrink-0">
+                            <p className="font-bold text-gray-900">{format(classArrival, 'h:mm a')}</p>
+                            <p className="text-gray-400">At Class</p>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Navigation button — flush to card bottom, card's overflow-hidden handles rounding */}
+                  <button
+                    onClick={() => handleNavigate(lot.lat, lot.lng)}
+                    className="w-full bg-blue-600 hover:bg-blue-700 py-3.5 flex items-center justify-center gap-2 text-xs font-bold text-white transition-colors uppercase tracking-wide"
+                  >
+                    <Navigation className="size-3.5" /> Start Navigation
+                  </button>
+                </CardContent>
+              </Card>
+            );
+          })
         )}
       </div>
     </div>
