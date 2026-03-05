@@ -13,279 +13,178 @@ import { toast } from 'sonner';
 export default function ParkingRecommendation() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const userLat = searchParams.get('lat');
-  const userLng = searchParams.get('lng');
-  const startTimeParam = searchParams.get('startTime');
-  const usingUserLocation = !!(userLat && userLng);
-
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [classInfo, setClassInfo] = useState<any>(null);
-  const [recommendations, setRecommendations] = useState<any[]>([]);
-
-  const prefs = useMemo(() => loadPrefs(), []);
-  const walkMultiplier = WALK_SPEED_MULTIPLIER[prefs.walkingSpeed] ?? 1.0;
 
   useEffect(() => {
-    if (!classId) return;
-
-    const fetchData = async () => {
-      setLoading(true);
-      setError(null);
-
-      try {
-        // Always fetch classroom + walking-distance lots; optionally fetch driving distances
-        const fetches: [Promise<any>, Promise<any>, Promise<any> | null] = [
-          cachedFetch(`${API_BASE}/api/classrooms/${classId}`),
-          cachedFetch(`${API_BASE}/api/classrooms/${classId}/lots`),
-          userLat && userLng
-            ? cachedFetch(`${API_BASE}/api/classrooms/lots/from-location?latitude=${userLat}&longitude=${userLng}`)
-            : null,
-        ];
-
-        const [classData, walkData, driveData] = await Promise.all(
-          fetches.map(p => p ?? Promise.resolve(null))
-        );
-
-        // Walking lots from /{classId}/lots (always available)
-        const walkLots: any[] = walkData?.lots || [];
-        // Driving lots from from-location (only when user location provided)
-        const driveLots: any[] = driveData ? (Array.isArray(driveData) ? driveData : []) : [];
-
-        // Use driving-sorted order when available, otherwise walking-sorted
-        const rawLots = driveLots.length > 0 ? driveLots : walkLots;
-
-        // Build lookup maps for both travel times
-        const walkTimeMap = new Map(walkLots.map((lot: any) => [lot.id, lot.travel_minutes]));
-        const driveTimeMap = new Map(driveLots.map((lot: any) => [lot.id, lot.travel_minutes]));
-
-        // Fetch specific details (availability) + forecasts for the top 3 recommended lots
-        const settledResults = await Promise.allSettled(
-          rawLots.slice(0, 3).map(async (lot: any) => {
-            const [detail, forecast] = await Promise.all([
-              cachedFetch(`${API_BASE}/api/lots/${lot.id}`, { ttl: 60_000 }),
-              cachedFetch(`${API_BASE}/api/lots/${lot.id}/forecast`, { ttl: 60_000 }).catch(() => ({ forecasts: [] })),
-            ]);
-            return { ...detail, forecasts: forecast.forecasts ?? [] };
-          })
-        );
-
-        const detailedLots = settledResults
-          .filter((r): r is PromiseFulfilledResult<any> => r.status === 'fulfilled')
-          .map(r => r.value);
-
-        // Classroom Info
+    const fetchClassDetails = async () => {
+      // 模拟加载
+      setTimeout(() => {
         setClassInfo({
-          name: classData.building?.name || "Building",
-          room: classData.location_string?.split('Room:')[1]?.trim() || classData.location_string || "",
+          name: "EDGE COMPUTING CS 131",
+          location: "Bourns Hall",
+          room: "A632",
+          startTime: new Date().setHours(11, 0, 0),
         });
-
-        // Mapping hydrated API data into our UI component's expected structure
-        const now = Date.now();
-        const classStart = startTimeParam ? new Date(Number(startTimeParam)) : null;
-        const formattedLots = detailedLots.map((lot: any) => {
-          const driveMin = driveTimeMap.get(lot.id) ?? 0;
-          const rawWalk = walkTimeMap.get(lot.id);
-          const walkMin = rawWalk != null ? Math.round(rawWalk * walkMultiplier) : 0;
-
-          // Arrival at lot: schedule-based when class start is known, otherwise "if you leave now"
-          const arrivalTime = classStart
-            ? subMinutes(classStart, prefs.arrivalBuffer + walkMin)
-            : (driveMin > 0 ? new Date(now + driveMin * 60_000) : null);
-
-          // Find forecast entry closest to arrival time
-          let predictedSpots: number | null = null;
-          if (arrivalTime && lot.forecasts?.length) {
-            const idx = closestIndexTo(arrivalTime, lot.forecasts.map((f: any) => new Date(f.forecast_time)));
-            if (idx != null) {
-              predictedSpots = lot.forecasts[idx].predicted_free_spaces;
-            }
-          }
-
-          return {
-            id: lot.id,
-            name: lot.name,
-            currentSpots: lot.free_spaces ?? 0,
-            totalSpots: lot.total_spaces ?? 0,
-            walkMinutes: rawWalk != null ? walkMin : null,
-            driveMinutes: driveTimeMap.get(lot.id) ?? null,
-            lat: lot.latitude,
-            lng: lot.longitude,
-            predictedSpots,
-            arrivalTime,
-            leaveByTime: classStart
-              ? subMinutes(classStart, prefs.arrivalBuffer + walkMin + driveMin)
-              : null,
-          };
-        });
-
-        setRecommendations(formattedLots);
-
-      } catch (err: any) {
-        console.error("Fetch Error:", err);
-        setError(err.message);
-      } finally {
         setLoading(false);
-      }
+      }, 500);
     };
+    fetchClassDetails();
+  }, [id]);
 
-    fetchData();
-  }, [classId, userLat, userLng, startTimeParam, walkMultiplier]);
+  const tripDetails = { driveToCampus: 15, parkAtLot: 5, walkToClass: 8 };
+  const totalTime = tripDetails.driveToCampus + tripDetails.parkAtLot + tripDetails.walkToClass;
+  const leaveByTime = subMinutes(classInfo?.startTime || new Date(), totalTime);
 
-  // Opens Google Maps in a new tab with the lot coordinates
-  const handleNavigate = (lat: string, lng: string) => {
-    window.open(`https://www.google.com/maps?q=${lat},${lng}`, '_blank');
-  };
+  const recommendations = [
+    {
+      id: 'lot-30',
+      name: 'Lot 30',
+      status: 'good',
+      currentSpots: 142,
+      totalSpots: 800,
+      walkingTime: 8,
+      badge: 'BEST MATCH'
+    },
+    {
+      id: 'lot-50',
+      name: 'Lot 50',
+      status: 'tight',
+      currentSpots: 12,
+      totalSpots: 450,
+      walkingTime: 12,
+      badge: 'VALUE'
+    }
+  ];
 
-  if (loading) return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-[#F6F8FB]">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
-      <p className="font-bold text-gray-500">Syncing live parking availability...</p>
-    </div>
-  );
-
-  if (error) return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-[#F6F8FB] p-6">
-      <AlertCircle className="size-12 text-red-500 mb-4" />
-      <h2 className="text-xl font-bold text-gray-900 mb-2">Something went wrong</h2>
-      <p className="text-gray-500 mb-6 text-center max-w-xs">{error}</p>
-      <Button onClick={() => navigate('/dashboard')} className="bg-blue-600 hover:bg-blue-700 text-white">
-        Back to Dashboard
-      </Button>
-    </div>
-  );
+  if (loading) return <div className="p-10 text-center font-bold text-ucr-blue">Calculating best route...</div>;
 
   return (
-    <div className="min-h-screen bg-[#F6F8FB] p-6">
-      <div className="max-w-2xl mx-auto">
-        <Button variant="ghost" onClick={() => navigate('/dashboard')} className="mb-6">
-          <ArrowLeft className="size-5 mr-2" /> Back
+    <div className="min-h-screen bg-[#F6F8FB]">
+      {/* 修复后的固定 Header: 增加 z-50 和背景色，防止内容穿透 */}
+      <div className="bg-white border-b fixed top-0 left-0 right-0 z-50 h-24 flex items-center shadow-sm">
+        <div className="container mx-auto px-4 max-w-5xl">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/dashboard/planner')}
+                className="text-gray-400 hover:text-ucr-blue"
+              >
+                <ArrowLeft className="size-6" />
         </Button>
-
-        {/* Header Section */}
-        <h1 className="text-2xl font-black mb-1">
-          {classInfo?.name}{classInfo?.room ? ` Room ${classInfo.room}` : ''}
+              <div>
+                <h1 className="text-xl font-black text-gray-900 tracking-tight uppercase">
+                  {classInfo.name}
         </h1>
-
-        <h2 className="text-sm font-black text-gray-400 uppercase tracking-widest mb-1 flex items-center gap-2">
-          <CheckCircle className="size-4 text-green-500" /> Optimal Parking Lots
-        </h2>
-        <p className="text-xs text-gray-400 mb-4">
-          {usingUserLocation ? "Sorted by driving distance from your location" : "Sorted by walking distance from classroom"}
+                <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5 font-medium">
+                  <MapPin className="size-3 text-ucr-blue" />
+                  {classInfo.location} • Room {classInfo.room}
         </p>
+              </div>
+            </div>
+            <div className="bg-blue-50 px-4 py-2 rounded-xl border border-blue-100 text-center">
+               <p className="text-[8px] text-ucr-blue font-black uppercase tracking-widest">Class Starts</p>
+               <p className="text-md font-bold text-gray-900">{format(classInfo.startTime, 'h:mm a')}</p>
+            </div>
+          </div>
+        </div>
+      </div>
 
-        {/* Empty state */}
-        {recommendations.length === 0 ? (
-          <Card className="border-dashed border-2 border-gray-300 p-10 text-center rounded-2xl">
-            <MapPin className="size-8 text-gray-300 mx-auto mb-3" />
-            <h3 className="font-bold text-gray-500 mb-1">No Parking Lots Found</h3>
-            <p className="text-sm text-gray-400">We couldn't find any nearby parking lots for this classroom.</p>
-          </Card>
-        ) : (
-          /* Lot Recommendation List */
-          recommendations.map((lot) => {
-            const classArrival = lot.arrivalTime && lot.walkMinutes != null
-              ? new Date(lot.arrivalTime.getTime() + lot.walkMinutes * 60_000)
-              : null;
-
-            return (
-              <Card key={lot.id} className="mb-4 border-none shadow-sm rounded-2xl overflow-hidden">
-                <CardContent className="p-0 [&:last-child]:pb-0">
-                  {/* Zone 1 — Leave By banner */}
-                  {lot.leaveByTime && (
-                    <div className="bg-blue-600 px-6 py-3 flex items-center justify-between rounded-t-2xl">
-                      <span className="text-blue-200 text-xs font-bold uppercase tracking-widest flex items-center gap-1.5">
-                        <Clock className="size-3.5" /> Leave By
+      {/* 主内容区域: pt-32 确保内容不会被固定的 header 挡住 */}
+      <div className="container mx-auto px-4 pt-32 pb-12 max-w-5xl">
+        <div className="grid lg:grid-cols-3 gap-8 items-start">
+          
+          {/* 左侧栏: 离家时间与行程分解 (你喜欢的设计) */}
+          <div className="lg:col-span-1 space-y-6">
+            <Card className="border-none shadow-xl bg-ucr-blue text-white overflow-hidden relative">
+              <div className="absolute top-0 right-0 p-4 opacity-10">
+                <Car className="size-24" />
+              </div>
+              <CardContent className="p-8 relative z-10">
+                <p className="text-blue-200 text-[10px] font-black uppercase tracking-[0.2em] mb-4 text-center">Recommended Departure</p>
+                <div className="text-center mb-6">
+                  <span className="text-6xl font-black tracking-tighter">
+                    {format(leaveByTime, 'h:mm')}
                       </span>
-                      <span className="text-white text-2xl font-black">{format(lot.leaveByTime, 'h:mm a')}</span>
-                    </div>
-                  )}
+                  <span className="text-xl font-bold ml-1 opacity-80 uppercase">
+                    {format(leaveByTime, 'a')}
+                  </span>
+                </div>
+                <div className="bg-white/10 rounded-2xl p-4 text-xs font-medium mb-6 backdrop-blur-sm text-center">
+                   Arrive 5 mins early to ensure a spot in {recommendations[0].name}.
+                </div>
+                
+              </CardContent>
+            </Card>
 
-                  {/* Zone 2 — Lot name + durations */}
-                  <div className="px-4 sm:px-6 pt-5 pb-4">
-                    <h3 className="font-bold text-lg text-gray-900 mb-1">{lot.name}</h3>
-                    <div className="flex items-center gap-1.5 text-sm text-gray-400 flex-wrap">
-                      {lot.driveMinutes != null && (
-                        <span className="flex items-center gap-1 whitespace-nowrap">
-                          <Car className="size-3.5 shrink-0" /> ~{Math.round(lot.driveMinutes)} min drive
+            <Card className="border-none shadow-sm rounded-3xl bg-white">
+              <CardContent className="p-6">
+                <h3 className="font-black text-gray-900 text-[10px] uppercase tracking-widest mb-6 border-b pb-2">Trip Breakdown</h3>
+                <div className="space-y-6">
+                  {[
+                    { icon: Car, label: 'Drive to UCR', time: tripDetails.driveToCampus },
+                    { icon: Footprints, label: 'Walk to Class', time: tripDetails.walkToClass },
+                  ].map((step, i) => (
+                    <div key={i} className="flex items-center gap-4">
+                      <div className="bg-gray-50 p-2.5 rounded-xl">
+                        <step.icon className="size-4 text-ucr-blue" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-bold text-gray-900">{step.label}</p>
+                      </div>
+                      <span className="font-black text-gray-900 text-sm">{step.time}m</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* 右侧栏: 停车场列表 */}
+          <div className="lg:col-span-2 space-y-4">
+            <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight flex items-center gap-2 mb-2">
+              <CheckCircle className="size-5 text-green-500" />
+              Optimal Parking Lots
+            </h3>
+
+            {recommendations.map((lot) => (
+              <Card key={lot.id} className="border-none shadow-sm bg-white hover:shadow-md transition-shadow">
+                <CardContent className="p-6">
+                  <div className="flex justify-between items-start mb-6">
+                    <div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <h4 className="font-black text-xl text-gray-900">{lot.name}</h4>
+                        <span className="bg-ucr-blue text-white text-[9px] px-2 py-0.5 rounded-full font-black uppercase tracking-widest">
+                          {lot.badge}
                         </span>
-                      )}
-                      {lot.driveMinutes != null && lot.walkMinutes != null && (
-                        <span className="text-gray-300">{'\u00B7'}</span>
-                      )}
-                      {lot.walkMinutes != null && (
-                        <span className="flex items-center gap-1 whitespace-nowrap">
-                          <Footprints className="size-3.5 shrink-0" /> ~{Math.round(lot.walkMinutes)} min walk
+                      </div>
+                      <div className="flex items-center gap-6 text-xs font-bold text-gray-500">
+                        <span className="flex items-center gap-1.5">
+                          <Footprints className="size-3" /> {lot.walkingTime} min walk
                         </span>
-                      )}
-                      {lot.driveMinutes == null && lot.walkMinutes == null && (
-                        <span className="flex items-center gap-1">
-                          <Footprints className="size-3.5" /> —
-                        </span>
-                      )}
                     </div>
                   </div>
 
-                  {/* Availability strip */}
-                  <div className="flex items-center bg-gray-50 rounded-xl mx-4 sm:mx-6 mb-3 px-4 py-3 gap-4">
-                    <div className="flex-1">
-                      <p className="text-[10px] text-gray-400 font-bold uppercase mb-0.5">Now</p>
-                      <p className="text-xl font-black text-gray-900">
-                        {lot.currentSpots}<span className="text-xs text-gray-300 font-bold">/{lot.totalSpots}</span>
-                      </p>
+                    <div className="text-right">
+                       <p className="text-[10px] text-gray-400 font-black uppercase mb-1">Live Spots</p>
+                       <div className="flex items-baseline gap-1 justify-end">
+                          <span className="text-2xl font-black text-gray-900">{lot.currentSpots}</span>
+                          <span className="text-xs font-bold text-gray-400">/ {lot.totalSpots}</span>
                     </div>
-                    <div className="w-px h-9 bg-gray-200" />
-                    <div className="flex-1">
-                      <p className="text-[10px] text-gray-400 font-bold uppercase mb-0.5">At Arrival</p>
-                      {lot.predictedSpots != null ? (
-                        <p className="text-xl font-black text-gray-900 flex items-center gap-1">
-                          {lot.predictedSpots < lot.currentSpots && <TrendingDown className="size-3.5 text-red-400" />}
-                          {lot.predictedSpots > lot.currentSpots && <TrendingUp className="size-3.5 text-green-500" />}
-                          {lot.predictedSpots}<span className="text-xs text-gray-300 font-bold">/{lot.totalSpots}</span>
-                        </p>
-                      ) : (
-                        <p className="text-xl font-black text-gray-300">—</p>
-                      )}
                     </div>
                   </div>
 
-                  {/* Journey timeline */}
-                  {lot.arrivalTime && (
-                    <div className="flex items-center gap-1.5 sm:gap-2 text-xs bg-gray-50 rounded-xl mx-4 sm:mx-6 mb-4 px-3 sm:px-4 py-3">
-                      <div className="text-center shrink-0">
-                        <p className="font-bold text-gray-900">{format(lot.leaveByTime || lot.arrivalTime, 'h:mm a')}</p>
-                        <p className="text-gray-400">Depart</p>
-                      </div>
-                      <TimelineConnector icon={Car} />
-                      <div className="text-center shrink-0">
-                        <p className="font-bold text-gray-900">{format(lot.arrivalTime, 'h:mm a')}</p>
-                        <p className="text-gray-400">At Lot</p>
-                      </div>
-                      {classArrival && (
-                        <>
-                          <TimelineConnector icon={Footprints} />
-                          <div className="text-center shrink-0">
-                            <p className="font-bold text-gray-900">{format(classArrival, 'h:mm a')}</p>
-                            <p className="text-gray-400">At Class</p>
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Navigation button — flush to card bottom, card's overflow-hidden handles rounding */}
-                  <button
-                    onClick={() => handleNavigate(lot.lat, lot.lng)}
-                    className="w-full bg-blue-600 hover:bg-blue-700 py-3.5 flex items-center justify-center gap-2 text-xs font-bold text-white transition-colors uppercase tracking-wide"
-                  >
-                    <Navigation className="size-3.5" /> Start Navigation
-                  </button>
+                  <Button className="w-full py-6 bg-white border border-gray-200 text-ucr-blue font-bold hover:bg-gray-50 rounded-xl transition-colors">
+                    Open in Google Maps
+                  </Button>
                 </CardContent>
               </Card>
-            );
-          })
-        )}
+            ))}
+          </div>
+
+        </div>
       </div>
     </div>
   );
