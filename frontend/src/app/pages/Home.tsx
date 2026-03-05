@@ -346,7 +346,7 @@ export default function Home() {
 
                         <Button
                           onClick={locationAvailable
-                            ? () => navigate(`/dashboard/parking/${item.classroomId}?lat=${latitude}&lng=${longitude}`)
+                            ? () => navigate(`/dashboard/parking/${item.classroomId}?lat=${latitude}&lng=${longitude}&startTime=${item.startTime.getTime()}`)
                             : requestLocation}
                           disabled={!locationAvailable && locLoading}
                           className={`w-full py-6 text-md font-bold rounded-xl transition-all active:scale-[0.98] ${
