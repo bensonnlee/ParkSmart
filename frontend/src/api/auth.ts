@@ -1,3 +1,5 @@
+import { clearApiCache } from './apiCache';
+
 export async function login(email: string, password: string) {
   const response = await fetch(
     "https://parksmart-api.onrender.com/api/auth/login",
@@ -34,6 +36,7 @@ export async function login(email: string, password: string) {
     // Even if the server request fails, we should clear local data
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+    clearApiCache();
   
     if (!response.ok) {
       throw new Error("Logout failed on server");

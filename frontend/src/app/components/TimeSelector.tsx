@@ -62,7 +62,7 @@ export function TimeSelector({ mode, selectedTime, onModeChange, onTimeChange }:
         <Select value={leaveNow ? 'now' : mode} onValueChange={handleModeChange}>
           <SelectTrigger className="w-full border-0 focus:ring-0 h-auto p-0">
             <div className="flex items-center gap-2">
-              <Clock className="size-4 text-ucr-blue flex-shrink-0" />
+              <Clock className="size-4 text-ucr-blue shrink-0" />
               <SelectValue />
             </div>
           </SelectTrigger>
@@ -80,7 +80,7 @@ export function TimeSelector({ mode, selectedTime, onModeChange, onTimeChange }:
             <Popover open={isTimeOpen} onOpenChange={setIsTimeOpen}>
               <PopoverTrigger asChild>
                 <Button variant="ghost" className="font-medium hover:bg-gray-50 px-2 h-auto w-full justify-start">
-                  <Clock className="size-4 mr-2 text-ucr-blue flex-shrink-0" />
+                  <Clock className="size-4 mr-2 text-ucr-blue shrink-0" />
                   <span className="whitespace-nowrap">{format(selectedTime, 'h:mm a')}</span>
                 </Button>
               </PopoverTrigger>
@@ -123,7 +123,7 @@ export function TimeSelector({ mode, selectedTime, onModeChange, onTimeChange }:
             <Popover open={isDateOpen} onOpenChange={setIsDateOpen}>
               <PopoverTrigger asChild>
                 <Button variant="ghost" className="font-medium hover:bg-gray-50 px-2 h-auto w-full justify-start">
-                  <Calendar className="size-4 mr-2 text-ucr-blue flex-shrink-0" />
+                  <Calendar className="size-4 mr-2 text-ucr-blue shrink-0" />
                   <span className="whitespace-nowrap">{format(selectedTime, 'EEE, MMM d')}</span>
                 </Button>
               </PopoverTrigger>

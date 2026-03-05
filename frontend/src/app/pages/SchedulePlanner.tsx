@@ -4,6 +4,7 @@ import { Button } from '@/app/components/ui/button';
 import { Card, CardContent } from '@/app/components/ui/card';
 import { Calendar, MapPin, Info, Upload, Settings, ChevronLeft } from 'lucide-react';
 import { format, startOfWeek, addDays } from 'date-fns';
+import { cachedFetch } from '@/api/apiCache';
 
 interface ApiEvent {
   id: string;
@@ -29,13 +30,10 @@ export default function SchedulePlanner() {
       if (!token) { setLoading(false); return; }
 
       try {
-        const response = await fetch('https://parksmart-api.onrender.com/api/schedules/me', {
+        const data = await cachedFetch('https://parksmart-api.onrender.com/api/schedules/me', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
-        if (response.ok) {
-          const data = await response.json();
-          setEvents(data.events || []);
-        }
+        setEvents(data.events || []);
       } catch (err) {
         console.error("Fetch error:", err);
       } finally {
@@ -50,29 +48,18 @@ export default function SchedulePlanner() {
       if (!event.classroom_id || roomNames[event.classroom_id]) return;
   
       try {
-        const res = await fetch(`https://parksmart-api.onrender.com/api/classrooms/${event.classroom_id}`);
-        
-        if (res.ok) {
-          const data = await res.json();
-          const displayName = data.location_string;
-          
-          setRoomNames(prev => ({ ...prev, [event.classroom_id]: displayName }));
-        } else {
-          setRoomNames(prev => ({ ...prev, [event.classroom_id]: `Room ${event.classroom_id.slice(0, 4)}` }));
-        }
-
-        const lotRes = await fetch(`https://parksmart-api.onrender.com/api/classrooms/${event.classroom_id}/lots`);
-        if (lotRes.ok) {
-          const lotData = await lotRes.json();
-          const topLot = lotData.lots && lotData.lots.length > 0
-          ? lotData.lots[0].name 
-          : "Lot 30"; 
-
+        const [data, lotData] = await Promise.all([
+          cachedFetch(`https://parksmart-api.onrender.com/api/classrooms/${event.classroom_id}`),
+          cachedFetch(`https://parksmart-api.onrender.com/api/classrooms/${event.classroom_id}/lots`)
+        ]);
+        setRoomNames(prev => ({ ...prev, [event.classroom_id]: data.location_string }));
+        const topLot = lotData.lots && lotData.lots.length > 0
+          ? lotData.lots[0].name
+          : "Lot 30";
         setRecommendedLots(prev => ({ ...prev, [event.classroom_id]: topLot }));
-        }
-
       } catch (e) {
         console.warn("Could not fetch details for:", event.classroom_id);
+        setRoomNames(prev => ({ ...prev, [event.classroom_id]: `Room ${event.classroom_id.slice(0, 4)}` }));
       }
     });
   }, [events]);
@@ -179,7 +166,7 @@ export default function SchedulePlanner() {
                       className="group flex flex-wrap sm:flex-nowrap items-center justify-between p-5 border border-gray-100 rounded-2xl bg-white hover:border-ucr-blue hover:shadow-lg transition-all cursor-pointer gap-4"
                     >
                       <div className="flex gap-4 items-center flex-1 min-w-0">
-                        <div className="flex-shrink-0 bg-gray-50 text-gray-400 group-hover:bg-blue-50 group-hover:text-ucr-blue p-3 rounded-xl transition-colors font-black text-xs">
+                        <div className="shrink-0 bg-gray-50 text-gray-400 group-hover:bg-blue-50 group-hover:text-ucr-blue p-3 rounded-xl transition-colors font-black text-xs">
                             {item.shortTime}
                         </div>
                         <div className="min-w-0">
@@ -195,7 +182,7 @@ export default function SchedulePlanner() {
                         </div>
                       </div>
                       
-                      <div className="flex-shrink-0 ml-auto sm:ml-0">
+                      <div className="shrink-0 ml-auto sm:ml-0">
                         <div className="bg-blue-50/50 px-4 py-2 rounded-xl border border-blue-100 text-center min-w-[100px]">
                           <p className="text-[8px] text-ucr-blue font-black uppercase tracking-widest mb-1">Recommended</p>
                           <p className="font-black text-gray-900">

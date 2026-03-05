@@ -186,7 +186,7 @@ export default function MapView() {
 
         <div className="flex-1 flex overflow-hidden">
           {/* Left Sidebar */}
-          <div className="w-full md:w-96 bg-white border-r flex flex-col overflow-hidden md:block hidden">
+          <div className="w-full md:w-96 bg-white border-r flex flex-col overflow-hidden md:block">
             {/* Search */}
             <div className="p-4 border-b">
               <div className="relative">
@@ -273,7 +273,7 @@ export default function MapView() {
             </div>
 
             {/* Destination */}
-            <div className="p-4 bg-gradient-to-r from-red-50 to-pink-50 border-b">
+            <div className="p-4 bg-linear-to-r from-red-50 to-pink-50 border-b">
               <div className="flex items-center gap-2">
                 <div className="size-10 bg-red-500 rounded-xl flex items-center justify-center">
                   <MapPinIcon className="size-5 text-white" />
@@ -290,7 +290,7 @@ export default function MapView() {
 
             {/* Selected Lot Details */}
             {selectedLot && (
-              <div className="p-4 border-b bg-gradient-to-r from-blue-50 to-indigo-50">
+              <div className="p-4 border-b bg-linear-to-r from-blue-50 to-indigo-50">
                 <div className="flex items-center gap-2 mb-3">
                   <span className="bg-ucr-blue text-white text-xs px-2 py-1 rounded-full font-semibold">
                     BEST MATCH
@@ -512,7 +512,7 @@ export default function MapView() {
             {/* Instructions - Bottom Left */}
             <div className="absolute bottom-4 left-4 bg-white/95 backdrop-blur-sm px-4 py-3 rounded-xl shadow-xl text-xs max-w-xs z-20 border border-gray-200" style={{ borderRadius: '12px' }}>
               <div className="flex items-start gap-2">
-                <div className="size-8 bg-ucr-blue/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                <div className="size-8 bg-ucr-blue/10 rounded-lg flex items-center justify-center shrink-0">
                   <svg className="size-4 text-ucr-blue" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                   </svg>

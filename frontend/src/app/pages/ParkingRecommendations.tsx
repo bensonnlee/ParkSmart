@@ -4,6 +4,7 @@ import { Button } from '@/app/components/ui/button';
 import { Card, CardContent } from '@/app/components/ui/card';
 import { ArrowLeft, MapPin, Footprints, CheckCircle, Navigation } from 'lucide-react';
 import { format, subMinutes } from 'date-fns';
+import { cachedFetch } from '@/api/apiCache';
 
 export default function ParkingRecommendations() {
   const { classId } = useParams<{ classId: string }>(); 
@@ -25,13 +26,10 @@ export default function ParkingRecommendations() {
         const baseUrl = "https://parksmart-api.onrender.com/api";
 
         // We fetch both the classroom details and the list of associated parking lots
-        const [classRes, listRes] = await Promise.all([
-          fetch(`${baseUrl}/classrooms/${classId}`),
-          fetch(`${baseUrl}/classrooms/${classId}/lots`)
+        const [classData, listData] = await Promise.all([
+          cachedFetch(`${baseUrl}/classrooms/${classId}`),
+          cachedFetch(`${baseUrl}/classrooms/${classId}/lots`)
         ]);
-
-        const classData = await classRes.json();
-        const listData = await listRes.json();
         const rawLots = listData.lots || [];
 
 

@@ -133,21 +133,21 @@ export default function Settings() {
                 <Button
                   variant={parkingPass === 'gold-plus' ? 'default' : 'outline'}
                   onClick={() => setParkingPass('gold-plus')}
-                  className={`flex-col h-auto py-8 ${parkingPass === 'gold-plus' ? 'bg-gradient-to-br from-yellow-500 to-amber-600 text-white border-transparent' : ''}`}
+                  className={`flex-col h-auto py-8 ${parkingPass === 'gold-plus' ? 'bg-linear-to-br from-yellow-500 to-amber-600 text-white border-transparent' : ''}`}
                 >
                   <span className="text-[20px] font-bold">Gold Plus</span>
                 </Button>
                 <Button
                   variant={parkingPass === 'gold' ? 'default' : 'outline'}
                   onClick={() => setParkingPass('gold')}
-                  className={`flex-col h-auto py-8 ${parkingPass === 'gold' ? 'bg-gradient-to-br from-yellow-400 to-yellow-600 text-white border-transparent' : ''}`}
+                  className={`flex-col h-auto py-8 ${parkingPass === 'gold' ? 'bg-linear-to-br from-yellow-400 to-yellow-600 text-white border-transparent' : ''}`}
                 >
                   <span className="text-[20px] font-bold">Gold</span>
                 </Button>
                 <Button
                   variant={parkingPass === 'blue' ? 'default' : 'outline'}
                   onClick={() => setParkingPass('blue')}
-                  className={`flex-col h-auto py-8 ${parkingPass === 'blue' ? 'bg-gradient-to-br from-blue-500 to-blue-700 text-white border-transparent' : ''}`}
+                  className={`flex-col h-auto py-8 ${parkingPass === 'blue' ? 'bg-linear-to-br from-blue-500 to-blue-700 text-white border-transparent' : ''}`}
                 >
                   <span className="text-[20px] font-bold">Blue</span>
                 </Button>

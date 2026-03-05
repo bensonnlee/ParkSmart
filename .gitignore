@@ -216,3 +216,5 @@ dist/
 #.ics file for testing with parser.py in backend/app/services/parser.py
 *.ics
 .vercel
+
+.DS_Store

@@ -86,7 +86,7 @@ export function DestinationPin({
       {showCard && (
         <div className="absolute left-1/2 -translate-x-1/2 top-full mt-5 bg-white rounded-xl shadow-2xl border-2 border-red-500 p-4 w-72 z-30 animate-in fade-in slide-in-from-top-2 duration-200">
           <div className="flex items-start gap-3">
-            <div className="size-12 bg-red-100 rounded-xl flex items-center justify-center flex-shrink-0">
+            <div className="size-12 bg-red-100 rounded-xl flex items-center justify-center shrink-0">
               {/* Graduation cap icon */}
               <svg className="size-7 text-red-600" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/>
