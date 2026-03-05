@@ -4,6 +4,7 @@ import { Button } from '@/app/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/app/components/ui/card';
 import { Alert, AlertDescription } from '@/app/components/ui/alert';
 import { Upload, FileText, CheckCircle2, AlertCircle, Calendar } from 'lucide-react';
+import { invalidateCache } from '@/api/apiCache';
 
 export default function IcsUpload() {
   const navigate = useNavigate();
@@ -68,6 +69,7 @@ export default function IcsUpload() {
         throw new Error(data.detail || 'Upload failed');
       }
   
+      invalidateCache('/api/schedules');
       setMessage({ type: 'success', text: "Schedule updated! Redirecting..." });
       setTimeout(() => navigate('/dashboard'), 1500);
   
@@ -145,7 +147,7 @@ export default function IcsUpload() {
             <Card className="border-ucr-gold/30 bg-yellow-50">
               <CardContent className="p-4">
                 <div className="flex items-center space-x-3">
-                  <FileText className="size-8 text-ucr-gold-dark flex-shrink-0" />
+                  <FileText className="size-8 text-ucr-gold-dark shrink-0" />
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-ucr-blue truncate">{selectedFile.name}</p>
                     <p className="text-sm text-gray-600">

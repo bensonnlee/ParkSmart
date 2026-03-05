@@ -2,9 +2,10 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router';
 import { Button } from '@/app/components/ui/button';
 import { Card, CardContent } from '@/app/components/ui/card';
-import { Calendar, MapPin, Clock, Upload, Settings, Eye, CheckCircle, AlertTriangle, XCircle, Edit2, Check } from 'lucide-react';
+import { Calendar, MapPin, Clock, Upload, Settings, Eye, Edit2, Check } from 'lucide-react';
 import { format, startOfWeek, addDays, nextMonday, isWeekend } from 'date-fns';
 import { useLocation } from '../hooks/useLocation';
+import { cachedFetch } from '@/api/apiCache';
 
 interface TodayClass {
   id: string;
@@ -36,13 +37,11 @@ export default function Home() {
   const [todayClasses, setTodayClasses] = useState<TodayClass[]>([]);
   const [isPreview, setIsPreview] = useState(false);
   const [roomNames, setRoomNames] = useState<Record<string, string>>({});
-  const [recommendedLots, setRecommendedLots] = useState<Record<string, string>>({});
 
   // Reverse Geocoding Effect
   useEffect(() => {
     if (latitude && longitude && !manualAddress) {
-      fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`)
-        .then(res => res.json())
+      cachedFetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`)
         .then(data => {
           const road = data.address.road || "";
           const city = data.address.city || data.address.town || data.address.village || data.address.suburb || "";
@@ -59,44 +58,22 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    if (!latitude || !longitude) return;
-
     todayClasses.forEach(async (item) => {
       if (!item.classroomId) return;
 
       if (!roomNames[item.classroomId]) {
         try {
-          const response = await fetch(`https://parksmart-api.onrender.com/api/classrooms/${item.classroomId}`);
-          if (response.ok) {
-            const data = await response.json();
-            const displayName = data.building?.name 
-              ? `${data.building.name} - ${data.location_string}`
-              : data.location_string;
-            setRoomNames(prev => ({ ...prev, [item.classroomId]: displayName }));
-          }
+          const data = await cachedFetch(`https://parksmart-api.onrender.com/api/classrooms/${item.classroomId}`);
+          const displayName = data.building?.name
+            ? `${data.building.name} - ${data.location_string}`
+            : data.location_string;
+          setRoomNames(prev => ({ ...prev, [item.classroomId]: displayName }));
         } catch (error) {
           console.error("Error fetching room name:", error);
         }
       }
-      if (!recommendedLots[item.classroomId]) {
-        try {
-          const lotRes = await fetch(`https://parksmart-api.onrender.com/api/classrooms/lots/from-location?latitude=${latitude}&longitude=${longitude}`);
-          if (lotRes.ok) {
-            const lotData = await lotRes.json();
-            if (Array.isArray(lotData) && lotData.length > 0) {
-              const topLotName = lotData[0].name; 
-              setRecommendedLots(prev => ({ ...prev, [item.classroomId]: topLotName }));
-            } else {
-              setRecommendedLots(prev => ({ ...prev, [item.classroomId]: "Lot 30" }));
-            }
-          }
-        } catch (error) {
-          console.error("Error fetching lots:", error);
-          setRecommendedLots(prev => ({ ...prev, [item.classroomId]: "Lot 30" }));
-        }
-      }
     });
-  }, [todayClasses, latitude, longitude]);
+  }, [todayClasses]);
 
   useEffect(() => {
     const fetchSchedule = async () => {
@@ -107,15 +84,12 @@ export default function Home() {
       }
 
       try {
-        const response = await fetch('https://parksmart-api.onrender.com/api/schedules/me', {
+        const data = await cachedFetch('https://parksmart-api.onrender.com/api/schedules/me', {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
           }
         });
-
-        if (!response.ok) throw new Error("Failed to fetch");
-        const data = await response.json();
         const events = data.events || [];
 
         setHasAnyData(events.length > 0);
@@ -315,7 +289,6 @@ export default function Home() {
             <div className="flex items-center justify-between mb-6">
                <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
                 {isPreview ? "Upcoming Monday" : "Current Schedule"}
-                <span className="bg-gray-200 text-gray-600 text-[10px] px-2 py-0.5 rounded-full uppercase">Live</span>
                </h2>
                <Button 
                   variant="link" 
@@ -346,12 +319,6 @@ export default function Home() {
                             <h3 className="font-extrabold text-xl text-gray-900 mt-2 group-hover:text-ucr-blue transition-colors">
                               {item.name}
                             </h3>
-                          </div>
-                          <div className="flex flex-col items-end gap-2">
-                             <div className="bg-green-50 text-green-700 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 border border-green-100">
-                               <CheckCircle className="size-3.5" /> 
-                               {recommendedLots[item.classroomId] || "Lot 30"}
-                             </div>
                           </div>
                         </div>
 

@@ -68,11 +68,8 @@ useEffect(() => {
         {/* Sidebar Header */}
         <div className="bg-ucr-blue text-white p-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="size-8 bg-white/20 rounded-lg flex items-center justify-center">
-              <span className="text-lg">🅿️</span>
-            </div>
             <div>
-              <h2 className="font-bold text-sm">CampusPark</h2>
+              <h2 className="font-bold text-sm">ParkSmart</h2>
               <p className="text-xs opacity-80">UCR Parking</p>
             </div>
           </div>

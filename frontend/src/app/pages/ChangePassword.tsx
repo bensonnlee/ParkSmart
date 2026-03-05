@@ -277,7 +277,7 @@ export default function ChangePassword() {
         {/* Security Notice */}
         <div className="mt-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
           <div className="flex gap-3">
-            <AlertCircle className="size-5 text-[#F1AB00] flex-shrink-0 mt-0.5" />
+            <AlertCircle className="size-5 text-[#F1AB00] shrink-0 mt-0.5" />
             <div>
               <p className="text-sm font-semibold text-gray-900 mb-1">Security Reminder</p>
               <p className="text-xs text-gray-600">

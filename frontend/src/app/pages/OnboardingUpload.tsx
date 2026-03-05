@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router';
 import { Button } from '@/app/components/ui/button';
 import { Upload, HelpCircle, Loader2 } from 'lucide-react'; // Added Loader2
 import { toast } from 'sonner';
+import { invalidateCache } from '@/api/apiCache';
 
 export default function OnboardingUpload() {
   const navigate = useNavigate();
@@ -43,6 +44,7 @@ export default function OnboardingUpload() {
       const uid = user?.id || user?.user_id || "guest";
       localStorage.setItem(`schedule:${uid}`, JSON.stringify(data));
 
+      invalidateCache('/api/schedules');
       toast.success(`Schedule synced: ${file.name}`);
     } catch (error) {
       console.error(error);
