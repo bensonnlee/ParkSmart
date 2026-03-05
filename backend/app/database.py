@@ -9,6 +9,7 @@ settings = get_settings()
 engine = create_async_engine(
     settings.database_url,
     echo=False,
+    connect_args = {"statement_cache_size": 0}, #Fix with how pgbouncer and async interacts with each other (disables async statement cache)
     pool_pre_ping=True,
     pool_size=3,
     max_overflow=2,

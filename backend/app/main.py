@@ -7,7 +7,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from app.routers import auth, classrooms, health, parking, permits, schedules
+from app.routers import auth, classrooms, forecasts, health, parking, permits, schedules
 
 # Configure logging
 logging.basicConfig(
@@ -54,6 +54,7 @@ async def global_exception_handler(request: Request, exc: Exception) -> JSONResp
 # Include routers
 app.include_router(auth.router)
 app.include_router(classrooms.router)
+app.include_router(forecasts.router)
 app.include_router(health.router)
 app.include_router(parking.router)
 app.include_router(permits.router)
