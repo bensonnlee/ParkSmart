@@ -38,3 +38,26 @@ export async function logout() {
 
   return true;
 }
+
+export async function deleteAccount() {
+  const response = await authenticatedFetch(
+    `${API_BASE}/api/auth/me`,
+    { method: "DELETE" }
+  );
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({ detail: "Failed to delete account" }));
+    throw new Error(err.detail || "Failed to delete account");
+  }
+
+  // Only clear local state after confirmed server-side deletion
+  const raw = localStorage.getItem("user");
+  if (raw) {
+    const u = JSON.parse(raw);
+    const uid = u?.id || u?.user_id || u?.supabase_id;
+    if (uid) localStorage.removeItem(`prefs:${uid}`);
+  }
+  clearSession();
+
+  return true;
+}

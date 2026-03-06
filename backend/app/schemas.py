@@ -141,6 +141,10 @@ class LogoutResponse(BaseModel):
     message: str
 
 
+class DeleteAccountResponse(BaseModel):
+    message: str
+
+
 class ForgotPasswordRequest(BaseModel):
     email: EmailStr
 

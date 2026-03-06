@@ -38,7 +38,7 @@ class User(Base, UUIDMixin, TimestampMixin):
 
     # Relationships
     schedule: Mapped["UserSchedule | None"] = relationship(
-        "UserSchedule", back_populates="user", uselist=False
+        "UserSchedule", back_populates="user", uselist=False, passive_deletes=True
     )
 
     def __repr__(self) -> str:

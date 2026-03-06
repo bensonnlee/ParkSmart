@@ -16,12 +16,12 @@ import {
   AlertDialogCancel,
 } from '@/app/components/ui/alert-dialog';
 import { PageHeader } from '@/app/components/PageHeader';
-import { User, CreditCard, SlidersHorizontal, LogOut, ExternalLink } from 'lucide-react';
+import { User, CreditCard, SlidersHorizontal, LogOut, ExternalLink, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { API_BASE } from '@/api/config';
 import { authenticatedFetch } from '@/api/authenticatedFetch';
 import { getAccessToken } from '@/api/tokenStorage';
-import { logout } from '@/api/auth';
+import { logout, deleteAccount } from '@/api/auth';
 import { loadPrefs } from '@/lib/prefs';
 import type { Prefs } from '@/lib/prefs';
 
@@ -81,6 +81,22 @@ export default function Settings() {
   const blocker = useBlocker(isDirty);
 
   const [isSaving, setIsSaving] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDeleteAccount = async () => {
+    setIsDeleting(true);
+    try {
+      await deleteAccount();
+      toast.success("Account deleted successfully");
+      navigate("/welcome");
+    } catch {
+      toast.error("Failed to delete account. Please try again.");
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteDialog(false);
+    }
+  };
 
   const handleSaveChanges = async () => {
     const prefs: Prefs = { parkingPass, arrivalBuffer, walkingSpeed, preferredPermitId: savedPrefs.preferredPermitId };
@@ -315,6 +331,28 @@ export default function Settings() {
             </Button>
           </div>
         </div>
+
+        {/* Danger Zone */}
+        <Card className="border-red-200">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="bg-red-50 rounded-full p-3">
+                <Trash2 className="size-5 text-red-600" />
+              </div>
+              <div>
+                <h2 className="font-bold text-gray-900 text-lg leading-tight">Danger Zone</h2>
+                <p className="text-muted-foreground text-sm">Permanently delete your account and all data</p>
+              </div>
+            </div>
+            <Button
+              variant="destructive"
+              onClick={() => setShowDeleteDialog(true)}
+              className="w-full sm:w-auto"
+            >
+              <Trash2 className="size-4 mr-2" /> Delete Account
+            </Button>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Navigation guard dialog */}
@@ -335,6 +373,29 @@ export default function Settings() {
               className="bg-red-500 hover:bg-red-600"
             >
               Discard & Leave
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete account confirmation dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Account</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action is permanent and cannot be undone. Your account, schedule, and all
+              associated data will be permanently deleted.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteAccount}
+              disabled={isDeleting}
+              className="bg-red-500 hover:bg-red-600"
+            >
+              {isDeleting ? "Deleting…" : "Delete Account"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

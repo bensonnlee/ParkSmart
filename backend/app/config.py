@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     # Supabase Auth (optional for cron jobs that don't use auth)
     supabase_url: str = ""
     supabase_anon_key: str = ""
+    supabase_service_role_key: str = ""
 
     # Mapbox
     mapbox_access_token: str

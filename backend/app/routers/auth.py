@@ -17,6 +17,7 @@ from app.models.permit import PermitType
 from app.schemas import (
     AuthResponse,
     AuthTokens,
+    DeleteAccountResponse,
     ForgotPasswordRequest,
     ForgotPasswordResponse,
     LoginRequest,
@@ -133,6 +134,23 @@ async def logout(
     except Exception:
         pass
     return LogoutResponse(message="Successfully logged out")
+
+
+@router.delete("/me", response_model=DeleteAccountResponse)
+async def delete_account(user: CurrentUser, db: DbSession) -> DeleteAccountResponse:
+    """Permanently delete the current user account and all associated data."""
+    try:
+        await auth_service.delete_user(str(user.supabase_id))
+    except Exception:
+        logger.warning("Failed to delete user from Supabase Auth", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete account from auth provider",
+        )
+
+    await db.delete(user)
+    await db.commit()
+    return DeleteAccountResponse(message="Account deleted successfully")
 
 
 @router.get("/me", response_model=UserResponse)

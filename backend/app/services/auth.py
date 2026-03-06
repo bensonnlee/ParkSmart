@@ -20,6 +20,24 @@ def get_supabase_client() -> Client:
     return create_client(settings.supabase_url, settings.supabase_anon_key)
 
 
+@lru_cache
+def get_supabase_admin_client() -> Client:
+    """Get cached Supabase admin client (service role) for user management."""
+    settings = get_settings()
+    if not settings.supabase_url or not settings.supabase_service_role_key:
+        raise RuntimeError(
+            "SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set for admin operations"
+        )
+    return create_client(settings.supabase_url, settings.supabase_service_role_key)
+
+
+async def delete_user(supabase_id: str) -> None:
+    """Delete a user from Supabase Auth."""
+    await asyncio.to_thread(
+        get_supabase_admin_client().auth.admin.delete_user, supabase_id
+    )
+
+
 async def sign_up(email: str, password: str) -> GoTrueAuthResponse:
     """Register a new user with Supabase Auth."""
     return await asyncio.to_thread(
