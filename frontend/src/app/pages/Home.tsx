@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router';
 import { Button } from '@/app/components/ui/button';
 import { Card } from '@/app/components/ui/card';
 import { PageHeader } from '@/app/components/PageHeader';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/app/components/ui/dialog';
 import { Calendar, MapPin, Clock, Upload, Settings, Eye } from 'lucide-react';
 import { format, nextMonday, isWeekend } from 'date-fns';
 import { useLocation } from '../hooks/useLocation';
@@ -29,8 +30,9 @@ export default function Home() {
   const navigate = useNavigate();
   
   // Location States
-  const { latitude, longitude, loading: locLoading, requestLocation } = useLocation();
+  const { latitude, longitude, loading: locLoading, isDenied, requestLocation } = useLocation();
   const [address, setAddress] = useState<string>("");
+  const [showLocationDialog, setShowLocationDialog] = useState(false);
   const locationAvailable = !!(latitude && longitude);
 
   // Added hasAnyData to distinguish between "No Schedule Uploaded" and "No Classes Today"
@@ -161,6 +163,14 @@ export default function Home() {
   const nextClass = todayClasses.find(c => c.endTime > currentTime) || todayClasses[0];
   const timeInfo = nextClass ? getTimeUntilClass(nextClass) : null;
 
+  const handleLocationRequest = () => {
+    if (isDenied) {
+      setShowLocationDialog(true);
+    } else {
+      requestLocation();
+    }
+  };
+
   return (
     <div>
       <PageHeader
@@ -251,15 +261,15 @@ export default function Home() {
               ) : (
                 <Card
                   className="p-5 border border-amber-200 shadow-sm flex items-center gap-4 cursor-pointer hover:bg-amber-50/50 transition-colors"
-                  onClick={requestLocation}
+                  onClick={handleLocationRequest}
                 >
                   <div className="bg-amber-50 p-3 rounded-2xl"><MapPin className="text-amber-600 size-6" /></div>
                   <div className="flex-1 overflow-hidden">
                     <p className="text-[11px] text-amber-600 uppercase font-black tracking-wider">
-                      {locLoading ? "Locating..." : "Location Required"}
+                      {locLoading ? "Locating..." : isDenied ? "Location Blocked" : "Location Required"}
                     </p>
                     <p className="text-sm font-bold text-gray-900 leading-tight">
-                      {locLoading ? "Checking permissions..." : "Tap to enable location"}
+                      {locLoading ? "Checking permissions..." : isDenied ? "Tap for instructions to re-enable" : "Tap to enable location"}
                     </p>
                   </div>
                 </Card>
@@ -273,9 +283,18 @@ export default function Home() {
                     <MapPin className="text-amber-600 size-5" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm text-gray-600">
-                      ParkSmart needs your location to find the closest parking lots. Enable location in your browser settings or tap the location card above to try again.
-                    </p>
+                    {isDenied ? (
+                      <div>
+                        <p className="text-sm font-semibold text-gray-800 mb-1">Location access was blocked</p>
+                        <p className="text-sm text-gray-600">
+                          Tap the location card above for step-by-step instructions to re-enable location access.
+                        </p>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-600">
+                        ParkSmart needs your location to find the closest parking lots. Tap the location card above to enable it.
+                      </p>
+                    )}
                   </div>
                 </div>
               </Card>
@@ -339,7 +358,7 @@ export default function Home() {
                         <Button
                           onClick={locationAvailable
                             ? () => navigate(`/dashboard/parking/${item.classroomId}?lat=${latitude}&lng=${longitude}&startTime=${item.startTime.getTime()}`)
-                            : requestLocation}
+                            : handleLocationRequest}
                           disabled={!locationAvailable && locLoading}
                           className={`w-full py-6 text-md font-bold rounded-xl transition-all active:scale-[0.98] ${
                             locationAvailable
@@ -358,6 +377,50 @@ export default function Home() {
           </>
         )}
       </div>
+
+      <Dialog open={showLocationDialog} onOpenChange={setShowLocationDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <MapPin className="size-5 text-amber-600" />
+              Re-enable Location Access
+            </DialogTitle>
+            <DialogDescription>
+              You previously blocked location access. Follow these steps to re-enable it:
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div className="space-y-3">
+              <div className="flex gap-3">
+                <span className="bg-ucr-blue text-white size-6 rounded-full flex items-center justify-center text-sm font-bold shrink-0">1</span>
+                <p className="text-sm text-gray-700">Click the <strong>lock icon</strong> (or site info icon) in your browser's address bar at the top of the page.</p>
+              </div>
+              <div className="flex gap-3">
+                <span className="bg-ucr-blue text-white size-6 rounded-full flex items-center justify-center text-sm font-bold shrink-0">2</span>
+                <p className="text-sm text-gray-700">Find <strong>"Location"</strong> in the permissions list and change it from "Block" to <strong>"Allow"</strong>.</p>
+              </div>
+              <div className="flex gap-3">
+                <span className="bg-ucr-blue text-white size-6 rounded-full flex items-center justify-center text-sm font-bold shrink-0">3</span>
+                <p className="text-sm text-gray-700">The page will automatically detect the change — no reload needed.</p>
+              </div>
+            </div>
+            <div className="bg-blue-50 rounded-lg p-3">
+              <p className="text-xs text-gray-500">
+                <strong>Tip:</strong> On mobile browsers, you may need to go to your device's Settings &gt; Browser &gt; Site Settings &gt; Location to update permissions.
+              </p>
+            </div>
+            <Button
+              className="w-full bg-ucr-blue hover:bg-ucr-blue-dark"
+              onClick={() => {
+                setShowLocationDialog(false);
+                requestLocation();
+              }}
+            >
+              I've Updated My Settings
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
