@@ -7,6 +7,7 @@ import { format, subMinutes, closestIndexTo } from 'date-fns';
 import { cachedFetch } from '@/api/apiCache';
 import { API_BASE } from '@/api/config';
 import { loadPrefs } from '@/lib/prefs';
+import { openMapsDirections } from '@/lib/maps';
 
 const WALK_SPEED_MULTIPLIER: Record<number, number> = { 1: 1.5, 2: 1.0, 3: 0.75 };
 
@@ -163,9 +164,8 @@ export default function ParkingRecommendations() {
     fetchData();
   }, [classId, userLat, userLng, startTimeParam, walkMultiplier, preferredPermitId]);
 
-  // Opens Google Maps in a new tab with the lot coordinates
   const handleNavigate = (lat: string, lng: string) => {
-    window.open(`https://www.google.com/maps?q=${lat},${lng}`, '_blank');
+    openMapsDirections(lat, lng, userLat, userLng);
   };
 
   if (loading) return (
