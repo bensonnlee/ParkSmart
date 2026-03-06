@@ -1,12 +1,10 @@
-import { Outlet, useNavigate, useLocation } from 'react-router';
-import { Button } from '@/app/components/ui/button';
-import { Home, Calendar, Settings, LogIn } from 'lucide-react';
+import { Outlet, useNavigate, NavLink } from 'react-router';
+import { Home, Calendar, Settings } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Sidebar, SidebarToggle } from '@/app/components/Sidebar';
 
 export default function Layout() {
   const navigate = useNavigate();
-  const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
@@ -36,53 +34,56 @@ export default function Layout() {
       </header>
 
       {/* Main Content Area */}
-      <main className="grow container mx-auto px-4 py-6 pb-32">
+      <main className="grow container mx-auto px-4 py-6 pb-nav-offset">
         <Outlet />
       </main>
 
-      {/* Bottom Navigation - ALWAYS VISIBLE */}
-      {/* I removed 'md:hidden' so it stays visible even when you expand the window past 768px */}
-      <nav className="fixed bottom-0 left-0 right-0 z-100 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-[0_-4px_12px_rgba(0,0,0,0.1)]">
-        <div className="grid grid-cols-3 gap-1 px-4 pt-2 pb-8 max-w-md mx-auto"> 
-          
-          <Button
-            variant={location.pathname === '/' || location.pathname === '/dashboard' ? 'default' : 'ghost'}
-            onClick={() => navigate('/dashboard')}
-            className={`flex-col h-auto py-2 transition-all active:scale-95 ${
-              location.pathname === '/' || location.pathname === '/dashboard' 
-              ? 'bg-ucr-blue text-white hover:bg-ucr-blue-dark' 
-              : 'text-gray-500'
-            }`}
+      {/* Bottom Navigation */}
+      <nav aria-label="Main navigation" className="fixed bottom-0 left-0 right-0 z-100 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-[0_-4px_12px_rgba(0,0,0,0.1)]">
+        <div className="grid grid-cols-3 gap-1 px-4 pt-2 max-w-md mx-auto pb-safe">
+
+          <NavLink
+            to="/dashboard"
+            end
+            className={({ isActive }) =>
+              `flex flex-col items-center justify-center min-h-12 rounded-md transition-all active:scale-95 outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 ${
+                isActive
+                  ? 'bg-ucr-blue text-white hover:bg-ucr-blue-dark'
+                  : 'text-gray-500 hover:bg-accent hover:text-accent-foreground'
+              }`
+            }
           >
             <Home className="size-5 mb-1" />
-            <span className="text-[10px] font-bold">Today</span>
-          </Button>
+            <span className="text-xs font-bold">Today</span>
+          </NavLink>
 
-          <Button
-            variant={location.pathname.includes('schedule') ? 'default' : 'ghost'}
-            onClick={() => navigate('/dashboard/schedule')}
-            className={`flex-col h-auto py-2 transition-all active:scale-95 ${
-              location.pathname.includes('schedule')
-              ? 'bg-ucr-blue text-white hover:bg-ucr-blue-dark' 
-              : 'text-gray-500'
-            }`}
+          <NavLink
+            to="/dashboard/schedule"
+            className={({ isActive }) =>
+              `flex flex-col items-center justify-center min-h-12 rounded-md transition-all active:scale-95 outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 ${
+                isActive
+                  ? 'bg-ucr-blue text-white hover:bg-ucr-blue-dark'
+                  : 'text-gray-500 hover:bg-accent hover:text-accent-foreground'
+              }`
+            }
           >
             <Calendar className="size-5 mb-1" />
-            <span className="text-[10px] font-bold">Schedule</span>
-          </Button>
+            <span className="text-xs font-bold">Schedule</span>
+          </NavLink>
 
-          <Button
-            variant={location.pathname.includes('settings') || location.pathname === '/login' ? 'default' : 'ghost'}
-            onClick={() => navigate(isLoggedIn ? '/dashboard/settings' : '/login')}
-            className={`flex-col h-auto py-2 transition-all active:scale-95 ${
-              location.pathname.includes('settings') || location.pathname === '/login'
-              ? 'bg-ucr-blue text-white hover:bg-ucr-blue-dark' 
-              : 'text-gray-500'
-            }`}
+          <NavLink
+            to={isLoggedIn ? '/dashboard/settings' : '/welcome'}
+            className={({ isActive }) =>
+              `flex flex-col items-center justify-center min-h-12 rounded-md transition-all active:scale-95 outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 ${
+                isActive
+                  ? 'bg-ucr-blue text-white hover:bg-ucr-blue-dark'
+                  : 'text-gray-500 hover:bg-accent hover:text-accent-foreground'
+              }`
+            }
           >
             <Settings className="size-5 mb-1" />
-            <span className="text-[10px] font-bold">{isLoggedIn ? 'Settings' : 'Sign In'}</span>
-          </Button>
+            <span className="text-xs font-bold">{isLoggedIn ? 'Settings' : 'Sign In'}</span>
+          </NavLink>
         </div>
       </nav>
     </div>

@@ -193,3 +193,11 @@
     line-height: 1.5;
   }
 }
+
+.pb-safe {
+  padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
+}
+
+.pb-nav-offset {
+  padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
+}
