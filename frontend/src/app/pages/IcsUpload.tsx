@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/app
 import { Alert, AlertDescription } from '@/app/components/ui/alert';
 import { Upload, FileText, CheckCircle2, AlertCircle, Calendar } from 'lucide-react';
 import { invalidateCache } from '@/api/apiCache';
+import { authenticatedFetch } from '@/api/authenticatedFetch';
 
 export default function IcsUpload() {
   const navigate = useNavigate();
@@ -26,53 +27,29 @@ export default function IcsUpload() {
   };
 
   const handleUpload = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      setMessage({ type: 'error', text: 'Session expired. Redirecting...' });
-      setTimeout(() => navigate('/welcome'), 2000);
-      return;
-    }
-  
     setIsLoading(true);
     setMessage(null);
-  
+
     try {
       const baseUrl = import.meta.env.VITE_API_BASE_URL;
       const form = new FormData();
-      form.append("file", selectedFile!); 
-  
-      const res = await fetch(`${baseUrl}/api/schedules/upload`, {
+      form.append("file", selectedFile!);
+
+      const res = await authenticatedFetch(`${baseUrl}/api/schedules/upload`, {
         method: "POST",
-        headers: { "Authorization": `Bearer ${token}` },
         body: form,
       });
-  
+
       const data = await res.json();
-  
+
       if (!res.ok) {
-        // Auto-clear logic for invalid tokens
-        if (res.status === 401 || data.detail === "Invalid authentication token") {
-          localStorage.clear(); 
-
-          setMessage({ 
-            type: 'error', 
-            text: 'Invalid session. Clearing cache and redirecting to login...' 
-          });
-          
-          setTimeout(() => {
-            navigate('/welcome');
-            window.location.reload(); // Refreshes the page to clear any remaining app state
-          }, 2000);
-          return;
-        }
-
         throw new Error(data.detail || 'Upload failed');
       }
-  
+
       invalidateCache('/api/schedules');
       setMessage({ type: 'success', text: "Schedule updated! Redirecting..." });
       setTimeout(() => navigate('/dashboard'), 1500);
-  
+
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message || 'Network error.' });
     } finally {

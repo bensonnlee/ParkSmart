@@ -6,6 +6,8 @@ import { Label } from '@/app/components/ui/label';
 import { MapPin, Eye, EyeOff, Loader2 } from 'lucide-react';
 import campusBg from '@/assets/ucr_background_login.webp';
 import { toast } from 'sonner';
+import { setTokens } from '@/api/tokenStorage';
+import { API_BASE } from '@/api/config';
 
 export default function Welcome() {
   const navigate = useNavigate();
@@ -23,7 +25,7 @@ export default function Welcome() {
     }
 
     setIsLoading(true);
-    const apiUrl = `https://parksmart-api.onrender.com/api/auth/login`;
+    const apiUrl = `${API_BASE}/api/auth/login`;
 
     try {
       const response = await fetch(apiUrl, {
@@ -37,10 +39,11 @@ export default function Welcome() {
 
       if (response.ok) { //new addition to handle multiple token structures
         const authToken = data.access_token ?? data.token ?? data.tokens?.access_token;
-        
+        const refreshToken = data.refresh_token ?? data.tokens?.refresh_token;
+
         if (authToken) {
-          localStorage.setItem("token", authToken);
-          
+          setTokens(authToken, refreshToken ?? "");
+
           if (data.user) {
             localStorage.setItem("user", JSON.stringify(data.user));
           }

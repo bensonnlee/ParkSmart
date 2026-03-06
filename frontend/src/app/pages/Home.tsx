@@ -6,6 +6,8 @@ import { Calendar, MapPin, Clock, Upload, Settings, Eye } from 'lucide-react';
 import { format, nextMonday, isWeekend } from 'date-fns';
 import { useLocation } from '../hooks/useLocation';
 import { cachedFetch } from '@/api/apiCache';
+import { getAccessToken } from '@/api/tokenStorage';
+import { API_BASE } from '@/api/config';
 
 interface TodayClass {
   id: string;
@@ -62,7 +64,7 @@ export default function Home() {
 
       if (!roomNames[item.classroomId]) {
         try {
-          const data = await cachedFetch(`https://parksmart-api.onrender.com/api/classrooms/${item.classroomId}`);
+          const data = await cachedFetch(`${API_BASE}/api/classrooms/${item.classroomId}`);
           const displayName = data.building?.name
             ? `${data.building.name} - ${data.location_string}`
             : data.location_string;
@@ -76,18 +78,14 @@ export default function Home() {
 
   useEffect(() => {
     const fetchSchedule = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        setHasAnyData(false); 
+      if (!getAccessToken()) {
+        setHasAnyData(false);
         return;
       }
 
       try {
-        const data = await cachedFetch('https://parksmart-api.onrender.com/api/schedules/me', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
+        const data = await cachedFetch(`${API_BASE}/api/schedules/me`, {
+          authenticated: true,
         });
         const events = data.events || [];
 

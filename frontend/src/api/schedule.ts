@@ -1,11 +1,11 @@
-const API_BASE_URL = 'https://parksmart-api.onrender.com';
+import { API_BASE } from './config';
 
 export const uploadSchedule = async (file: File, token: string) => {
   const formData = new FormData();
   // Ensure 'file' matches the name expected in your Swagger docs
   formData.append('file', file); 
 
-  const response = await fetch(`${API_BASE_URL}/api/v1/schedules`, {
+  const response = await fetch(`${API_BASE}/api/v1/schedules`, {
     method: 'POST',
     body: formData,
     headers: {
