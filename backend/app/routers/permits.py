@@ -1,5 +1,6 @@
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime
+from zoneinfo import ZoneInfo
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -13,6 +14,8 @@ from app.schemas import ParkingLotRead, PermitTypeRead
 router = APIRouter(prefix="/api/permits", tags=["permits"])
 
 DbSession = Annotated[AsyncSession, Depends(get_db)]
+
+PACIFIC = ZoneInfo("America/Los_Angeles")
 
 
 @router.get("", response_model=list[PermitTypeRead])
@@ -52,7 +55,7 @@ async def get_lots_by_permit(
         raise HTTPException(status_code=404, detail="Permit not found")
 
     # Get current day of week (0=Monday, 6=Sunday in Python)
-    now = datetime.now()
+    now = datetime.now(UTC).astimezone(PACIFIC)
     current_day = now.weekday()
     current_time = now.time()
 
