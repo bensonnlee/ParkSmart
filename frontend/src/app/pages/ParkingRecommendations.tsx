@@ -165,7 +165,7 @@ export default function ParkingRecommendations() {
   }, [classId, userLat, userLng, startTimeParam, walkMultiplier, preferredPermitId]);
 
   const handleNavigate = (lat: string, lng: string) => {
-    openMapsDirections(lat, lng, userLat, userLng);
+    openMapsDirections(lat, lng);
   };
 
   if (loading) return (

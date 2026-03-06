@@ -20,23 +20,14 @@ function detectPlatform(): Platform {
 export function openMapsDirections(
   destLat: number | string,
   destLng: number | string,
-  originLat?: number | string | null,
-  originLng?: number | string | null,
 ): void {
   const platform = detectPlatform();
-  let url: string;
 
-  if (platform === 'ios') {
-    // Apple Maps with driving directions
-    url = originLat && originLng
-      ? `https://maps.apple.com/?saddr=${originLat},${originLng}&daddr=${destLat},${destLng}&dirflg=d`
-      : `https://maps.apple.com/?daddr=${destLat},${destLng}&dirflg=d`;
-  } else {
-    // Google Maps with driving directions (Android + desktop)
-    url = originLat && originLng
-      ? `https://www.google.com/maps/dir/?api=1&origin=${originLat},${originLng}&destination=${destLat},${destLng}&travelmode=driving`
-      : `https://www.google.com/maps/dir/?api=1&destination=${destLat},${destLng}&travelmode=driving`;
-  }
+  // Omitting origin lets the maps app use the device's live GPS location,
+  // which is more accurate and shows a ready-to-tap "Start" button.
+  const url = platform === 'ios'
+    ? `https://maps.apple.com/?daddr=${destLat},${destLng}&dirflg=d`
+    : `https://www.google.com/maps/dir/?api=1&destination=${destLat},${destLng}&travelmode=driving`;
 
   window.open(url, '_blank');
 }
