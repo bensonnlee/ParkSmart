@@ -7,6 +7,18 @@ export interface Prefs {
   preferredPermitId: string | null;
 }
 
+export const WALKING_SPEEDS = [
+  { value: 1, label: 'Slow' },
+  { value: 2, label: 'Medium' },
+  { value: 3, label: 'Fast' },
+] as const;
+
+export const PERMIT_OPTIONS: { slug: PermitSlug; label: string; activeClass: string }[] = [
+  { slug: 'gold-plus', label: 'Gold Plus', activeClass: 'border-amber-400 bg-linear-to-br from-yellow-500 to-amber-600 text-white shadow-md' },
+  { slug: 'gold', label: 'Gold', activeClass: 'border-yellow-400 bg-linear-to-br from-yellow-400 to-yellow-600 text-white shadow-md' },
+  { slug: 'blue', label: 'Blue', activeClass: 'border-blue-400 bg-linear-to-br from-blue-500 to-blue-700 text-white shadow-md' },
+];
+
 export const DEFAULT_PREFS: Prefs = {
   parkingPass: 'gold',
   arrivalBuffer: 10,

@@ -22,14 +22,8 @@ import { API_BASE } from '@/api/config';
 import { authenticatedFetch } from '@/api/authenticatedFetch';
 import { getAccessToken } from '@/api/tokenStorage';
 import { logout, deleteAccount } from '@/api/auth';
-import { loadPrefs } from '@/lib/prefs';
+import { loadPrefs, WALKING_SPEEDS, PERMIT_OPTIONS } from '@/lib/prefs';
 import type { Prefs } from '@/lib/prefs';
-
-const WALKING_SPEEDS = [
-  { value: 1, label: 'Slow'},
-  { value: 2, label: 'Medium' },
-  { value: 3, label: 'Fast' },
-] as const;
 
 export default function Settings() {
   const navigate = useNavigate();
@@ -220,36 +214,19 @@ export default function Settings() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
-              <button
-                onClick={() => setParkingPass('gold-plus')}
-                className={`rounded-lg border-2 py-6 text-center transition-all cursor-pointer ${
-                  parkingPass === 'gold-plus'
-                    ? 'border-amber-400 bg-linear-to-br from-yellow-500 to-amber-600 text-white shadow-md'
-                    : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                <span className="text-lg font-bold block">Gold Plus</span>
-              </button>
-              <button
-                onClick={() => setParkingPass('gold')}
-                className={`rounded-lg border-2 py-6 text-center transition-all cursor-pointer ${
-                  parkingPass === 'gold'
-                    ? 'border-yellow-400 bg-linear-to-br from-yellow-400 to-yellow-600 text-white shadow-md'
-                    : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                <span className="text-lg font-bold block">Gold</span>
-              </button>
-              <button
-                onClick={() => setParkingPass('blue')}
-                className={`rounded-lg border-2 py-6 text-center transition-all cursor-pointer ${
-                  parkingPass === 'blue'
-                    ? 'border-blue-400 bg-linear-to-br from-blue-500 to-blue-700 text-white shadow-md'
-                    : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                <span className="text-lg font-bold block">Blue</span>
-              </button>
+              {PERMIT_OPTIONS.map((permit) => (
+                <button
+                  key={permit.slug}
+                  onClick={() => setParkingPass(permit.slug)}
+                  className={`rounded-lg border-2 py-6 text-center transition-all cursor-pointer ${
+                    parkingPass === permit.slug
+                      ? permit.activeClass
+                      : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  <span className="text-lg font-bold block">{permit.label}</span>
+                </button>
+              ))}
             </div>
 
             <Button

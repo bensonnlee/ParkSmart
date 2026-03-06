@@ -1,8 +1,6 @@
-import { createBrowserRouter } from 'react-router';
+import { createBrowserRouter, redirect } from 'react-router';
 import Layout from '@/app/pages/Layout';
 import Welcome from '@/app/pages/Welcome';
-import OnboardingUpload from '@/app/pages/OnboardingUpload';
-import OnboardingParkingPass from '@/app/pages/OnboardingParkingPass';
 import Home from '@/app/pages/Home';
 import ParkingRecommendations from '@/app/pages/ParkingRecommendations';
 import Settings from '@/app/pages/Settings';
@@ -23,9 +21,9 @@ export const router = createBrowserRouter([
     path: '/welcome',
     Component: Welcome,
   },
-  { //new addition for signup route
-  path: '/signup',
-  Component: SignUp,
+  {
+    path: '/signup',
+    Component: SignUp,
   },
   {
     path: '/schedule',
@@ -33,11 +31,11 @@ export const router = createBrowserRouter([
   },
   {
     path: '/onboarding/upload',
-    Component: OnboardingUpload,
+    loader: () => redirect('/signup'),
   },
   {
     path: '/onboarding/parking-pass',
-    Component: OnboardingParkingPass,
+    loader: () => redirect('/signup'),
   },
   {
     path: '/dashboard',
