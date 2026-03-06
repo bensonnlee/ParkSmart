@@ -158,7 +158,7 @@ export default function SchedulePlanner() {
                             {item.shortTime}
                         </div>
                         <div className="min-w-0">
-                          <h3 className="font-bold text-gray-900 text-base sm:text-lg break-words">
+                          <h3 className="font-bold text-gray-900 text-base sm:text-lg wrap-break-word">
                             {item.event_name}
                           </h3>
                           <div className="flex items-center gap-1 text-[11px] text-gray-500 font-medium mt-1">

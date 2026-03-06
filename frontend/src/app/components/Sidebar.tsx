@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'; // Added useEffect
 import { useNavigate, useLocation } from 'react-router';
-import { X, Home, Calendar, MapPin, Settings, Menu } from 'lucide-react';
+import { X, Home, Calendar, Settings, Menu } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 
 interface SidebarProps {
@@ -40,7 +40,6 @@ useEffect(() => {
   const menuItems = [
     { icon: Home, label: 'Dashboard', path: '/dashboard' },
     { icon: Calendar, label: 'My Schedule', path: '/dashboard/schedule' },
-    { icon: MapPin, label: 'Find Parking', path: '/dashboard/map' },
     { icon: Settings, label: 'Settings', path: '/dashboard/settings' },
   ];
 
