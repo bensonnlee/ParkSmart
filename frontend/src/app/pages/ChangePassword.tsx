@@ -6,6 +6,7 @@ import { Label } from '@/app/components/ui/label';
 import { Input } from '@/app/components/ui/input';
 import { ArrowLeft, Lock, CheckCircle2, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
+import { authenticatedFetch } from '@/api/authenticatedFetch';
 
 export default function ChangePassword() {
   const navigate = useNavigate();
@@ -39,22 +40,12 @@ export default function ChangePassword() {
       return;
     }
 
-  const token = localStorage.getItem("token");
-  if (!token) {
-    toast.error("You are not logged in. Please log in again.");
-    navigate("/welcome");
-    return;
-  }
-
   setIsSubmitting(true);
 
   try {
-    const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/change-password`, {
+    const res = await authenticatedFetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/change-password`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         old_password: oldPassword,
         new_password: newPassword,

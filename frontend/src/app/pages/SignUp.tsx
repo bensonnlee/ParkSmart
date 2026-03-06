@@ -4,6 +4,7 @@ import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
 import { Label } from "@/app/components/ui/label";
 import { toast } from "sonner";
+import { API_BASE } from "@/api/config";
 
 export default function SignUp() {
   const navigate = useNavigate();
@@ -12,8 +13,6 @@ export default function SignUp() {
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-
-  const BASE = import.meta.env.VITE_API_BASE_URL || "https://parksmart-api.onrender.com";
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,7 +23,7 @@ export default function SignUp() {
 
     setIsLoading(true);
     try {
-      const res = await fetch(`${BASE}/api/auth/signup`, {
+      const res = await fetch(`${API_BASE}/api/auth/signup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

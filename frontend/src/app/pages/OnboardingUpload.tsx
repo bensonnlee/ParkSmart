@@ -4,6 +4,8 @@ import { Button } from '@/app/components/ui/button';
 import { Upload, HelpCircle, Loader2 } from 'lucide-react'; // Added Loader2
 import { toast } from 'sonner';
 import { invalidateCache } from '@/api/apiCache';
+import { authenticatedFetch } from '@/api/authenticatedFetch';
+import { API_BASE } from '@/api/config';
 
 export default function OnboardingUpload() {
   const navigate = useNavigate();
@@ -22,17 +24,13 @@ export default function OnboardingUpload() {
     formData.append('file', file);
 
     try {
-      // 1. Get the current user info for the Token and LocalStorage key
+      // 1. Get the current user info for the LocalStorage key
       const storedUser = localStorage.getItem("user");
       const user = storedUser ? JSON.parse(storedUser) : null;
-      const token = localStorage.getItem("token");
 
       // 2. Upload to your backend
-      const response = await fetch('https://parksmart-api.onrender.com/api/schedules/upload', {
+      const response = await authenticatedFetch(`${API_BASE}/api/schedules/upload`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`, // Ensure user is authenticated
-        },
         body: formData,
       });
 

@@ -1,8 +1,10 @@
-import { clearApiCache } from './apiCache';
+import { authenticatedFetch } from './authenticatedFetch';
+import { clearSession } from './tokenStorage';
+import { API_BASE } from './config';
 
 export async function login(email: string, password: string) {
   const response = await fetch(
-    "https://parksmart-api.onrender.com/api/auth/login",
+    `${API_BASE}/api/auth/login`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -18,29 +20,21 @@ export async function login(email: string, password: string) {
   return response.json();
 }
 
-  export async function logout() {
-    const token = localStorage.getItem("token");
-  
-    const response = await fetch(
-      "https://parksmart-api.onrender.com/api/auth/logout",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          // Most secure APIs require the token to know WHO is logging out
-          "Authorization": `Bearer ${token}` 
-        },
-      }
-    );
-  
-    // Even if the server request fails, we should clear local data
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    clearApiCache();
-  
-    if (!response.ok) {
-      throw new Error("Logout failed on server");
+export async function logout() {
+  const response = await authenticatedFetch(
+    `${API_BASE}/api/auth/logout`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
     }
-  
-    return true;
+  );
+
+  // Even if the server request fails, we should clear local data
+  clearSession();
+
+  if (!response.ok) {
+    throw new Error("Logout failed on server");
   }
+
+  return true;
+}

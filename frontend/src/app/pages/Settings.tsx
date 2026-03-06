@@ -18,6 +18,9 @@ import {
 import { ArrowLeft, User, CreditCard, SlidersHorizontal, LogOut, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import { API_BASE } from '@/api/config';
+import { authenticatedFetch } from '@/api/authenticatedFetch';
+import { getAccessToken } from '@/api/tokenStorage';
+import { logout } from '@/api/auth';
 import { loadPrefs } from '@/lib/prefs';
 import type { Prefs } from '@/lib/prefs';
 
@@ -86,16 +89,13 @@ export default function Settings() {
     setSavedPrefs(prefs);
 
     // Persist to DB if user is authenticated
-    const token = localStorage.getItem("token");
+    const token = getAccessToken();
     if (token) {
       setIsSaving(true);
       try {
-        const res = await fetch(`${API_BASE}/api/auth/me/preferences`, {
+        const res = await authenticatedFetch(`${API_BASE}/api/auth/me/preferences`, {
           method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             parking_pass: parkingPass,
             arrival_buffer: arrivalBuffer,
@@ -132,8 +132,8 @@ export default function Settings() {
     toast("Changes discarded");
   };
 
-  const handleLogout = () => {
-    localStorage.clear();
+  const handleLogout = async () => {
+    try { await logout(); } catch { /* server-side failure is non-blocking */ }
     toast.success("Logged out successfully");
     navigate("/welcome");
   };

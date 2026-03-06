@@ -5,6 +5,8 @@ import { Card, CardContent } from '@/app/components/ui/card';
 import { Calendar, MapPin, Info, Upload, Settings, ChevronLeft } from 'lucide-react';
 import { format, startOfWeek, addDays } from 'date-fns';
 import { cachedFetch } from '@/api/apiCache';
+import { getAccessToken } from '@/api/tokenStorage';
+import { API_BASE } from '@/api/config';
 
 interface ApiEvent {
   id: string;
@@ -26,12 +28,11 @@ export default function SchedulePlanner() {
 
   useEffect(() => {
     const fetchSchedule = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) { setLoading(false); return; }
+      if (!getAccessToken()) { setLoading(false); return; }
 
       try {
-        const data = await cachedFetch('https://parksmart-api.onrender.com/api/schedules/me', {
-          headers: { 'Authorization': `Bearer ${token}` }
+        const data = await cachedFetch(`${API_BASE}/api/schedules/me`, {
+          authenticated: true,
         });
         setEvents(data.events || []);
       } catch (err) {
@@ -49,8 +50,8 @@ export default function SchedulePlanner() {
   
       try {
         const [data, lotData] = await Promise.all([
-          cachedFetch(`https://parksmart-api.onrender.com/api/classrooms/${event.classroom_id}`),
-          cachedFetch(`https://parksmart-api.onrender.com/api/classrooms/${event.classroom_id}/lots`)
+          cachedFetch(`${API_BASE}/api/classrooms/${event.classroom_id}`),
+          cachedFetch(`${API_BASE}/api/classrooms/${event.classroom_id}/lots`)
         ]);
         setRoomNames(prev => ({ ...prev, [event.classroom_id]: data.location_string }));
         const topLot = lotData.lots && lotData.lots.length > 0
