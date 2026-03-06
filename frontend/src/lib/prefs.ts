@@ -4,7 +4,7 @@ export interface Prefs {
   parkingPass: PermitSlug;
   arrivalBuffer: number;
   walkingSpeed: number;
-  preferredPermitId?: string | null;
+  preferredPermitId: string | null;
 }
 
 export const DEFAULT_PREFS: Prefs = {

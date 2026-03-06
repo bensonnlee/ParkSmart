@@ -39,7 +39,7 @@ useEffect(() => {
 
   const menuItems = [
     { icon: Home, label: 'Dashboard', path: '/dashboard' },
-    { icon: Calendar, label: 'My Schedule', path: '/dashboard/planner' },
+    { icon: Calendar, label: 'My Schedule', path: '/dashboard/schedule' },
     { icon: MapPin, label: 'Find Parking', path: '/dashboard/map' },
     { icon: Settings, label: 'Settings', path: '/dashboard/settings' },
   ];

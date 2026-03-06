@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { Button } from '@/app/components/ui/button';
 import { Card } from '@/app/components/ui/card';
+import { PageHeader } from '@/app/components/PageHeader';
 import { Calendar, MapPin, Clock, Upload, Settings, Eye } from 'lucide-react';
 import { format, nextMonday, isWeekend } from 'date-fns';
 import { useLocation } from '../hooks/useLocation';
@@ -161,41 +162,34 @@ export default function Home() {
   const timeInfo = nextClass ? getTimeUntilClass(nextClass) : null;
 
   return (
-    <div className="min-h-screen bg-[#F6F8FB]">
-      <div className="bg-white border-b sticky top-0 z-10 px-4 py-4 shadow-sm">
-        <div className="container mx-auto flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 leading-tight tracking-tight">
-              Hello, {displayName}
-            </h1>
-            <p className="text-sm text-gray-500 font-medium">
-              {isPreview ? "Monday's Schedule Preview" : "Your schedule for today"}
-            </p>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
+    <div>
+      <PageHeader
+        title={`Hello, ${displayName}`}
+        subtitle={isPreview ? "Monday's Schedule Preview" : "Your schedule for today"}
+        actions={
+          <>
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => navigate('/dashboard/upload')}
               className="flex text-gray-600 border-gray-300 hover:bg-gray-50 hover:text-ucr-blue transition-colors"
             >
               <Upload className="size-4 mr-2" />
               <span className="inline-block">Update Schedule</span>
             </Button>
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => navigate('/dashboard/settings')}
               className="text-gray-500 hover:text-gray-900"
             >
               <Settings className="size-5" />
             </Button>
-          </div>
-        </div>
-      </div>
+          </>
+        }
+      />
 
-      <div className="container mx-auto px-4 py-6 max-w-6xl">
+      <div className="max-w-6xl mx-auto">
         {!hasAnyData ? (
           <Card className="mt-8 text-center p-12 border-dashed border-2">
             <div className="bg-blue-50 size-16 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -293,7 +287,7 @@ export default function Home() {
                </h2>
                <Button 
                   variant="link" 
-                  onClick={() => navigate('/dashboard/planner')} 
+                  onClick={() => navigate('/dashboard/schedule')} 
                   className="text-ucr-blue font-semibold hover:no-underline p-0 h-auto"
                 >
                   View Full Calendar →

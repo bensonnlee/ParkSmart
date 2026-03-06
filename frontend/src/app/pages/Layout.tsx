@@ -59,10 +59,10 @@ export default function Layout() {
           </Button>
 
           <Button
-            variant={location.pathname.includes('planner') ? 'default' : 'ghost'}
-            onClick={() => navigate('/dashboard/planner')}
+            variant={location.pathname.includes('schedule') ? 'default' : 'ghost'}
+            onClick={() => navigate('/dashboard/schedule')}
             className={`flex-col h-auto py-2 transition-all active:scale-95 ${
-              location.pathname.includes('planner') 
+              location.pathname.includes('schedule')
               ? 'bg-ucr-blue text-white hover:bg-ucr-blue-dark' 
               : 'text-gray-500'
             }`}
