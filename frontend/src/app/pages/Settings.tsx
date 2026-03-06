@@ -15,7 +15,8 @@ import {
   AlertDialogAction,
   AlertDialogCancel,
 } from '@/app/components/ui/alert-dialog';
-import { ArrowLeft, User, CreditCard, SlidersHorizontal, LogOut, ExternalLink } from 'lucide-react';
+import { PageHeader } from '@/app/components/PageHeader';
+import { User, CreditCard, SlidersHorizontal, LogOut, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import { API_BASE } from '@/api/config';
 import { authenticatedFetch } from '@/api/authenticatedFetch';
@@ -82,7 +83,7 @@ export default function Settings() {
   const [isSaving, setIsSaving] = useState(false);
 
   const handleSaveChanges = async () => {
-    const prefs: Prefs = { parkingPass, arrivalBuffer, walkingSpeed };
+    const prefs: Prefs = { parkingPass, arrivalBuffer, walkingSpeed, preferredPermitId: savedPrefs.preferredPermitId };
 
     // Always save to localStorage for immediate local access
     localStorage.setItem(prefsKey, JSON.stringify(prefs));
@@ -139,27 +140,15 @@ export default function Settings() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-24">
-      {/* Header */}
-      <div className="bg-white border-b sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate('/dashboard')}
-            className="mb-3 -ml-2"
-          >
-            <ArrowLeft className="size-4 mr-1" />
-            Dashboard
-          </Button>
-          <h1 className="text-2xl font-bold text-gray-900">Account Settings</h1>
-          <p className="text-sm text-muted-foreground">Manage your account data and parking preferences</p>
-        </div>
-
+    <div className="pb-4">
+      <PageHeader
+        title="Account Settings"
+        subtitle="Manage your account data and parking preferences"
+      >
         {/* Unsaved changes banner */}
         {isDirty && (
-          <div className="bg-amber-50 border-t border-amber-200 px-4 py-3">
-            <div className="container mx-auto flex items-center justify-between gap-4">
+          <div className="bg-amber-50 border border-amber-200 rounded-lg mt-4 px-4 py-3">
+            <div className="flex items-center justify-between gap-4">
               <p className="text-sm font-medium text-amber-800">You have unsaved changes</p>
               <div className="flex items-center gap-2">
                 <Button variant="ghost" size="sm" onClick={handleDiscardChanges} className="text-amber-800 hover:bg-amber-100">
@@ -172,9 +161,9 @@ export default function Settings() {
             </div>
           </div>
         )}
-      </div>
+      </PageHeader>
 
-      <div className="container mx-auto px-4 py-6 max-w-4xl space-y-6">
+      <div className="max-w-4xl mx-auto space-y-6">
         {/* Account Data */}
         <Card>
           <CardContent className="p-6">
@@ -307,20 +296,20 @@ export default function Settings() {
         </Card>
 
         {/* Logout and Save */}
-        <div className="flex justify-between items-center pt-2">
-          <Button variant="ghost" onClick={handleLogout} className="text-red-600 hover:bg-red-50">
+        <div className="flex flex-col-reverse sm:flex-row sm:justify-between sm:items-center gap-4 pt-2">
+          <Button variant="ghost" onClick={handleLogout} className="text-red-600 hover:bg-red-50 w-full sm:w-auto">
             <LogOut className="size-4 mr-2" /> Logout
           </Button>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 w-full sm:w-auto">
             {isDirty && (
-              <Button variant="outline" onClick={handleDiscardChanges}>
+              <Button variant="outline" onClick={handleDiscardChanges} className="flex-1 sm:flex-initial">
                 Discard
               </Button>
             )}
             <Button
               onClick={handleSaveChanges}
               disabled={!isDirty || isSaving}
-              className="bg-primary hover:bg-ucr-blue-dark px-8 disabled:opacity-50"
+              className="bg-primary hover:bg-ucr-blue-dark sm:px-8 flex-1 sm:flex-initial disabled:opacity-50"
             >
               {isSaving ? "Saving…" : "Save Changes"}
             </Button>

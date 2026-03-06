@@ -2,7 +2,8 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router';
 import { Button } from '@/app/components/ui/button';
 import { Card, CardContent } from '@/app/components/ui/card';
-import { Calendar, MapPin, Info, Upload, Settings, ChevronLeft } from 'lucide-react';
+import { PageHeader } from '@/app/components/PageHeader';
+import { Calendar, MapPin, Info, Upload, Settings } from 'lucide-react';
 import { format, startOfWeek, addDays } from 'date-fns';
 import { cachedFetch } from '@/api/apiCache';
 import { getAccessToken } from '@/api/tokenStorage';
@@ -17,14 +18,16 @@ interface ApiEvent {
   days_of_week: number[];
 }
 
+const WEEK_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+const WEEK_LABELS_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
 export default function SchedulePlanner() {
   const navigate = useNavigate();
   const [events, setEvents] = useState<ApiEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedDayIdx, setSelectedDayIdx] = useState(new Date().getDay() === 0 ? 6 : new Date().getDay() - 1);
-  
+
   const [roomNames, setRoomNames] = useState<Record<string, string>>({});
-  const [recommendedLots, setRecommendedLots] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const fetchSchedule = async () => {
@@ -47,26 +50,16 @@ export default function SchedulePlanner() {
   useEffect(() => {
     events.forEach(async (event) => {
       if (!event.classroom_id || roomNames[event.classroom_id]) return;
-  
+
       try {
-        const [data, lotData] = await Promise.all([
-          cachedFetch(`${API_BASE}/api/classrooms/${event.classroom_id}`),
-          cachedFetch(`${API_BASE}/api/classrooms/${event.classroom_id}/lots`)
-        ]);
+        const data = await cachedFetch(`${API_BASE}/api/classrooms/${event.classroom_id}`);
         setRoomNames(prev => ({ ...prev, [event.classroom_id]: data.location_string }));
-        const topLot = lotData.lots && lotData.lots.length > 0
-          ? lotData.lots[0].name
-          : "Lot 30";
-        setRecommendedLots(prev => ({ ...prev, [event.classroom_id]: topLot }));
       } catch (e) {
         console.warn("Could not fetch details for:", event.classroom_id);
         setRoomNames(prev => ({ ...prev, [event.classroom_id]: `Room ${event.classroom_id.slice(0, 4)}` }));
       }
     });
   }, [events]);
-
-  const WEEK_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-  const WEEK_LABELS_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
   const { weekDates, rangeString } = useMemo(() => {
     const start = startOfWeek(new Date(), { weekStartsOn: 1 });
@@ -86,37 +79,32 @@ export default function SchedulePlanner() {
       .sort((a, b) => a.start_time.localeCompare(b.start_time));
   }, [events, selectedDayIdx]);
 
-  if (loading) return <div className="p-10 text-center font-bold text-ucr-blue">Loading Your Plan...</div>;
+  if (loading) return <div className="p-10 text-center font-bold text-ucr-blue">Loading Schedule...</div>;
 
   return (
-    <div className="min-h-screen bg-[#F6F8FB] pb-20 px-4 pt-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')} className="hover:bg-gray-200">
-              <ChevronLeft className="size-5" />
-            </Button>
-            <div>
-              <h1 className="text-2xl font-black text-gray-900 tracking-tight uppercase">Weekly Plan</h1>
-              <p className="text-gray-500 text-xs font-medium italic">Optimized parking based on your schedule</p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Button 
-              onClick={() => navigate('/dashboard/upload')}
+    <div>
+      <PageHeader
+        title="My Schedule"
+        subtitle="Your weekly class calendar"
+        actions={
+          <>
+            <Button
               variant="outline"
-              className="bg-white border-gray-200 text-gray-600 hover:text-ucr-blue hover:border-ucr-blue shadow-sm transition-all"
+              size="sm"
+              onClick={() => navigate('/dashboard/upload')}
+              className="flex text-gray-600 border-gray-300 hover:bg-gray-50 hover:text-ucr-blue transition-colors"
             >
               <Upload className="size-4 mr-2" />
-              <span className="font-bold text-xs uppercase tracking-tight">Update Schedule</span>
+              <span className="inline-block">Update Schedule</span>
             </Button>
-            <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard/settings')} className="text-gray-400 hover:text-gray-600">
+            <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard/settings')} className="text-gray-500 hover:text-gray-900">
               <Settings className="size-5" />
             </Button>
-          </div>
-        </div>
+          </>
+        }
+      />
 
+      <div className="max-w-4xl mx-auto">
         <Card className="shadow-xl border-none rounded-3xl overflow-hidden bg-white">
           <CardContent className="p-0">
             <div className="bg-ucr-blue p-6 text-white flex justify-between items-center">
@@ -161,35 +149,22 @@ export default function SchedulePlanner() {
 
                 {classesForSelectedDay.length > 0 ? (
                   classesForSelectedDay.map((item) => (
-                    <div 
-                      key={item.id} 
-                      onClick={() => navigate(`/dashboard/parking/${item.classroom_id}`)}
-                      className="group flex flex-wrap sm:flex-nowrap items-center justify-between p-5 border border-gray-100 rounded-2xl bg-white hover:border-ucr-blue hover:shadow-lg transition-all cursor-pointer gap-4"
+                    <div
+                      key={item.id}
+                      className="p-4 border border-gray-100 rounded-2xl bg-white"
                     >
-                      <div className="flex gap-4 items-center flex-1 min-w-0">
-                        <div className="shrink-0 bg-gray-50 text-gray-400 group-hover:bg-blue-50 group-hover:text-ucr-blue p-3 rounded-xl transition-colors font-black text-xs">
+                      <div className="flex gap-3 items-start">
+                        <div className="shrink-0 bg-gray-50 text-gray-400 p-3 rounded-xl font-black text-xs">
                             {item.shortTime}
                         </div>
                         <div className="min-w-0">
-                          <h3 className="font-bold text-gray-900 text-lg group-hover:text-ucr-blue transition-colors truncate">
+                          <h3 className="font-bold text-gray-900 text-base sm:text-lg break-words">
                             {item.event_name}
                           </h3>
-                          <div className="flex items-center gap-3 text-[11px] text-gray-500 font-medium mt-1">
-                            <span className="flex items-center gap-1">
-                              <MapPin className="size-3" />
-                              {roomNames[item.classroom_id] || `Room ${item.classroom_id.slice(0,4)}`}
-                            </span>
+                          <div className="flex items-center gap-1 text-[11px] text-gray-500 font-medium mt-1">
+                            <MapPin className="size-3 shrink-0" />
+                            {roomNames[item.classroom_id] || `Room ${item.classroom_id.slice(0,4)}`}
                           </div>
-                        </div>
-                      </div>
-                      
-                      <div className="shrink-0 ml-auto sm:ml-0">
-                        <div className="bg-blue-50/50 px-4 py-2 rounded-xl border border-blue-100 text-center min-w-[100px]">
-                          <p className="text-[8px] text-ucr-blue font-black uppercase tracking-widest mb-1">Recommended</p>
-                          <p className="font-black text-gray-900">
-                            {/* UPDATED: Dynamic lot name display */}
-                            {recommendedLots[item.classroom_id] || "LOT 30"}
-                          </p>
                         </div>
                       </div>
                     </div>

@@ -10,7 +10,7 @@ import Settings from '@/app/pages/Settings';
 import IcsUpload from '@/app/pages/IcsUpload';
 import SchedulePlanner from '@/app/pages/SchedulePlanner';
 import NotFound from '@/app/pages/NotFound';
-import RedirectToPlanner from '@/app/pages/RedirectToPlanner';
+import RedirectToSchedule from '@/app/pages/RedirectToSchedule';
 import SignUp from '@/app/pages/SignUp';
 import ChangePassword from '@/app/pages/ChangePassword';
 
@@ -29,8 +29,8 @@ export const router = createBrowserRouter([
   Component: SignUp,
   },
   {
-    path: '/planner',
-    Component: RedirectToPlanner,
+    path: '/schedule',
+    Component: RedirectToSchedule,
   },
   {
     path: '/onboarding/upload',
@@ -65,7 +65,7 @@ export const router = createBrowserRouter([
         Component: ChangePassword,
       },
       {
-        path: 'planner',
+        path: 'schedule',
         Component: SchedulePlanner,
       },
       {
