@@ -16,7 +16,7 @@ import {
   AlertDialogCancel,
 } from '@/app/components/ui/alert-dialog';
 import { PageHeader } from '@/app/components/PageHeader';
-import { User, CreditCard, SlidersHorizontal, LogOut, ExternalLink, Trash2 } from 'lucide-react';
+import { User, CreditCard, SlidersHorizontal, LogOut, ExternalLink, Trash2, MessageSquarePlus } from 'lucide-react';
 import { toast } from 'sonner';
 import { API_BASE } from '@/api/config';
 import { authenticatedFetch } from '@/api/authenticatedFetch';
@@ -284,6 +284,25 @@ export default function Settings() {
                   </button>
                 ))}
               </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Send Feedback */}
+        <Card
+          className="cursor-pointer hover:shadow-md transition-all"
+          onClick={() => navigate('/dashboard/feedback')}
+        >
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="bg-blue-50 rounded-full p-3">
+                <MessageSquarePlus className="size-5 text-primary" />
+              </div>
+              <div className="flex-1">
+                <h2 className="font-bold text-gray-900 text-lg leading-tight">Send Feedback</h2>
+                <p className="text-muted-foreground text-sm">Report bugs, request features, or share your thoughts</p>
+              </div>
+              <span className="text-primary font-bold text-lg">→</span>
             </div>
           </CardContent>
         </Card>

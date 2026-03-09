@@ -241,3 +241,20 @@ class UserScheduleRead(BaseModel):
     events: list[ScheduleEventRead] = []
     created_at: datetime
     updated_at: datetime
+
+
+# Feedback schemas
+class FeedbackCreate(BaseModel):
+    category: Literal["bug", "feature", "accuracy", "general"]
+    message: str = Field(min_length=10, max_length=2000)
+    contact_email: EmailStr | None = None
+
+
+class FeedbackRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    category: Literal["bug", "feature", "accuracy", "general"]
+    message: str
+    contact_email: str | None = None
+    created_at: datetime

@@ -11,6 +11,7 @@ import RedirectToSchedule from '@/app/pages/RedirectToSchedule';
 import SignUp from '@/app/pages/SignUp';
 import ChangePassword from '@/app/pages/ChangePassword';
 import FindByBuilding from '@/app/pages/FindByBuilding';
+import Feedback from '@/app/pages/Feedback';
 
 
 export const router = createBrowserRouter([
@@ -65,6 +66,10 @@ export const router = createBrowserRouter([
       {
         path: 'find-by-building',
         Component: FindByBuilding,
+      },
+      {
+        path: 'feedback',
+        Component: Feedback,
       },
       {
         path: 'upload',
