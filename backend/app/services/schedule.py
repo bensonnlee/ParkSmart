@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.models import Building, Classroom, ScheduleEvent, UserSchedule
+from app.schemas import ManualEventCreate, ManualEventUpdate
 
 logger = logging.getLogger(__name__)
 
@@ -125,6 +126,116 @@ async def get_user_schedule(db: AsyncSession, user_id: uuid.UUID) -> UserSchedul
         .options(selectinload(UserSchedule.events))
     )
     return result.scalar_one_or_none()
+
+
+async def _resolve_classroom_id(
+    db: AsyncSession,
+    building_id: uuid.UUID | None,
+    room_number: str | None,
+) -> uuid.UUID | None:
+    """Look up a building by ID and resolve to a classroom, creating one if needed."""
+    if building_id is None:
+        return None
+    result = await db.execute(select(Building).where(Building.id == building_id))
+    building = result.scalar_one_or_none()
+    if building is None:
+        return None
+    location_string = (
+        f"{building.name} Room: {room_number}" if room_number else building.name
+    )
+    classroom = await get_or_create_classroom(db, location_string)
+    return classroom.id
+
+
+async def add_single_event(
+    db: AsyncSession, user_id: uuid.UUID, data: ManualEventCreate
+) -> ScheduleEvent:
+    """Add a single manually-created event to the user's schedule."""
+    # Get or create the user's schedule
+    result = await db.execute(
+        select(UserSchedule).where(UserSchedule.user_id == user_id)
+    )
+    schedule = result.scalar_one_or_none()
+    if schedule is None:
+        schedule = UserSchedule(user_id=user_id, name="My Schedule")
+        db.add(schedule)
+        await db.flush()
+
+    classroom_id = await _resolve_classroom_id(db, data.building_id, data.room_number)
+
+    event = ScheduleEvent(
+        schedule_id=schedule.id,
+        event_name=data.event_name,
+        classroom_id=classroom_id,
+        start_time=data.start_time,
+        end_time=data.end_time,
+        days_of_week=data.days_of_week,
+        valid_from=data.valid_from,
+        valid_until=data.valid_until,
+    )
+    db.add(event)
+    await db.commit()
+    await db.refresh(event)
+    return event
+
+
+async def update_event(
+    db: AsyncSession, user_id: uuid.UUID, event_id: uuid.UUID, data: ManualEventUpdate
+) -> ScheduleEvent | None:
+    """Update a manually-created event. Returns None if not found/owned."""
+    result = await db.execute(
+        select(ScheduleEvent)
+        .join(UserSchedule)
+        .where(ScheduleEvent.id == event_id, UserSchedule.user_id == user_id)
+    )
+    event = result.scalar_one_or_none()
+    if event is None:
+        return None
+
+    # Update simple fields
+    if data.event_name is not None:
+        event.event_name = data.event_name
+    if data.start_time is not None:
+        event.start_time = data.start_time
+    if data.end_time is not None:
+        event.end_time = data.end_time
+    if data.days_of_week is not None:
+        event.days_of_week = data.days_of_week
+    if data.valid_from is not None:
+        event.valid_from = data.valid_from
+    if data.valid_until is not None:
+        event.valid_until = data.valid_until
+
+    # Reconstruct classroom if building/room fields were sent
+    # Use model_fields_set to distinguish "field sent as None" from "field not sent"
+    building_sent = "building_id" in data.model_fields_set
+    room_sent = "room_number" in data.model_fields_set
+
+    if building_sent or room_sent:
+        event.classroom_id = await _resolve_classroom_id(
+            db, data.building_id, data.room_number
+        )
+
+    await db.commit()
+    await db.refresh(event)
+    return event
+
+
+async def delete_event(
+    db: AsyncSession, user_id: uuid.UUID, event_id: uuid.UUID
+) -> bool:
+    """Delete a single event. Returns False if not found or not owned."""
+    result = await db.execute(
+        select(ScheduleEvent)
+        .join(UserSchedule)
+        .where(ScheduleEvent.id == event_id, UserSchedule.user_id == user_id)
+    )
+    event = result.scalar_one_or_none()
+    if event is None:
+        return False
+    await db.delete(event)
+    await db.commit()
+    return True
 
 
 async def delete_user_schedule(db: AsyncSession, user_id: uuid.UUID) -> bool:

@@ -1,7 +1,8 @@
 import { useState, useRef } from 'react';
 import { Button } from '@/app/components/ui/button';
-import { Upload, ChevronLeft, FileText } from 'lucide-react';
+import { Upload, ChevronLeft, FileText, PenLine } from 'lucide-react';
 import { toast } from 'sonner';
+import ClassEventDialog from '@/app/components/ClassEventDialog';
 
 interface StepScheduleUploadProps {
   file: File | null;
@@ -20,6 +21,7 @@ export default function StepScheduleUpload({
 }: StepScheduleUploadProps) {
   const [isDragOver, setIsDragOver] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [manualDialogOpen, setManualDialogOpen] = useState(false);
 
   const handleFile = (f: File) => {
     if (!f.name.endsWith('.ics')) {
@@ -100,6 +102,22 @@ export default function StepScheduleUpload({
       <p className="text-xs text-muted-foreground text-center">
         Export your schedule as .ics from R'Web or Google Calendar
       </p>
+
+      <button
+        type="button"
+        onClick={() => setManualDialogOpen(true)}
+        className="flex items-center justify-center gap-1.5 text-sm font-medium text-ucr-blue hover:text-ucr-blue-dark transition-colors mx-auto"
+      >
+        <PenLine className="size-3.5" />
+        Or add classes manually
+      </button>
+
+      <ClassEventDialog
+        open={manualDialogOpen}
+        onOpenChange={setManualDialogOpen}
+        mode="add"
+        onSuccess={onFinish}
+      />
 
       {/* Actions */}
       <div className="flex items-center gap-3 pt-2">

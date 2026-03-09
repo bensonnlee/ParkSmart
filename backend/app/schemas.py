@@ -227,6 +227,28 @@ class ScheduleEventRead(BaseModel):
     updated_at: datetime
 
 
+class ManualEventCreate(BaseModel):
+    event_name: str
+    building_id: uuid.UUID | None = None
+    room_number: str | None = None
+    start_time: time
+    end_time: time
+    days_of_week: list[int]  # 0=Mon..6=Sun
+    valid_from: date | None = None
+    valid_until: date | None = None
+
+
+class ManualEventUpdate(BaseModel):
+    event_name: str | None = None
+    building_id: uuid.UUID | None = None
+    room_number: str | None = None
+    start_time: time | None = None
+    end_time: time | None = None
+    days_of_week: list[int] | None = None
+    valid_from: date | None = None
+    valid_until: date | None = None
+
+
 class UserScheduleCreate(BaseModel):
     name: str | None = None
     events: list[ScheduleEventCreate] = []

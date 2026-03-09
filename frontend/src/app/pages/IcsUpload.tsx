@@ -3,15 +3,17 @@ import { useNavigate } from 'react-router';
 import { Button } from '@/app/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/app/components/ui/card';
 import { Alert, AlertDescription } from '@/app/components/ui/alert';
-import { Upload, FileText, CheckCircle2, AlertCircle, Calendar } from 'lucide-react';
+import { Upload, FileText, CheckCircle2, AlertCircle, Calendar, PenLine } from 'lucide-react';
 import { invalidateCache } from '@/api/apiCache';
 import { authenticatedFetch } from '@/api/authenticatedFetch';
+import ClassEventDialog from '@/app/components/ClassEventDialog';
 
 export default function IcsUpload() {
   const navigate = useNavigate();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [manualDialogOpen, setManualDialogOpen] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -120,6 +122,23 @@ export default function IcsUpload() {
             </label>
           </div>
 
+          {/* Divider with manual entry option */}
+          <div className="flex items-center gap-4">
+            <div className="h-px bg-gray-200 flex-1" />
+            <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">or</span>
+            <div className="h-px bg-gray-200 flex-1" />
+          </div>
+
+          <Button
+            variant="outline"
+            onClick={() => setManualDialogOpen(true)}
+            className="w-full border-ucr-blue/30 text-ucr-blue hover:bg-ucr-blue/5 font-semibold"
+            disabled={isLoading}
+          >
+            <PenLine className="size-4 mr-2" />
+            Add classes manually
+          </Button>
+
           {selectedFile && (
             <Card className="border-ucr-gold/30 bg-yellow-50">
               <CardContent className="p-4">
@@ -178,6 +197,16 @@ export default function IcsUpload() {
           </div>
         </CardContent>
       </Card>
+
+      <ClassEventDialog
+        open={manualDialogOpen}
+        onOpenChange={setManualDialogOpen}
+        mode="add"
+        onSuccess={() => {
+          invalidateCache('/api/schedules');
+          navigate('/dashboard/schedule');
+        }}
+      />
     </div>
   );
 }

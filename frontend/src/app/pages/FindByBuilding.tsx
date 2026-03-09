@@ -42,13 +42,15 @@ export default function FindByBuilding() {
   const [recommendations, setRecommendations] = useState<any[] | null>(null);
   const [otherLots, setOtherLots] = useState<any[]>([]);
 
-  // Fetch buildings on debounced query change (skip when empty to avoid loading all on mount)
+  // Fetch buildings on debounced query change (empty query returns all buildings)
   useEffect(() => {
-    if (!debouncedQuery) { setBuildings([]); return; }
     let stale = false;
     const fetchBuildings = async () => {
       try {
-        const data = await cachedFetch(`${API_BASE}/api/buildings?q=${encodeURIComponent(debouncedQuery)}`, { ttl: 30_000 });
+        const url = debouncedQuery
+          ? `${API_BASE}/api/buildings?q=${encodeURIComponent(debouncedQuery)}`
+          : `${API_BASE}/api/buildings`;
+        const data = await cachedFetch(url, { ttl: 30_000 });
         if (!stale) setBuildings(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error('Error fetching buildings:', err);

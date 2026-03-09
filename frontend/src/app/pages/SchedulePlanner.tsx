@@ -1,13 +1,14 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router';
 import { Button } from '@/app/components/ui/button';
 import { Card, CardContent } from '@/app/components/ui/card';
 import { PageHeader } from '@/app/components/PageHeader';
-import { Calendar, MapPin, Info, Upload, Settings } from 'lucide-react';
+import { Calendar, MapPin, Info, Upload, Settings, Plus } from 'lucide-react';
 import { format, startOfWeek, addDays } from 'date-fns';
-import { cachedFetch } from '@/api/apiCache';
+import { cachedFetch, invalidateCache } from '@/api/apiCache';
 import { getAccessToken } from '@/api/tokenStorage';
 import { API_BASE } from '@/api/config';
+import ClassEventDialog from '@/app/components/ClassEventDialog';
 
 interface ApiEvent {
   id: string;
@@ -16,6 +17,12 @@ interface ApiEvent {
   start_time: string;
   end_time: string;
   days_of_week: number[];
+}
+
+interface ClassroomInfo {
+  location_string: string;
+  building_id?: string | null;
+  building_name?: string | null;
 }
 
 const WEEK_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -27,7 +34,57 @@ export default function SchedulePlanner() {
   const [loading, setLoading] = useState(true);
   const [selectedDayIdx, setSelectedDayIdx] = useState(new Date().getDay() === 0 ? 6 : new Date().getDay() - 1);
 
-  const [roomNames, setRoomNames] = useState<Record<string, string>>({});
+  const [classroomData, setClassroomData] = useState<Record<string, ClassroomInfo>>({});
+  const fetchedClassrooms = useRef(new Set<string>());
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // Dialog state — mode is derived from editingEvent
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<{
+    id: string;
+    event_name: string;
+    building_id?: string | null;
+    building_name?: string | null;
+    room_number?: string | null;
+    start_time: string;
+    end_time: string;
+    days_of_week: number[];
+  } | undefined>(undefined);
+
+  const dialogMode = editingEvent ? 'edit' : 'add';
+
+  const handleDialogSuccess = useCallback(() => {
+    invalidateCache('/api/schedules');
+    invalidateCache('/api/classrooms');
+    fetchedClassrooms.current.clear();
+    setClassroomData({});
+    setRefreshKey(k => k + 1);
+  }, []);
+
+  const handleAddClass = useCallback(() => {
+    setEditingEvent(undefined);
+    setDialogOpen(true);
+  }, []);
+
+  const handleEditEvent = useCallback((event: ApiEvent) => {
+    const classroom = classroomData[event.classroom_id];
+    const locationStr = classroom?.location_string || '';
+    const parts = locationStr.split(' Room: ');
+    const buildingName = parts.length === 2 ? parts[0] : null;
+    const roomNum = parts.length === 2 ? parts[1] : null;
+
+    setEditingEvent({
+      id: event.id,
+      event_name: event.event_name,
+      building_id: classroom?.building_id || null,
+      building_name: buildingName || classroom?.building_name || null,
+      room_number: roomNum,
+      start_time: event.start_time,
+      end_time: event.end_time,
+      days_of_week: event.days_of_week,
+    });
+    setDialogOpen(true);
+  }, [classroomData]);
 
   useEffect(() => {
     const fetchSchedule = async () => {
@@ -45,20 +102,35 @@ export default function SchedulePlanner() {
       }
     };
     fetchSchedule();
-  }, []);
+  }, [refreshKey]);
 
   useEffect(() => {
-    events.forEach(async (event) => {
-      if (!event.classroom_id || roomNames[event.classroom_id]) return;
+    const toFetch = events.filter(
+      e => e.classroom_id && !fetchedClassrooms.current.has(e.classroom_id)
+    );
+    toFetch.forEach(event => fetchedClassrooms.current.add(event.classroom_id));
 
-      try {
-        const data = await cachedFetch(`${API_BASE}/api/classrooms/${event.classroom_id}`);
-        setRoomNames(prev => ({ ...prev, [event.classroom_id]: data.location_string }));
-      } catch (e) {
-        console.warn("Could not fetch details for:", event.classroom_id);
-        setRoomNames(prev => ({ ...prev, [event.classroom_id]: `Room ${event.classroom_id.slice(0, 4)}` }));
-      }
-    });
+    Promise.all(
+      toFetch.map(async (event) => {
+        try {
+          const data = await cachedFetch(`${API_BASE}/api/classrooms/${event.classroom_id}`);
+          setClassroomData(prev => ({
+            ...prev,
+            [event.classroom_id]: {
+              location_string: data.location_string,
+              building_id: data.building_id || null,
+              building_name: data.building?.name || null,
+            },
+          }));
+        } catch (e) {
+          console.warn("Could not fetch details for:", event.classroom_id);
+          setClassroomData(prev => ({
+            ...prev,
+            [event.classroom_id]: { location_string: `Room ${event.classroom_id.slice(0, 4)}` },
+          }));
+        }
+      })
+    );
   }, [events]);
 
   const { weekDates, rangeString } = useMemo(() => {
@@ -89,13 +161,21 @@ export default function SchedulePlanner() {
         actions={
           <>
             <Button
+              size="sm"
+              onClick={handleAddClass}
+              className="flex bg-ucr-blue hover:bg-ucr-blue-dark text-white transition-colors"
+            >
+              <Plus className="size-4 sm:mr-1" />
+              <span className="hidden sm:inline-block">Add Class</span>
+            </Button>
+            <Button
               variant="outline"
               size="sm"
               onClick={() => navigate('/dashboard/upload')}
               className="flex text-gray-600 border-gray-300 hover:bg-gray-50 hover:text-ucr-blue transition-colors"
             >
-              <Upload className="size-4 mr-2" />
-              <span className="inline-block">Update Schedule</span>
+              <Upload className="size-4 sm:mr-2" />
+              <span className="hidden sm:inline-block">Update Schedule</span>
             </Button>
             <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard/settings')} className="text-gray-500 hover:text-gray-900">
               <Settings className="size-5" />
@@ -151,7 +231,8 @@ export default function SchedulePlanner() {
                   classesForSelectedDay.map((item) => (
                     <div
                       key={item.id}
-                      className="p-4 border border-gray-100 rounded-2xl bg-white"
+                      onClick={() => handleEditEvent(item)}
+                      className="p-4 border border-gray-100 rounded-2xl bg-white cursor-pointer hover:border-ucr-blue/30 hover:shadow-sm transition-all"
                     >
                       <div className="flex gap-3 items-start">
                         <div className="shrink-0 bg-gray-50 text-gray-400 p-3 rounded-xl font-black text-xs">
@@ -163,7 +244,7 @@ export default function SchedulePlanner() {
                           </h3>
                           <div className="flex items-center gap-1 text-[11px] text-gray-500 font-medium mt-1">
                             <MapPin className="size-3 shrink-0" />
-                            {roomNames[item.classroom_id] || `Room ${item.classroom_id.slice(0,4)}`}
+                            {classroomData[item.classroom_id]?.location_string || `Room ${item.classroom_id.slice(0,4)}`}
                           </div>
                         </div>
                       </div>
@@ -181,6 +262,14 @@ export default function SchedulePlanner() {
           </CardContent>
         </Card>
       </div>
+
+      <ClassEventDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        mode={dialogMode}
+        editData={editingEvent}
+        onSuccess={handleDialogSuccess}
+      />
     </div>
   );
 }
