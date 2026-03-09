@@ -169,10 +169,16 @@ class BuildingRead(BaseModel):
 
     id: uuid.UUID
     name: str
+    nickname: str
     latitude: Decimal
     longitude: Decimal
     created_at: datetime
     updated_at: datetime
+
+
+class BuildingLotsResponse(BaseModel):
+    building: BuildingRead
+    lots: list[ParkingLotWithDistance]
 
 
 class ClassroomRead(BaseModel):

@@ -1,7 +1,14 @@
 import { Outlet, useNavigate, NavLink } from 'react-router';
-import { Home, Calendar, Settings } from 'lucide-react';
+import { Home, Calendar, Settings, Search } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Sidebar, SidebarToggle } from '@/app/components/Sidebar';
+
+const navLinkClass = ({ isActive }: { isActive: boolean }) =>
+  `flex flex-col items-center justify-center min-h-12 rounded-md transition-all active:scale-95 outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 ${
+    isActive
+      ? 'bg-ucr-blue text-white hover:bg-ucr-blue-dark'
+      : 'text-gray-500 hover:bg-accent hover:text-accent-foreground'
+  }`;
 
 export default function Layout() {
   const navigate = useNavigate();
@@ -40,47 +47,24 @@ export default function Layout() {
 
       {/* Bottom Navigation */}
       <nav aria-label="Main navigation" className="fixed bottom-0 left-0 right-0 z-100 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-[0_-4px_12px_rgba(0,0,0,0.1)]">
-        <div className="grid grid-cols-3 gap-1 px-4 pt-2 max-w-md mx-auto pb-safe">
+        <div className="grid grid-cols-4 gap-1 px-4 pt-2 max-w-md mx-auto pb-safe">
 
-          <NavLink
-            to="/dashboard"
-            end
-            className={({ isActive }) =>
-              `flex flex-col items-center justify-center min-h-12 rounded-md transition-all active:scale-95 outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 ${
-                isActive
-                  ? 'bg-ucr-blue text-white hover:bg-ucr-blue-dark'
-                  : 'text-gray-500 hover:bg-accent hover:text-accent-foreground'
-              }`
-            }
-          >
+          <NavLink to="/dashboard" end className={navLinkClass}>
             <Home className="size-5 mb-1" />
             <span className="text-xs font-bold">Today</span>
           </NavLink>
 
-          <NavLink
-            to="/dashboard/schedule"
-            className={({ isActive }) =>
-              `flex flex-col items-center justify-center min-h-12 rounded-md transition-all active:scale-95 outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 ${
-                isActive
-                  ? 'bg-ucr-blue text-white hover:bg-ucr-blue-dark'
-                  : 'text-gray-500 hover:bg-accent hover:text-accent-foreground'
-              }`
-            }
-          >
+          <NavLink to="/dashboard/find-by-building" className={navLinkClass}>
+            <Search className="size-5 mb-1" />
+            <span className="text-xs font-bold">Search</span>
+          </NavLink>
+
+          <NavLink to="/dashboard/schedule" className={navLinkClass}>
             <Calendar className="size-5 mb-1" />
             <span className="text-xs font-bold">Schedule</span>
           </NavLink>
 
-          <NavLink
-            to={isLoggedIn ? '/dashboard/settings' : '/welcome'}
-            className={({ isActive }) =>
-              `flex flex-col items-center justify-center min-h-12 rounded-md transition-all active:scale-95 outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 ${
-                isActive
-                  ? 'bg-ucr-blue text-white hover:bg-ucr-blue-dark'
-                  : 'text-gray-500 hover:bg-accent hover:text-accent-foreground'
-              }`
-            }
-          >
+          <NavLink to={isLoggedIn ? '/dashboard/settings' : '/welcome'} className={navLinkClass}>
             <Settings className="size-5 mb-1" />
             <span className="text-xs font-bold">{isLoggedIn ? 'Settings' : 'Sign In'}</span>
           </NavLink>

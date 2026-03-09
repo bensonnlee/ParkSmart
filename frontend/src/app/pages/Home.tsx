@@ -4,7 +4,7 @@ import { Button } from '@/app/components/ui/button';
 import { Card } from '@/app/components/ui/card';
 import { PageHeader } from '@/app/components/PageHeader';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/app/components/ui/dialog';
-import { Calendar, MapPin, Clock, Upload, Settings, Eye } from 'lucide-react';
+import { Calendar, MapPin, Clock, Upload, Settings, Eye, Building2 } from 'lucide-react';
 import { format, nextMonday, isWeekend } from 'date-fns';
 import { useLocation } from '../hooks/useLocation';
 import { cachedFetch } from '@/api/apiCache';
@@ -207,10 +207,16 @@ export default function Home() {
             </div>
             <h2 className="text-xl font-bold text-gray-900 mb-2">No Schedule Found</h2>
             <p className="text-gray-500 mb-6 max-w-xs mx-auto">Upload your .ics file to see your classes and parking recommendations.</p>
-            <Button onClick={() => navigate('/dashboard/upload')} className="bg-ucr-blue hover:bg-ucr-blue-dark px-8">
-              <Upload className="size-4 mr-2" />
-              Upload Now
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Button onClick={() => navigate('/dashboard/upload')} className="bg-ucr-blue hover:bg-ucr-blue-dark px-8">
+                <Upload className="size-4 mr-2" />
+                Upload Now
+              </Button>
+              <Button variant="outline" onClick={() => navigate('/dashboard/find-by-building')} className="px-8">
+                <Building2 className="size-4 mr-2" />
+                Find by Building
+              </Button>
+            </div>
           </Card>
         ) : (
           <>
@@ -374,6 +380,20 @@ export default function Home() {
                 })}
               </div>
             )}
+
+            {/* Find by Building CTA */}
+            <Card className="mt-8 p-5 border-none shadow-sm flex items-center gap-4 cursor-pointer hover:shadow-md transition-all"
+              onClick={() => navigate('/dashboard/find-by-building')}
+            >
+              <div className="bg-blue-50 p-3 rounded-2xl shrink-0">
+                <Building2 className="text-ucr-blue size-6" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-bold text-gray-900">Find Parking by Building</h3>
+                <p className="text-sm text-gray-500">Search any campus building for optimal parking</p>
+              </div>
+              <span className="text-ucr-blue font-bold text-lg">→</span>
+            </Card>
           </>
         )}
       </div>

@@ -2,14 +2,14 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Button } from '@/app/components/ui/button';
 import { Card, CardContent } from '@/app/components/ui/card';
-import { ArrowLeft, MapPin, Footprints, Car, CheckCircle, Navigation, AlertCircle, TrendingDown, TrendingUp, Clock, type LucideIcon } from 'lucide-react';
-import { format, subMinutes, closestIndexTo } from 'date-fns';
+import { ArrowLeft, MapPin, Footprints, Car, CheckCircle, Navigation, AlertCircle, Clock, type LucideIcon } from 'lucide-react';
+import { format, subMinutes } from 'date-fns';
 import { cachedFetch } from '@/api/apiCache';
 import { API_BASE } from '@/api/config';
-import { loadPrefs } from '@/lib/prefs';
+import { loadPrefs, WALK_SPEED_MULTIPLIER } from '@/lib/prefs';
 import { openMapsDirections } from '@/lib/maps';
-
-const WALK_SPEED_MULTIPLIER: Record<number, number> = { 1: 1.5, 2: 1.0, 3: 0.75 };
+import { getPredictedSpots } from '@/lib/forecast';
+import { AvailabilityStrip } from '@/app/components/AvailabilityStrip';
 
 function TimelineConnector({ icon: Icon }: { icon: LucideIcon }) {
   return (
@@ -125,14 +125,7 @@ export default function ParkingRecommendations() {
             ? subMinutes(classStart, prefs.arrivalBuffer + walkMin)
             : (driveMin > 0 ? new Date(now + driveMin * 60_000) : null);
 
-          // Find forecast entry closest to arrival time
-          let predictedSpots: number | null = null;
-          if (arrivalTime && lot.forecasts?.length) {
-            const idx = closestIndexTo(arrivalTime, lot.forecasts.map((f: any) => new Date(f.forecast_time)));
-            if (idx != null) {
-              predictedSpots = lot.forecasts[idx].predicted_free_spaces;
-            }
-          }
+          const predictedSpots = getPredictedSpots(arrivalTime, lot.forecasts);
 
           return {
             id: lot.id,
@@ -267,27 +260,12 @@ export default function ParkingRecommendations() {
                   </div>
 
                   {/* Availability strip */}
-                  <div className="flex items-center bg-gray-50 rounded-xl mx-4 sm:mx-6 mb-3 px-4 py-3 gap-4">
-                    <div className="flex-1">
-                      <p className="text-[10px] text-gray-400 font-bold uppercase mb-0.5">Now</p>
-                      <p className="text-xl font-black text-gray-900">
-                        {lot.currentSpots}<span className="text-xs text-gray-300 font-bold">/{lot.totalSpots}</span>
-                      </p>
-                    </div>
-                    <div className="w-px h-9 bg-gray-200" />
-                    <div className="flex-1">
-                      <p className="text-[10px] text-gray-400 font-bold uppercase mb-0.5">At Arrival</p>
-                      {lot.predictedSpots != null ? (
-                        <p className="text-xl font-black text-gray-900 flex items-center gap-1">
-                          {lot.predictedSpots < lot.currentSpots && <TrendingDown className="size-3.5 text-red-400" />}
-                          {lot.predictedSpots > lot.currentSpots && <TrendingUp className="size-3.5 text-green-500" />}
-                          {lot.predictedSpots}<span className="text-xs text-gray-300 font-bold">/{lot.totalSpots}</span>
-                        </p>
-                      ) : (
-                        <p className="text-xl font-black text-gray-300">—</p>
-                      )}
-                    </div>
-                  </div>
+                  <AvailabilityStrip
+                    currentSpots={lot.currentSpots}
+                    totalSpots={lot.totalSpots}
+                    predictedSpots={lot.predictedSpots}
+                    className="mx-4 sm:mx-6 mb-3"
+                  />
 
                   {/* Journey timeline */}
                   {lot.arrivalTime && (

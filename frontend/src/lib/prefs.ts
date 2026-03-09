@@ -13,6 +13,8 @@ export const WALKING_SPEEDS = [
   { value: 3, label: 'Fast' },
 ] as const;
 
+export const WALK_SPEED_MULTIPLIER: Record<number, number> = { 1: 1.5, 2: 1.0, 3: 0.75 };
+
 export const PERMIT_OPTIONS: { slug: PermitSlug; label: string; activeClass: string }[] = [
   { slug: 'gold-plus', label: 'Gold Plus', activeClass: 'border-amber-400 bg-linear-to-br from-yellow-500 to-amber-600 text-white shadow-md' },
   { slug: 'gold', label: 'Gold', activeClass: 'border-yellow-400 bg-linear-to-br from-yellow-400 to-yellow-600 text-white shadow-md' },

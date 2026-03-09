@@ -10,6 +10,7 @@ import NotFound from '@/app/pages/NotFound';
 import RedirectToSchedule from '@/app/pages/RedirectToSchedule';
 import SignUp from '@/app/pages/SignUp';
 import ChangePassword from '@/app/pages/ChangePassword';
+import FindByBuilding from '@/app/pages/FindByBuilding';
 
 
 export const router = createBrowserRouter([
@@ -60,6 +61,10 @@ export const router = createBrowserRouter([
       {
         path: 'schedule',
         Component: SchedulePlanner,
+      },
+      {
+        path: 'find-by-building',
+        Component: FindByBuilding,
       },
       {
         path: 'upload',
