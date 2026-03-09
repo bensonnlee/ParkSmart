@@ -58,6 +58,7 @@ export default function StepAccountCreate({
         <Input
           value={displayName}
           onChange={(e) => setDisplayName(e.target.value)}
+          autoComplete="name"
           placeholder="Your name"
           required
           className="mt-1"
@@ -70,6 +71,7 @@ export default function StepAccountCreate({
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           type="email"
+          autoComplete="email"
           placeholder="you@ucr.edu"
           required
           className="mt-1"
@@ -83,6 +85,7 @@ export default function StepAccountCreate({
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             type={showPassword ? 'text' : 'password'}
+            autoComplete="new-password"
             placeholder="Min 6 characters"
             required
             minLength={6}
@@ -107,6 +110,7 @@ export default function StepAccountCreate({
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             type={showConfirm ? 'text' : 'password'}
+            autoComplete="new-password"
             placeholder="Re-enter your password"
             required
             minLength={6}

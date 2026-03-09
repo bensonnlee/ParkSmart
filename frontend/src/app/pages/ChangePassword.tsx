@@ -114,6 +114,7 @@ export default function ChangePassword() {
                   <Input
                     id="old-password"
                     type={showOldPassword ? 'text' : 'password'}
+                    autoComplete="current-password"
                     value={oldPassword}
                     onChange={(e) => setOldPassword(e.target.value)}
                     placeholder="Enter your current password"
@@ -144,6 +145,7 @@ export default function ChangePassword() {
                     <Input
                       id="new-password"
                       type={showNewPassword ? 'text' : 'password'}
+                      autoComplete="new-password"
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       placeholder="Enter your new password"
@@ -179,6 +181,7 @@ export default function ChangePassword() {
                     <Input
                       id="confirm-password"
                       type={showConfirmPassword ? 'text' : 'password'}
+                      autoComplete="new-password"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder="Re-enter your new password"
