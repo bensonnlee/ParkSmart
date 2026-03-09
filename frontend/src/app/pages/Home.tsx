@@ -392,7 +392,7 @@ export default function Home() {
                               : 'bg-gray-400 hover:bg-gray-500'
                           }`}
                         >
-                          {locationAvailable ? "Find Optimal Parking" : locLoading ? "Locating..." : "Allow Location to Find Parking"}
+                          {locationAvailable ? "Find Parking" : locLoading ? "Locating..." : "Allow Location to Find Parking"}
                         </Button>
                       </div>
                     </Card>

@@ -192,7 +192,7 @@ export default function ParkingRecommendations() {
         </h1>
 
         <h2 className="text-sm font-black text-gray-400 uppercase tracking-widest mb-1 flex items-center gap-2">
-          <CheckCircle className="size-4 text-green-500" /> Optimal Parking Lots
+          <CheckCircle className="size-4 text-green-500" /> Parking Lots
         </h2>
         <p className="text-xs text-gray-400 mb-4">
           {usingUserLocation ? "Sorted by total driving + walking time" : "Sorted by walking distance from classroom"}

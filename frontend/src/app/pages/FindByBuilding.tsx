@@ -172,7 +172,7 @@ export default function FindByBuilding() {
     <div>
       <PageHeader
         title="Find by Building"
-        subtitle="Search any campus building for optimal parking"
+        subtitle="Search any campus building for parking"
       />
 
       <div className="max-w-2xl mx-auto">
@@ -241,7 +241,7 @@ export default function FindByBuilding() {
               Finding parking...
             </>
           ) : (
-            'Find Optimal Parking'
+            'Find Parking'
           )}
         </Button>
 
@@ -257,7 +257,7 @@ export default function FindByBuilding() {
             ) : (
               <>
                 <h2 className="text-sm font-black text-gray-400 uppercase tracking-widest mb-1 flex items-center gap-2">
-                  <CheckCircle className="size-4 text-green-500" /> Optimal Parking Lots
+                  <CheckCircle className="size-4 text-green-500" /> Parking Lots
                 </h2>
                 <p className="text-xs text-gray-400 mb-4">
                   {latitude && longitude

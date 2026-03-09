@@ -1,7 +1,6 @@
 import { Outlet, useNavigate, NavLink } from 'react-router';
 import { Home, Calendar, Settings, Search } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { Sidebar, SidebarToggle } from '@/app/components/Sidebar';
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
   `flex flex-col items-center justify-center min-h-12 rounded-md transition-all active:scale-95 outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 ${
@@ -12,7 +11,6 @@ const navLinkClass = ({ isActive }: { isActive: boolean }) =>
 
 export default function Layout() {
   const navigate = useNavigate();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
@@ -27,12 +25,9 @@ export default function Layout() {
 
   return (
     <div className="relative min-h-screen bg-gray-50 flex flex-col">
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-
       {/* Header */}
       <header className="sticky top-0 z-40 bg-ucr-blue text-white py-3 shadow-md">
-        <div className="container mx-auto px-4 flex items-center gap-3">
-          <SidebarToggle onClick={() => setSidebarOpen(true)} />
+        <div className="container mx-auto px-4">
           <div onClick={() => navigate('/dashboard')} className="cursor-pointer">
             <h1 className="text-lg font-bold uppercase tracking-wider text-white">UC Riverside</h1>
             <p className="text-[10px] opacity-80 uppercase text-white">Parking Optimizer</p>
