@@ -25,6 +25,19 @@ async function refreshAccessToken(): Promise<string> {
 }
 
 /**
+ * Mutex-protected token refresh. Concurrent callers share a single
+ * in-flight refresh request. Throws on failure.
+ */
+export function refreshWithMutex(): Promise<string> {
+  if (!refreshPromise) {
+    refreshPromise = refreshAccessToken().finally(() => {
+      refreshPromise = null;
+    });
+  }
+  return refreshPromise;
+}
+
+/**
  * Drop-in replacement for fetch() that auto-attaches the Bearer token,
  * intercepts 401s, refreshes via the backend, and retries once.
  *
@@ -47,13 +60,7 @@ export async function authenticatedFetch(
       // Free the connection from the 401 response
       await response.body?.cancel();
 
-      // Mutex: only the first caller triggers the refresh
-      if (!refreshPromise) {
-        refreshPromise = refreshAccessToken().finally(() => {
-          refreshPromise = null;
-        });
-      }
-      const newToken = await refreshPromise;
+      const newToken = await refreshWithMutex();
 
       // Retry original request with new token
       const retryHeaders = new Headers(init?.headers);

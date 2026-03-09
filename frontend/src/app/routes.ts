@@ -12,20 +12,35 @@ import SignUp from '@/app/pages/SignUp';
 import ChangePassword from '@/app/pages/ChangePassword';
 import FindByBuilding from '@/app/pages/FindByBuilding';
 import Feedback from '@/app/pages/Feedback';
+import { validateSession } from '@/api/validateSession';
 
+async function redirectIfAuthenticated() {
+  const valid = await validateSession();
+  if (valid) return redirect('/dashboard');
+  return null;
+}
+
+async function requireAuth() {
+  const valid = await validateSession();
+  if (!valid) return redirect('/welcome');
+  return null;
+}
 
 export const router = createBrowserRouter([
   {
     path: '/',
     Component: Welcome,
+    loader: redirectIfAuthenticated,
   },
   {
     path: '/welcome',
     Component: Welcome,
+    loader: redirectIfAuthenticated,
   },
   {
     path: '/signup',
     Component: SignUp,
+    loader: redirectIfAuthenticated,
   },
   {
     path: '/schedule',
@@ -42,6 +57,7 @@ export const router = createBrowserRouter([
   {
     path: '/dashboard',
     Component: Layout,
+    loader: requireAuth,
     children: [
       {
         index: true,
