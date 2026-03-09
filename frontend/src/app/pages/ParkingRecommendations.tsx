@@ -33,6 +33,7 @@ export default function ParkingRecommendations() {
   const [error, setError] = useState<string | null>(null);
   const [classInfo, setClassInfo] = useState<any>(null);
   const [recommendations, setRecommendations] = useState<any[]>([]);
+  const [otherLots, setOtherLots] = useState<any[]>([]);
 
   const prefs = useMemo(() => loadPrefs(), []);
   const walkMultiplier = WALK_SPEED_MULTIPLIER[prefs.walkingSpeed] ?? 1.0;
@@ -44,6 +45,7 @@ export default function ParkingRecommendations() {
     const fetchData = async () => {
       setLoading(true);
       setError(null);
+      setOtherLots([]);
 
       try {
         // Always fetch classroom + walking-distance lots; optionally fetch driving distances + permit-accessible lots
@@ -145,6 +147,37 @@ export default function ParkingRecommendations() {
         });
 
         setRecommendations(formattedLots);
+
+        // Fetch availability for remaining lots (beyond top 3)
+        const remainingLots = filteredLots.slice(3);
+        if (remainingLots.length > 0) {
+          const otherSettled = await Promise.allSettled(
+            remainingLots.map((lot: any) =>
+              cachedFetch(`${API_BASE}/api/lots/${lot.id}`, { ttl: 60_000 }).catch(() => null)
+            )
+          );
+
+          const otherFormatted = remainingLots.map((lot: any, i: number) => {
+            const result = otherSettled[i];
+            const detail = result.status === 'fulfilled' ? result.value : null;
+            const rawWalk = walkTimeMap.get(lot.id);
+            const walkMin = rawWalk != null ? Math.round(rawWalk * walkMultiplier) : null;
+            const driveMin = driveTimeMap.get(lot.id) ?? null;
+
+            return {
+              id: lot.id,
+              name: detail?.name ?? lot.name ?? lot.id,
+              walkMinutes: walkMin,
+              driveMinutes: driveMin,
+              lat: detail?.latitude ?? lot.latitude,
+              lng: detail?.longitude ?? lot.longitude,
+              currentSpots: detail?.free_spaces ?? null,
+              totalSpots: detail?.total_spaces ?? null,
+            };
+          });
+
+          setOtherLots(otherFormatted);
+        }
 
       } catch (err: any) {
         console.error("Fetch Error:", err);
@@ -302,6 +335,56 @@ export default function ParkingRecommendations() {
               </Card>
             );
           })
+        )}
+
+        {/* All Other Lots */}
+        {otherLots.length > 0 && (
+          <>
+            <h2 className="text-sm font-black text-gray-400 uppercase tracking-widest mb-1 mt-8 flex items-center gap-2">
+              <MapPin className="size-4 text-gray-400" /> All Other Lots
+            </h2>
+            <p className="text-xs text-gray-400 mb-4">
+              {otherLots.length} additional lot{otherLots.length !== 1 ? 's' : ''} nearby
+            </p>
+
+            {otherLots.map((lot) => (
+              <Card key={lot.id} className="mb-3 border-none shadow-sm rounded-2xl overflow-hidden">
+                <CardContent className="p-0 last:pb-0">
+                  <div className="px-4 sm:px-6 pt-4 pb-3">
+                    <div className="flex items-center justify-between mb-1">
+                      <h3 className="font-bold text-base text-gray-900">{lot.name}</h3>
+                      {lot.currentSpots != null && lot.totalSpots != null && (
+                        <span className="text-xs font-bold text-gray-500 bg-gray-100 rounded-full px-2.5 py-1">
+                          {lot.currentSpots} / {lot.totalSpots} spots
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1.5 text-sm text-gray-400 flex-wrap">
+                      {lot.driveMinutes != null && (
+                        <span className="flex items-center gap-1 whitespace-nowrap">
+                          <Car className="size-3.5 shrink-0" /> ~{Math.round(lot.driveMinutes)} min drive
+                        </span>
+                      )}
+                      {lot.driveMinutes != null && lot.walkMinutes != null && (
+                        <span className="text-gray-300">{'\u00B7'}</span>
+                      )}
+                      {lot.walkMinutes != null && (
+                        <span className="flex items-center gap-1 whitespace-nowrap">
+                          <Footprints className="size-3.5 shrink-0" /> ~{Math.round(lot.walkMinutes)} min walk
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleNavigate(lot.lat, lot.lng)}
+                    className="w-full bg-blue-600 hover:bg-blue-700 py-3 flex items-center justify-center gap-2 text-xs font-bold text-white transition-colors uppercase tracking-wide"
+                  >
+                    <Navigation className="size-3.5" /> Start Navigation
+                  </button>
+                </CardContent>
+              </Card>
+            ))}
+          </>
         )}
       </div>
     </div>
