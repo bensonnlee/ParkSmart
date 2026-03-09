@@ -6,6 +6,8 @@ import { API_BASE } from '@/api/config';
 import { setTokens, getAccessToken } from '@/api/tokenStorage';
 import { authenticatedFetch } from '@/api/authenticatedFetch';
 import { invalidateCache } from '@/api/apiCache';
+import { addScheduleEvent } from '@/api/schedule';
+import type { ManualEventData } from '@/api/schedule';
 import { DEFAULT_PREFS } from '@/lib/prefs';
 import type { PermitSlug } from '@/lib/prefs';
 import StepIndicator from './onboarding/StepIndicator';
@@ -35,6 +37,7 @@ export default function SignUp() {
 
   // Step 3 fields
   const [file, setFile] = useState<File | null>(null);
+  const [pendingEvents, setPendingEvents] = useState<ManualEventData[]>([]);
 
   // Global
   const [error, setError] = useState('');
@@ -79,6 +82,14 @@ export default function SignUp() {
   const handlePreferencesSubmit = () => {
     goToStep(3);
   };
+
+  const handleAddManualClass = useCallback((data: ManualEventData) => {
+    setPendingEvents(prev => [...prev, data]);
+  }, []);
+
+  const handleRemoveManualClass = useCallback((index: number) => {
+    setPendingEvents(prev => prev.filter((_, i) => i !== index));
+  }, []);
 
   // Finish onboarding: show loading screen → signup → save preferences → upload schedule → navigate
   const finishOnboarding = async (skipUpload: boolean) => {
@@ -131,7 +142,11 @@ export default function SignUp() {
           })()
         : null;
 
-      const [prefsRes, uploadRes] = await Promise.all([prefsPromise, uploadPromise]);
+      const eventsPromise = pendingEvents.length > 0
+        ? Promise.allSettled(pendingEvents.map(evt => addScheduleEvent(evt)))
+        : null;
+
+      const [prefsRes, uploadRes, eventsResults] = await Promise.all([prefsPromise, uploadPromise, eventsPromise]);
 
       // Handle preferences result
       if (prefsRes.ok) {
@@ -168,6 +183,16 @@ export default function SignUp() {
         }
       }
 
+      // Handle manual class events result
+      if (eventsResults) {
+        const failed = eventsResults.filter(r => r.status === 'rejected').length;
+        if (failed > 0) {
+          toast.warning(`${failed} class(es) couldn't be saved — you can add them later.`);
+        } else {
+          invalidateCache('/api/schedules');
+        }
+      }
+
       // 4. Wait for minimum display time, then navigate
       await minDisplayTime;
       window.dispatchEvent(new Event('authChange'));
@@ -179,11 +204,11 @@ export default function SignUp() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 bg-white">
+    <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 bg-white">
       <div className="w-full max-w-md">
         {step < 4 && <StepIndicator currentStep={step} totalSteps={3} />}
 
-        <div className={`overflow-hidden ${step < 4 ? 'border rounded-2xl p-6 shadow-sm' : 'p-6'}`}>
+        <div className={`overflow-hidden ${step < 4 ? 'border rounded-2xl p-4 sm:p-6 shadow-sm' : 'p-4 sm:p-6'}`}>
           <AnimatePresence mode="wait" custom={direction}>
             <motion.div
               key={`step-${step}`}
@@ -226,6 +251,9 @@ export default function SignUp() {
                   onFinish={() => finishOnboarding(false)}
                   onSkip={() => finishOnboarding(true)}
                   onBack={() => goToStep(2)}
+                  onAddManualClass={handleAddManualClass}
+                  onRemoveManualClass={handleRemoveManualClass}
+                  pendingEvents={pendingEvents}
                 />
               )}
               {step === 4 && (

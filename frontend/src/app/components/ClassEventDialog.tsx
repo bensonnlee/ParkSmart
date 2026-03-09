@@ -5,7 +5,6 @@ import { Label } from '@/app/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/app/components/ui/dialog';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription, DrawerFooter } from '@/app/components/ui/drawer';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/app/components/ui/command';
-import { Popover, PopoverContent, PopoverTrigger } from '@/app/components/ui/popover';
 import { ToggleGroup, ToggleGroupItem } from '@/app/components/ui/toggle-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
 import { Building2, Search, Trash2, Loader2 } from 'lucide-react';
@@ -28,6 +27,7 @@ interface ClassEventDialogProps {
   onOpenChange: (open: boolean) => void;
   mode: 'add' | 'edit';
   onSuccess?: () => void;
+  onSubmitOverride?: (data: ManualEventData) => void;
   editData?: {
     id: string;
     event_name: string;
@@ -51,9 +51,10 @@ const DAY_LABELS = [
 ];
 
 function generateTimeOptions(): string[] {
+  const minutes = [0, 20, 30, 50];
   const times: string[] = [];
   for (let h = 0; h < 24; h++) {
-    for (let m = 0; m < 60; m += 15) {
+    for (const m of minutes) {
       times.push(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
     }
   }
@@ -62,7 +63,7 @@ function generateTimeOptions(): string[] {
 
 const TIME_OPTIONS = generateTimeOptions();
 
-function formatTimeLabel(t: string): string {
+export function formatTimeLabel(t: string): string {
   const [hStr, mStr] = t.split(':');
   let h = parseInt(hStr, 10);
   const ampm = h >= 12 ? 'PM' : 'AM';
@@ -71,7 +72,7 @@ function formatTimeLabel(t: string): string {
   return `${h}:${mStr} ${ampm}`;
 }
 
-export default function ClassEventDialog({ open, onOpenChange, mode, onSuccess, editData }: ClassEventDialogProps) {
+export default function ClassEventDialog({ open, onOpenChange, mode, onSuccess, onSubmitOverride, editData }: ClassEventDialogProps) {
   const isMobile = useIsMobile();
 
   // Form state
@@ -99,7 +100,6 @@ export default function ClassEventDialog({ open, onOpenChange, mode, onSuccess, 
     setSelectedDays([]);
     setConfirmDelete(false);
     setBuildingQuery('');
-    setBuildings([]);
   }, []);
 
   // Populate form when editing
@@ -148,6 +148,10 @@ export default function ClassEventDialog({ open, onOpenChange, mode, onSuccess, 
       toast.error('Please select at least one day');
       return;
     }
+    if (endTime <= startTime) {
+      toast.error('End time must be after start time');
+      return;
+    }
 
     setSubmitting(true);
     try {
@@ -160,7 +164,13 @@ export default function ClassEventDialog({ open, onOpenChange, mode, onSuccess, 
         days_of_week: selectedDays.map(Number),
       };
 
-      if (mode === 'add') {
+      if (mode === 'add' && onSubmitOverride) {
+        onSubmitOverride(payload);
+        toast.success('Class added');
+        setSubmitting(false);
+        onOpenChange(false);
+        return;
+      } else if (mode === 'add') {
         await addScheduleEvent(payload);
         toast.success('Class added successfully');
       } else if (editData) {
@@ -220,57 +230,54 @@ export default function ClassEventDialog({ open, onOpenChange, mode, onSuccess, 
       {/* Building search */}
       <div className="space-y-2">
         <Label className="text-sm font-semibold text-gray-700">Building</Label>
-        <Popover open={buildingOpen} onOpenChange={setBuildingOpen}>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              role="combobox"
-              aria-expanded={buildingOpen}
-              className="w-full justify-between text-left font-normal h-10"
-            >
-              {selectedBuilding ? (
-                <span className="flex items-center gap-2 truncate">
-                  <Building2 className="size-4 text-ucr-blue shrink-0" />
-                  <span className="truncate">{selectedBuilding.name}</span>
-                  {selectedBuilding.nickname && (
-                    <span className="text-gray-400 text-xs truncate">({selectedBuilding.nickname})</span>
-                  )}
-                </span>
-              ) : (
-                <span className="text-muted-foreground flex items-center gap-2">
-                  <Search className="size-4" />
-                  Search buildings...
-                </span>
+        <Button
+          variant="outline"
+          role="combobox"
+          aria-expanded={buildingOpen}
+          onClick={() => setBuildingOpen(!buildingOpen)}
+          className="w-full justify-between text-left font-normal h-10"
+        >
+          {selectedBuilding ? (
+            <span className="flex items-center gap-2 truncate">
+              <Building2 className="size-4 text-ucr-blue shrink-0" />
+              <span className="truncate">{selectedBuilding.name}</span>
+              {selectedBuilding.nickname && (
+                <span className="text-gray-400 text-xs truncate">({selectedBuilding.nickname})</span>
               )}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-(--radix-popover-trigger-width) p-0" align="start">
-            <Command shouldFilter={false}>
-              <CommandInput
-                placeholder="Type a building name..."
-                value={buildingQuery}
-                onValueChange={setBuildingQuery}
-              />
-              <CommandList>
-                <CommandEmpty>No buildings found.</CommandEmpty>
-                <CommandGroup>
-                  {buildings.map((b) => (
-                    <CommandItem
-                      key={b.id}
-                      value={b.id}
-                      onSelect={() => handleSelectBuilding(b)}
-                      className="flex items-center gap-2"
-                    >
-                      <Building2 className="size-4 text-gray-400 shrink-0" />
-                      <span className="font-medium">{b.name}</span>
-                      <span className="text-gray-400 text-xs ml-auto">{b.nickname}</span>
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              </CommandList>
-            </Command>
-          </PopoverContent>
-        </Popover>
+            </span>
+          ) : (
+            <span className="text-muted-foreground flex items-center gap-2">
+              <Search className="size-4" />
+              Search buildings...
+            </span>
+          )}
+        </Button>
+        {buildingOpen && (
+          <Command shouldFilter={false} className="border rounded-md">
+            <CommandInput
+              placeholder="Type a building name..."
+              value={buildingQuery}
+              onValueChange={setBuildingQuery}
+            />
+            <CommandList>
+              <CommandEmpty>No buildings found.</CommandEmpty>
+              <CommandGroup>
+                {buildings.map((b) => (
+                  <CommandItem
+                    key={b.id}
+                    value={b.id}
+                    onSelect={() => handleSelectBuilding(b)}
+                    className="flex items-center gap-2"
+                  >
+                    <Building2 className="size-4 text-gray-400 shrink-0" />
+                    <span className="font-medium">{b.name}</span>
+                    <span className="text-gray-400 text-xs ml-auto">{b.nickname}</span>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        )}
       </div>
 
       {/* Room number */}
@@ -356,28 +363,48 @@ export default function ClassEventDialog({ open, onOpenChange, mode, onSuccess, 
     </div>
   );
 
-  const footerContent = (
-    <div className="flex items-center gap-3 w-full">
+  const footerContent = confirmDelete ? (
+    <div className="flex gap-2 w-full">
+      <Button
+        variant="destructive"
+        onClick={handleDelete}
+        disabled={submitting}
+        className="flex-1 text-sm"
+      >
+        {submitting ? <Loader2 className="size-4 mr-2 animate-spin" /> : <Trash2 className="size-4 mr-1" />}
+        Confirm Delete
+      </Button>
+      <Button
+        variant="outline"
+        onClick={() => setConfirmDelete(false)}
+        disabled={submitting}
+        className="flex-1 text-sm"
+      >
+        Cancel
+      </Button>
+    </div>
+  ) : (
+    <div className="flex items-center gap-2 sm:gap-3 w-full">
       {mode === 'edit' && (
         <Button
-          variant={confirmDelete ? 'destructive' : 'outline'}
+          variant="outline"
           size="sm"
           onClick={handleDelete}
           disabled={submitting}
-          className="mr-auto"
+          className="mr-auto text-sm"
         >
           <Trash2 className="size-4 mr-1" />
-          {confirmDelete ? 'Confirm Delete' : 'Delete'}
+          Delete
         </Button>
       )}
-      <div className="flex gap-3 ml-auto">
-        <Button variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>
+      <div className="flex gap-2 sm:gap-3 ml-auto">
+        <Button variant="outline" onClick={() => onOpenChange(false)} disabled={submitting} className="text-sm">
           Cancel
         </Button>
         <Button
           onClick={handleSubmit}
           disabled={submitting}
-          className="bg-ucr-blue hover:bg-ucr-blue-dark text-white"
+          className="text-sm bg-ucr-blue hover:bg-ucr-blue-dark text-white"
         >
           {submitting && <Loader2 className="size-4 mr-2 animate-spin" />}
           {mode === 'add' ? 'Add Class' : 'Save Changes'}
@@ -389,7 +416,7 @@ export default function ClassEventDialog({ open, onOpenChange, mode, onSuccess, 
   if (isMobile) {
     return (
       <Drawer open={open} onOpenChange={onOpenChange}>
-        <DrawerContent className="max-h-[85vh]">
+        <DrawerContent className="max-h-[85dvh] overflow-hidden">
           <DrawerHeader>
             <DrawerTitle className="text-lg font-bold">
               {mode === 'add' ? 'Add Class' : 'Edit Class'}
@@ -398,7 +425,7 @@ export default function ClassEventDialog({ open, onOpenChange, mode, onSuccess, 
               {mode === 'add' ? 'Add a class to your schedule' : 'Update or remove this class'}
             </DrawerDescription>
           </DrawerHeader>
-          <div className="overflow-y-auto px-4 pb-2">
+          <div data-vaul-no-drag className="flex-1 overflow-y-auto min-h-0 px-4 pb-2">
             {formContent}
           </div>
           <DrawerFooter>
