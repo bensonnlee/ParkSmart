@@ -10,6 +10,8 @@ import { loadPrefs, WALK_SPEED_MULTIPLIER } from '@/lib/prefs';
 import { openMapsDirections } from '@/lib/maps';
 import { getPredictedSpots } from '@/lib/forecast';
 import { AvailabilityStrip } from '@/app/components/AvailabilityStrip';
+import { BreakBanner } from '@/app/components/BreakBanner';
+import { useBreak } from '@/app/hooks/useBreak';
 
 function TimelineConnector({ icon: Icon }: { icon: LucideIcon }) {
   return (
@@ -34,6 +36,7 @@ export default function ParkingRecommendations() {
   const [classInfo, setClassInfo] = useState<any>(null);
   const [recommendations, setRecommendations] = useState<any[]>([]);
   const [otherLots, setOtherLots] = useState<any[]>([]);
+  const onBreak = useBreak();
 
   const prefs = useMemo(() => loadPrefs(), []);
   const walkMultiplier = WALK_SPEED_MULTIPLIER[prefs.walkingSpeed] ?? 1.0;
@@ -190,10 +193,6 @@ export default function ParkingRecommendations() {
     fetchData();
   }, [classId, userLat, userLng, startTimeParam, walkMultiplier, preferredPermitId]);
 
-  const handleNavigate = (lat: string, lng: string) => {
-    openMapsDirections(lat, lng);
-  };
-
   if (loading) return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-[#F6F8FB]">
       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
@@ -230,6 +229,12 @@ export default function ParkingRecommendations() {
         <p className="text-xs text-gray-400 mb-4">
           {usingUserLocation ? "Sorted by total driving + walking time" : "Sorted by walking distance from classroom"}
         </p>
+
+        {onBreak && (
+          <div className="mb-4">
+            <BreakBanner />
+          </div>
+        )}
 
         {/* Empty state */}
         {recommendations.length === 0 ? (
@@ -326,7 +331,7 @@ export default function ParkingRecommendations() {
 
                   {/* Navigation button — flush to card bottom, card's overflow-hidden handles rounding */}
                   <button
-                    onClick={() => handleNavigate(lot.lat, lot.lng)}
+                    onClick={() => openMapsDirections(lot.lat, lot.lng)}
                     className="w-full bg-blue-600 hover:bg-blue-700 py-3.5 flex items-center justify-center gap-2 text-xs font-bold text-white transition-colors uppercase tracking-wide"
                   >
                     <Navigation className="size-3.5" /> Start Navigation
@@ -376,7 +381,7 @@ export default function ParkingRecommendations() {
                     </div>
                   </div>
                   <button
-                    onClick={() => handleNavigate(lot.lat, lot.lng)}
+                    onClick={() => openMapsDirections(lot.lat, lot.lng)}
                     className="w-full bg-blue-600 hover:bg-blue-700 py-3 flex items-center justify-center gap-2 text-xs font-bold text-white transition-colors uppercase tracking-wide"
                   >
                     <Navigation className="size-3.5" /> Start Navigation

@@ -15,8 +15,10 @@ import { loadPrefs, WALK_SPEED_MULTIPLIER } from '@/lib/prefs';
 import { openMapsDirections } from '@/lib/maps';
 import { useDebounce } from '@/app/hooks/useDebounce';
 import { useLocation } from '@/app/hooks/useLocation';
+import { useBreak } from '@/app/hooks/useBreak';
 import { getPredictedSpots } from '@/lib/forecast';
 import { AvailabilityStrip } from '@/app/components/AvailabilityStrip';
+import { BreakBanner } from '@/app/components/BreakBanner';
 
 interface BuildingOption {
   id: string;
@@ -41,6 +43,7 @@ export default function FindByBuilding() {
   const [error, setError] = useState<string | null>(null);
   const [recommendations, setRecommendations] = useState<any[] | null>(null);
   const [otherLots, setOtherLots] = useState<any[]>([]);
+  const onBreak = useBreak();
 
   // Fetch buildings on debounced query change (empty query returns all buildings)
   useEffect(() => {
@@ -210,6 +213,12 @@ export default function FindByBuilding() {
         title="Find by Building"
         subtitle="Search any campus building for parking"
       />
+
+      {onBreak && (
+        <div className="max-w-2xl mx-auto mb-4">
+          <BreakBanner />
+        </div>
+      )}
 
       <div className="max-w-2xl mx-auto">
         {/* Search + Select */}
