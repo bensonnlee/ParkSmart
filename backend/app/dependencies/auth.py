@@ -50,6 +50,18 @@ async def get_current_user(
     return user
 
 
+async def get_admin_user(
+    user: Annotated[User, Depends(get_current_user)],
+) -> User:
+    """Validate JWT and return user only if admin. Raises 401 or 403."""
+    if not user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required",
+        )
+    return user
+
+
 async def get_optional_user(
     credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(security)],
     db: Annotated[AsyncSession, Depends(get_db)],
