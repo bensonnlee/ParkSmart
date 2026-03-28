@@ -18,10 +18,10 @@ from zoneinfo import ZoneInfo
 import numpy as np
 import pandas as pd
 from prophet import Prophet
-from sqlalchemy import delete, insert, select
+from sqlalchemy import Date, cast, delete, exists, func, insert, select
 
 from app.database import async_session_maker
-from app.models import ParkingForecast, ParkingLot, ParkingSnapshot
+from app.models import AcademicWeek, ParkingForecast, ParkingLot, ParkingSnapshot
 
 logger = logging.getLogger(__name__)
 
@@ -133,17 +133,54 @@ async def generate_forecasts() -> int:
     )
 
     async with async_session_maker() as session:
+        # Guard: if no academic weeks exist, use legacy unfiltered behavior
+        has_weeks_result = await session.execute(
+            select(exists(select(AcademicWeek.id)))
+        )
+        has_weeks = has_weeks_result.scalar()
+
+        # Break detection: if terms are configured but today is not in any week,
+        # we're on a break — clear forecasts and exit early.
+        if has_weeks:
+            today_pacific = now.astimezone(PACIFIC).date()
+            in_term_result = await session.execute(
+                select(
+                    exists(
+                        select(AcademicWeek.id).where(
+                            AcademicWeek.start_date <= today_pacific,
+                            AcademicWeek.end_date >= today_pacific,
+                        )
+                    )
+                )
+            )
+            if not in_term_result.scalar():
+                logger.info("Break detected — deleting all forecasts")
+                await session.execute(delete(ParkingForecast))
+                await session.commit()
+                return 0
+
         # Fetch all lots with their capacity
         lots_result = await session.execute(select(ParkingLot))
         lots = lots_result.scalars().all()
 
         for lot in lots:
-            # Load all historical snapshots for training
+            # Load snapshots, filtered to academic weeks when available
             snap_stmt = (
                 select(ParkingSnapshot.collected_at, ParkingSnapshot.free_spaces)
                 .where(ParkingSnapshot.lot_id == lot.id)
                 .order_by(ParkingSnapshot.collected_at)
             )
+            if has_weeks:
+                snap_stmt = snap_stmt.where(
+                    exists(
+                        select(AcademicWeek.id).where(
+                            cast(
+                                func.timezone('America/Los_Angeles', ParkingSnapshot.collected_at),
+                                Date,
+                            ).between(AcademicWeek.start_date, AcademicWeek.end_date)
+                        )
+                    )
+                )
             snap_result = await session.execute(snap_stmt)
             rows = snap_result.all()
 
