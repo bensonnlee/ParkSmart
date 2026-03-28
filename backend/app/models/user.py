@@ -3,7 +3,7 @@
 import uuid
 from typing import TYPE_CHECKING
 
-from sqlalchemy import ForeignKey, Integer, String
+from sqlalchemy import Boolean, ForeignKey, Integer, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -34,6 +34,9 @@ class User(Base, UUIDMixin, TimestampMixin):
     )
     walking_speed: Mapped[int | None] = mapped_column(
         Integer, nullable=True, server_default="2"
+    )
+    is_admin: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default="false"
     )
 
     # Relationships

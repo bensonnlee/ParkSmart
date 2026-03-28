@@ -280,3 +280,40 @@ class FeedbackRead(BaseModel):
     message: str
     contact_email: str | None = None
     created_at: datetime
+
+
+# Academic calendar schemas
+class AcademicTermCreate(BaseModel):
+    term_type: Literal["fall", "winter", "spring"]
+    start_date: date
+
+
+# All fields are required for updates (full replacement), same shape as create.
+AcademicTermUpdate = AcademicTermCreate
+
+
+class AcademicWeekRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    term_id: uuid.UUID
+    week_number: int
+    start_date: date
+    end_date: date
+    label: str | None = None
+
+
+class AcademicTermRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    name: str
+    term_type: Literal["fall", "winter", "spring"]
+    start_date: date
+    weeks: list[AcademicWeekRead] = []
+    created_at: datetime
+    updated_at: datetime
+
+
+class CurrentTermResponse(BaseModel):
+    current_term: AcademicTermRead | None = None
