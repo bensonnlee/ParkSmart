@@ -9,7 +9,9 @@ export function useBreak(): boolean {
   const [onBreak, setOnBreak] = useState(false);
 
   useEffect(() => {
-    isOnBreak().then(setOnBreak);
+    let stale = false;
+    isOnBreak().then((v) => { if (!stale) setOnBreak(v); });
+    return () => { stale = true; };
   }, []);
 
   return onBreak;

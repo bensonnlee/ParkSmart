@@ -230,11 +230,7 @@ export default function ParkingRecommendations() {
           {usingUserLocation ? "Sorted by total driving + walking time" : "Sorted by walking distance from classroom"}
         </p>
 
-        {onBreak && (
-          <div className="mb-4">
-            <BreakBanner />
-          </div>
-        )}
+        {onBreak && <BreakBanner className="mb-4" />}
 
         {/* Empty state */}
         {recommendations.length === 0 ? (

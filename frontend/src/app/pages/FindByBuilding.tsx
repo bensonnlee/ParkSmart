@@ -214,11 +214,7 @@ export default function FindByBuilding() {
         subtitle="Search any campus building for parking"
       />
 
-      {onBreak && (
-        <div className="max-w-2xl mx-auto mb-4">
-          <BreakBanner />
-        </div>
-      )}
+      {onBreak && <BreakBanner className="max-w-2xl mx-auto mb-4" />}
 
       <div className="max-w-2xl mx-auto">
         {/* Search + Select */}

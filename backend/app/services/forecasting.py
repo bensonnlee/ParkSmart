@@ -18,7 +18,7 @@ from zoneinfo import ZoneInfo
 import numpy as np
 import pandas as pd
 from prophet import Prophet
-from sqlalchemy import Date, cast, delete, exists, func, insert, select
+from sqlalchemy import delete, exists, func, insert, or_, select
 
 from app.database import async_session_maker
 from app.models import AcademicWeek, ParkingForecast, ParkingLot, ParkingSnapshot
@@ -163,6 +163,20 @@ async def generate_forecasts() -> int:
         lots_result = await session.execute(select(ParkingLot))
         lots = lots_result.scalars().all()
 
+        # Pre-compute UTC timestamp ranges from academic weeks so we can filter
+        # snapshots with index-friendly range predicates instead of per-row casts.
+        term_utc_ranges: list[tuple[datetime, datetime]] = []
+        if has_weeks:
+            weeks_result = await session.execute(
+                select(AcademicWeek.start_date, AcademicWeek.end_date)
+            )
+            for w_start, w_end in weeks_result.all():
+                # Convert week date boundaries to UTC timestamps.
+                # A week starts at Sunday 00:00 Pacific and ends at Saturday 23:59:59 Pacific.
+                utc_start = datetime(w_start.year, w_start.month, w_start.day, tzinfo=PACIFIC).astimezone(UTC)
+                utc_end = datetime(w_end.year, w_end.month, w_end.day, 23, 59, 59, tzinfo=PACIFIC).astimezone(UTC)
+                term_utc_ranges.append((utc_start, utc_end))
+
         for lot in lots:
             # Load snapshots, filtered to academic weeks when available
             snap_stmt = (
@@ -170,16 +184,12 @@ async def generate_forecasts() -> int:
                 .where(ParkingSnapshot.lot_id == lot.id)
                 .order_by(ParkingSnapshot.collected_at)
             )
-            if has_weeks:
+            if term_utc_ranges:
                 snap_stmt = snap_stmt.where(
-                    exists(
-                        select(AcademicWeek.id).where(
-                            cast(
-                                func.timezone('America/Los_Angeles', ParkingSnapshot.collected_at),
-                                Date,
-                            ).between(AcademicWeek.start_date, AcademicWeek.end_date)
-                        )
-                    )
+                    or_(*(
+                        ParkingSnapshot.collected_at.between(utc_start, utc_end)
+                        for utc_start, utc_end in term_utc_ranges
+                    ))
                 )
             snap_result = await session.execute(snap_stmt)
             rows = snap_result.all()

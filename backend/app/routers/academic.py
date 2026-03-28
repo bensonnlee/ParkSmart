@@ -6,7 +6,7 @@ from typing import Annotated
 from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import exists, func, select
+from sqlalchemy import delete, exists, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -149,8 +149,7 @@ async def get_current_term(db: DbSession) -> CurrentTermResponse:
     today = datetime.now(UTC).astimezone(PACIFIC).date()
 
     result = await db.execute(
-        select(AcademicTerm)
-        .where(
+        select(AcademicTerm).where(
             exists(
                 select(AcademicWeek.id).where(
                     AcademicWeek.term_id == AcademicTerm.id,
@@ -159,9 +158,9 @@ async def get_current_term(db: DbSession) -> CurrentTermResponse:
                 )
             )
         )
-        .options(selectinload(AcademicTerm.weeks))
     )
     term = result.scalar_one_or_none()
+    # Weeks intentionally not loaded — the primary consumer (isOnBreak) only checks null vs non-null.
     return CurrentTermResponse(current_term=AcademicTermRead.model_validate(term) if term else None)
 
 
@@ -187,8 +186,7 @@ async def update_term(
     term.start_date = body.start_date
     term.name = f"{body.term_type.title()} {body.start_date.year}"
 
-    for week in list(term.weeks):
-        await db.delete(week)
+    await db.execute(delete(AcademicWeek).where(AcademicWeek.term_id == term.id))
     await db.flush()
 
     db.add_all(_generate_weeks(term))
