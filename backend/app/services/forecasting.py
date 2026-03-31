@@ -108,10 +108,12 @@ def _train_and_predict(
 
     forecast = model.predict(future)
 
-    # Clamp predictions to [0, capacity] and rename to domain terms
+    # Use the lower confidence bound as the primary prediction so the system
+    # under-predicts free spaces — better to tell a user a lot is full than to
+    # send them somewhere with no spaces.  Clamp to [0, capacity].
     result = pd.DataFrame({
         "forecast_time": forecast["ds"],
-        "predicted_free": np.clip(forecast["yhat"], 0, capacity).round().astype(int),
+        "predicted_free": np.clip(forecast["yhat_lower"], 0, capacity).round().astype(int),
         "predicted_free_lower": np.clip(forecast["yhat_lower"], 0, capacity).round().astype(int),
     })
 
