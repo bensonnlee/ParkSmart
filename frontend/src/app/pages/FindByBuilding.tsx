@@ -19,6 +19,8 @@ import { useBreak } from '@/app/hooks/useBreak';
 import { getPredictedSpots } from '@/lib/forecast';
 import { AvailabilityStrip } from '@/app/components/AvailabilityStrip';
 import { BreakBanner } from '@/app/components/BreakBanner';
+import { ForecastPausedBanner } from '@/app/components/ForecastPausedBanner';
+import { PREDICTIONS_PAUSED } from '@/api/config';
 
 interface BuildingOption {
   id: string;
@@ -151,7 +153,9 @@ export default function FindByBuilding() {
         const totalMinutes = driveMin + walkMin;
         const arriveByTime = totalMinutes > 0 ? new Date(now + totalMinutes * 60_000) : null;
 
-        const predictedSpots = getPredictedSpots(arriveByTime, lot.forecasts);
+        const predictedSpots = PREDICTIONS_PAUSED
+          ? null
+          : getPredictedSpots(arriveByTime, lot.forecasts);
 
         return {
           id: lot.id,
@@ -214,7 +218,11 @@ export default function FindByBuilding() {
         subtitle="Search any campus building for parking"
       />
 
-      {onBreak && <BreakBanner className="max-w-2xl mx-auto mb-4" />}
+      {PREDICTIONS_PAUSED ? (
+        <ForecastPausedBanner className="max-w-2xl mx-auto mb-4" />
+      ) : onBreak ? (
+        <BreakBanner className="max-w-2xl mx-auto mb-4" />
+      ) : null}
 
       <div className="max-w-2xl mx-auto">
         {/* Search + Select */}

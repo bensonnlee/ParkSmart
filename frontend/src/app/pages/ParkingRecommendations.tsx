@@ -11,7 +11,9 @@ import { openMapsDirections } from '@/lib/maps';
 import { getPredictedSpots } from '@/lib/forecast';
 import { AvailabilityStrip } from '@/app/components/AvailabilityStrip';
 import { BreakBanner } from '@/app/components/BreakBanner';
+import { ForecastPausedBanner } from '@/app/components/ForecastPausedBanner';
 import { useBreak } from '@/app/hooks/useBreak';
+import { PREDICTIONS_PAUSED } from '@/api/config';
 
 function TimelineConnector({ icon: Icon }: { icon: LucideIcon }) {
   return (
@@ -130,7 +132,9 @@ export default function ParkingRecommendations() {
             ? subMinutes(classStart, prefs.arrivalBuffer + walkMin)
             : (driveMin > 0 ? new Date(now + driveMin * 60_000) : null);
 
-          const predictedSpots = getPredictedSpots(arrivalTime, lot.forecasts);
+          const predictedSpots = PREDICTIONS_PAUSED
+            ? null
+            : getPredictedSpots(arrivalTime, lot.forecasts);
 
           return {
             id: lot.id,
@@ -230,7 +234,11 @@ export default function ParkingRecommendations() {
           {usingUserLocation ? "Sorted by total driving + walking time" : "Sorted by walking distance from classroom"}
         </p>
 
-        {onBreak && <BreakBanner className="mb-4" />}
+        {PREDICTIONS_PAUSED ? (
+          <ForecastPausedBanner className="mb-4" />
+        ) : onBreak ? (
+          <BreakBanner className="mb-4" />
+        ) : null}
 
         {/* Empty state */}
         {recommendations.length === 0 ? (
