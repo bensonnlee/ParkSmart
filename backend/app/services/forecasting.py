@@ -26,7 +26,7 @@ from app.models import AcademicWeek, ParkingForecast, ParkingLot, ParkingSnapsho
 logger = logging.getLogger(__name__)
 
 PACIFIC = ZoneInfo("America/Los_Angeles")
-MODEL_VERSION = "prophet-v1"
+MODEL_VERSION = "prophet-v2"
 FORECAST_DAYS = 7
 MIN_SNAPSHOTS = 50
 
@@ -78,30 +78,33 @@ def _train_and_predict(
     """
     Train a Prophet model on historical snapshots and predict future free_spaces.
 
-    Uses logistic growth capped at the lot's capacity. Returns a DataFrame with
-    columns: forecast_time, predicted_free, predicted_free_lower (all clamped
-    to [0, capacity]).
+    Uses flat growth (no trend) since parking data is stationary — it oscillates
+    daily/weekly but doesn't have long-term growth. Timestamps are converted to
+    naive Pacific time so daily/weekly seasonality aligns with local campus
+    patterns regardless of DST. Returns a DataFrame with columns: forecast_time,
+    predicted_free, predicted_free_lower (all clamped to [0, capacity]).
     """
     prophet_df = history_df[["collected_at", "free_spaces"]].rename(
         columns={"collected_at": "ds", "free_spaces": "y"}
     )
-    prophet_df["ds"] = pd.to_datetime(prophet_df["ds"]).dt.tz_localize(None)
-    prophet_df["cap"] = capacity
-    prophet_df["floor"] = 0
+    prophet_df["ds"] = (
+        pd.to_datetime(prophet_df["ds"], utc=True)
+        .dt.tz_convert(PACIFIC)
+        .dt.tz_localize(None)
+    )
 
     model = Prophet(
         yearly_seasonality=False,
         weekly_seasonality=True,
         daily_seasonality=True,
-        growth="logistic",
-        changepoint_prior_scale=0.1,
+        growth="flat",
         seasonality_prior_scale=5,
     )
     model.fit(prophet_df)
 
-    future = pd.DataFrame({"ds": [t.replace(tzinfo=None) for t in future_times]})
-    future["cap"] = capacity
-    future["floor"] = 0
+    future = pd.DataFrame({
+        "ds": [t.astimezone(PACIFIC).replace(tzinfo=None) for t in future_times],
+    })
 
     forecast = model.predict(future)
 
@@ -231,7 +234,7 @@ async def generate_forecasts() -> int:
                 )
                 forecast_rows.append({
                     "lot_id": lot.id,
-                    "forecast_time": ft.to_pydatetime().replace(tzinfo=UTC),
+                    "forecast_time": ft.to_pydatetime().replace(tzinfo=PACIFIC).astimezone(UTC),
                     "predicted_free_spaces": pf_int,
                     "predicted_free_spaces_lower": int(pl),
                     "predicted_occupancy_pct": occupancy_pct,

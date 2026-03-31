@@ -1,0 +1,145 @@
+n,mae,rmse,mape,bias,max_abs_error,lot,approach,bucket
+119,757.73,848.47,208.5,757.73,1273,Lot 30,UTC+filtered (production),rush
+40,724.65,771.47,1735.83,724.65,1113,Lot 30,UTC+filtered (production),midday
+38,175.03,188.21,9.41,105.24,338,Lot 30,UTC+filtered (production),off-peak
+197,638.61,750.03,480.22,625.15,1273,Lot 30,UTC+filtered (production),ALL
+119,836.38,949.72,242.07,836.38,1432,Lot 30,UTC+unfiltered (no calendar),rush
+40,922.05,961.64,2090.5,922.05,1314,Lot 30,UTC+unfiltered (no calendar),midday
+38,202.71,213.43,11.11,172.29,412,Lot 30,UTC+unfiltered (no calendar),off-peak
+197,731.54,861.04,572.83,725.68,1432,Lot 30,UTC+unfiltered (no calendar),ALL
+119,616.31,674.95,171.24,616.31,996,Lot 30,Pacific+filtered,rush
+40,774.33,785.86,1543.79,774.33,960,Lot 30,Pacific+filtered,midday
+38,217.68,232.55,12.04,174.84,499,Lot 30,Pacific+filtered,off-peak
+197,571.5,641.1,419.22,563.24,996,Lot 30,Pacific+filtered,ALL
+119,251.64,276.34,72.81,204.63,486,Lot 30,flat+Pacific+filtered,rush
+40,246.6,275.93,683.27,232.95,444,Lot 30,flat+Pacific+filtered,midday
+38,255.05,321.8,13.44,-152.95,770,Lot 30,flat+Pacific+filtered,off-peak
+197,251.27,285.59,185.31,141.41,770,Lot 30,flat+Pacific+filtered,ALL
+9,128.67,128.83,26.09,128.67,139,Big Springs 2,UTC+filtered (production),rush
+40,86.28,98.9,16.05,-9.53,193,Big Springs 2,UTC+filtered (production),midday
+3,167.67,167.83,20.06,-167.67,178,Big Springs 2,UTC+filtered (production),off-peak
+52,98.31,109.64,18.02,5.27,193,Big Springs 2,UTC+filtered (production),ALL
+9,235.33,235.71,47.76,235.33,257,Big Springs 2,UTC+unfiltered (no calendar),rush
+40,119.05,140.79,25.24,106.45,244,Big Springs 2,UTC+unfiltered (no calendar),midday
+3,39.67,40.34,4.76,-39.67,50,Big Springs 2,UTC+unfiltered (no calendar),off-peak
+52,134.6,157.98,27.96,120.33,257,Big Springs 2,UTC+unfiltered (no calendar),ALL
+9,138.78,138.82,28.13,138.78,144,Big Springs 2,Pacific+filtered,rush
+40,88.65,95.11,18.48,88.65,138,Big Springs 2,Pacific+filtered,midday
+3,63.33,63.62,7.56,63.33,69,Big Springs 2,Pacific+filtered,off-peak
+52,95.87,102.6,19.52,95.87,144,Big Springs 2,Pacific+filtered,ALL
+9,27.44,27.69,5.59,27.44,33,Big Springs 2,flat+Pacific+filtered,rush
+40,38.9,51.97,7.02,-31.8,101,Big Springs 2,flat+Pacific+filtered,midday
+3,69.0,69.19,8.26,-69.0,76,Big Springs 2,flat+Pacific+filtered,off-peak
+52,38.65,49.87,6.84,-23.69,101,Big Springs 2,flat+Pacific+filtered,ALL
+119,13.57,15.57,3.39,5.18,47,Lot 50,UTC+filtered (production),rush
+40,51.62,55.17,12.91,-51.62,80,Lot 50,UTC+filtered (production),midday
+38,10.13,11.2,2.53,5.82,21,Lot 50,UTC+filtered (production),off-peak
+197,20.63,28.08,5.16,-6.23,80,Lot 50,UTC+filtered (production),ALL
+119,12.65,14.14,3.16,6.09,40,Lot 50,UTC+unfiltered (no calendar),rush
+40,45.58,49.17,11.39,-45.58,73,Lot 50,UTC+unfiltered (no calendar),midday
+38,9.79,10.72,2.45,6.53,17,Lot 50,UTC+unfiltered (no calendar),off-peak
+197,18.78,25.18,4.7,-4.31,73,Lot 50,UTC+unfiltered (no calendar),ALL
+119,19.47,25.08,4.87,-5.69,70,Lot 50,Pacific+filtered,rush
+40,54.52,57.95,13.63,-54.52,78,Lot 50,Pacific+filtered,midday
+38,8.87,10.11,2.22,7.24,13,Lot 50,Pacific+filtered,off-peak
+197,24.54,32.89,6.14,-13.11,78,Lot 50,Pacific+filtered,ALL
+119,58.03,69.47,14.51,-55.63,138,Lot 50,flat+Pacific+filtered,rush
+40,132.47,134.04,33.12,-132.47,160,Lot 50,flat+Pacific+filtered,midday
+38,35.0,44.22,8.75,-28.84,86,Lot 50,flat+Pacific+filtered,off-peak
+197,68.71,83.31,17.18,-66.07,160,Lot 50,flat+Pacific+filtered,ALL
+119,40.49,49.47,12.95,25.28,88,Lot 26,UTC+filtered (production),rush
+40,64.8,74.5,30.33,41.8,107,Lot 26,UTC+filtered (production),midday
+38,26.61,34.99,6.46,-14.71,90,Lot 26,UTC+filtered (production),off-peak
+197,42.75,53.3,15.23,20.92,107,Lot 26,UTC+filtered (production),ALL
+119,53.53,70.36,17.84,50.99,135,Lot 26,UTC+unfiltered (no calendar),rush
+40,97.25,108.44,47.3,89.05,153,Lot 26,UTC+unfiltered (no calendar),midday
+38,21.18,24.45,5.41,10.82,48,Lot 26,UTC+unfiltered (no calendar),off-peak
+197,56.17,74.12,21.42,50.97,153,Lot 26,UTC+unfiltered (no calendar),ALL
+119,40.89,46.42,12.4,16.55,78,Lot 26,Pacific+filtered,rush
+40,73.0,77.12,33.26,50.7,104,Lot 26,Pacific+filtered,midday
+38,24.58,30.62,6.25,6.21,74,Lot 26,Pacific+filtered,off-peak
+197,44.26,51.87,15.45,21.49,104,Lot 26,Pacific+filtered,ALL
+119,37.05,55.63,9.3,-29.3,134,Lot 26,flat+Pacific+filtered,rush
+40,41.77,58.32,15.78,-9.93,152,Lot 26,flat+Pacific+filtered,midday
+38,43.16,55.96,10.48,-32.53,137,Lot 26,flat+Pacific+filtered,off-peak
+197,39.19,56.25,10.84,-25.99,152,Lot 26,flat+Pacific+filtered,ALL
+119,89.5,109.55,196.8,89.5,174,Lot 32,UTC+filtered (production),rush
+40,88.88,93.85,700.11,88.88,133,Lot 32,UTC+filtered (production),midday
+38,13.76,24.96,5.82,-5.87,69,Lot 32,UTC+filtered (production),off-peak
+197,74.77,95.7,254.27,70.98,174,Lot 32,UTC+filtered (production),ALL
+119,99.52,123.02,227.65,99.52,194,Lot 32,UTC+unfiltered (no calendar),rush
+40,115.95,120.25,889.17,115.95,161,Lot 32,UTC+unfiltered (no calendar),midday
+38,12.84,22.91,5.8,0.47,56,Lot 32,UTC+unfiltered (no calendar),off-peak
+197,86.14,110.36,309.05,83.75,194,Lot 32,UTC+unfiltered (no calendar),ALL
+119,70.76,85.35,154.65,70.76,132,Lot 32,Pacific+filtered,rush
+40,97.95,99.01,672.32,97.95,127,Lot 32,Pacific+filtered,midday
+38,14.66,27.5,6.77,1.97,74,Lot 32,Pacific+filtered,off-peak
+197,65.46,80.85,223.52,63.02,132,Lot 32,Pacific+filtered,ALL
+119,40.8,47.63,87.21,35.82,82,Lot 32,flat+Pacific+filtered,rush
+40,45.65,48.05,337.0,45.65,73,Lot 32,flat+Pacific+filtered,midday
+38,25.68,41.34,10.31,-23.05,109,Lot 32,flat+Pacific+filtered,off-peak
+197,38.87,46.57,119.32,26.46,109,Lot 32,flat+Pacific+filtered,ALL
+119,83.45,92.32,47.17,83.45,147,Lot 24,UTC+filtered (production),rush
+40,66.92,74.36,84.16,66.47,111,Lot 24,UTC+filtered (production),midday
+38,30.66,42.23,9.11,-10.39,110,Lot 24,UTC+filtered (production),off-peak
+197,69.91,81.33,47.34,61.9,147,Lot 24,UTC+filtered (production),ALL
+119,114.76,126.34,66.58,114.76,190,Lot 24,UTC+unfiltered (no calendar),rush
+40,119.45,123.81,142.89,119.45,163,Lot 24,UTC+unfiltered (no calendar),midday
+38,40.61,44.83,13.16,26.13,83,Lot 24,UTC+unfiltered (no calendar),off-peak
+197,101.41,114.64,71.77,98.61,190,Lot 24,UTC+unfiltered (no calendar),ALL
+119,62.69,66.64,34.23,62.69,104,Lot 24,Pacific+filtered,rush
+40,82.22,83.96,96.96,82.22,121,Lot 24,Pacific+filtered,midday
+38,36.32,42.62,11.62,16.32,89,Lot 24,Pacific+filtered,off-peak
+197,61.57,66.81,42.61,57.71,121,Lot 24,Pacific+filtered,ALL
+119,29.0,34.46,15.47,26.71,62,Lot 24,flat+Pacific+filtered,rush
+40,39.52,43.13,49.46,39.52,79,Lot 24,flat+Pacific+filtered,midday
+38,32.74,47.51,9.67,-16.26,130,Lot 24,flat+Pacific+filtered,off-peak
+197,31.86,39.12,21.25,21.03,130,Lot 24,flat+Pacific+filtered,ALL
+119,145.35,151.92,71.05,145.35,199,Big Springs 1,UTC+filtered (production),rush
+40,144.62,150.85,67.16,144.62,208,Big Springs 1,UTC+filtered (production),midday
+38,140.82,145.46,53.96,140.82,212,Big Springs 1,UTC+filtered (production),off-peak
+197,144.33,150.48,66.96,144.33,212,Big Springs 1,UTC+filtered (production),ALL
+119,188.51,193.73,91.56,188.51,242,Big Springs 1,UTC+unfiltered (no calendar),rush
+40,185.65,190.69,85.27,185.65,249,Big Springs 1,UTC+unfiltered (no calendar),midday
+38,178.26,182.04,68.19,178.26,253,Big Springs 1,UTC+unfiltered (no calendar),off-peak
+197,185.95,190.91,85.77,185.95,253,Big Springs 1,UTC+unfiltered (no calendar),ALL
+119,144.57,150.96,70.65,144.57,199,Big Springs 1,Pacific+filtered,rush
+40,144.53,150.7,67.11,144.53,207,Big Springs 1,Pacific+filtered,midday
+38,138.0,142.37,52.74,138.0,201,Big Springs 1,Pacific+filtered,off-peak
+197,143.29,149.29,66.47,143.29,207,Big Springs 1,Pacific+filtered,ALL
+119,43.32,46.22,19.95,-13.84,73,Big Springs 1,flat+Pacific+filtered,rush
+40,43.65,43.8,19.37,-9.0,55,Big Springs 1,flat+Pacific+filtered,midday
+38,33.18,38.69,12.96,-12.34,77,Big Springs 1,flat+Pacific+filtered,off-peak
+197,41.43,44.37,18.49,-12.57,77,Big Springs 1,flat+Pacific+filtered,ALL
+119,70.71,82.85,45.13,69.87,135,Lot 6,UTC+filtered (production),rush
+40,49.3,55.62,45.91,10.25,94,Lot 6,UTC+filtered (production),midday
+38,47.87,62.91,13.29,-39.24,147,Lot 6,UTC+filtered (production),off-peak
+197,61.96,74.42,39.15,36.72,147,Lot 6,UTC+filtered (production),ALL
+119,92.94,108.03,60.79,92.94,170,Lot 6,UTC+unfiltered (no calendar),rush
+40,64.05,77.34,69.42,54.6,126,Lot 6,UTC+unfiltered (no calendar),midday
+38,26.03,39.36,7.22,-13.92,108,Lot 6,UTC+unfiltered (no calendar),off-peak
+197,74.17,92.53,52.21,64.54,170,Lot 6,UTC+unfiltered (no calendar),ALL
+119,48.15,53.63,29.6,48.15,84,Lot 6,Pacific+filtered,rush
+40,34.8,42.26,37.83,31.5,70,Lot 6,Pacific+filtered,midday
+38,27.16,43.65,7.42,-10.53,129,Lot 6,Pacific+filtered,off-peak
+197,41.39,49.68,26.99,33.45,129,Lot 6,Pacific+filtered,ALL
+119,21.29,23.83,11.24,14.39,42,Lot 6,flat+Pacific+filtered,rush
+40,29.12,33.09,21.39,-14.28,63,Lot 6,flat+Pacific+filtered,midday
+38,48.26,66.98,13.23,-37.47,172,Lot 6,flat+Pacific+filtered,off-peak
+197,28.08,37.82,13.68,-1.43,172,Lot 6,flat+Pacific+filtered,ALL
+842,171.09,330.81,82.41,167.63,1273,_AGGREGATE_,UTC+filtered (production),rush
+320,159.63,285.86,331.95,126.94,1113,_AGGREGATE_,UTC+filtered (production),midday
+269,64.71,96.94,14.43,23.79,338,_AGGREGATE_,UTC+filtered (production),off-peak
+1431,148.53,290.57,124.98,131.49,1273,_AGGREGATE_,UTC+filtered (production),ALL
+842,200.14,374.36,100.2,198.85,1432,_AGGREGATE_,UTC+unfiltered (no calendar),rush
+320,208.63,358.97,414.21,193.45,1314,_AGGREGATE_,UTC+unfiltered (no calendar),midday
+269,69.86,108.68,16.07,53.32,412,_AGGREGATE_,UTC+unfiltered (no calendar),off-peak
+1431,177.55,336.89,154.03,170.29,1432,_AGGREGATE_,UTC+unfiltered (no calendar),ALL
+842,143.22,265.08,67.39,136.22,996,_AGGREGATE_,Pacific+filtered,rush
+320,168.75,290.96,305.84,151.92,960,_AGGREGATE_,Pacific+filtered,midday
+269,66.71,106.43,14.08,47.9,499,_AGGREGATE_,Pacific+filtered,off-peak
+1431,134.55,249.81,110.26,123.13,996,_AGGREGATE_,Pacific+filtered,ALL
+842,68.29,113.1,32.37,26.13,486,_AGGREGATE_,flat+Pacific+filtered,rush
+320,77.21,115.86,143.38,15.08,444,_AGGREGATE_,flat+Pacific+filtered,midday
+269,67.6,129.64,11.23,-43.64,770,_AGGREGATE_,flat+Pacific+filtered,off-peak
+1431,70.16,116.99,53.03,10.54,770,_AGGREGATE_,flat+Pacific+filtered,ALL

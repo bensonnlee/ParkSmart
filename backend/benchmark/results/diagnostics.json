@@ -1,0 +1,394 @@
+{
+  "Lot 30": {
+    "capacity": 2143,
+    "total_snapshots": 6502,
+    "filtered_snapshots": 5901,
+    "filtered_pct": 90.8,
+    "train_filtered_count": 5704,
+    "train_unfiltered_count": 6305,
+    "test_count": 197,
+    "date_range": {
+      "train_filtered": {
+        "start": "2026-01-22T16:08:20.308298+00:00",
+        "end": "2026-03-29T18:02:40.440816+00:00"
+      },
+      "train_unfiltered": {
+        "start": "2026-01-22T16:08:20.308298+00:00",
+        "end": "2026-03-29T18:02:40.440816+00:00"
+      },
+      "test": {
+        "start": "2026-03-29T19:02:02.920927+00:00",
+        "end": "2026-03-31T18:15:22.729787+00:00"
+      }
+    },
+    "free_spaces_distribution": {
+      "train_filtered": {
+        "n": 5704,
+        "mean": 1146.4,
+        "median": 1194.5,
+        "std": 663.6,
+        "min": 0,
+        "max": 2143
+      },
+      "train_unfiltered": {
+        "n": 6305,
+        "mean": 1217.9,
+        "median": 1368.0,
+        "std": 668.6,
+        "min": 0,
+        "max": 2143
+      },
+      "test": {
+        "n": 197,
+        "mean": 1148.6,
+        "median": 1197.0,
+        "std": 683.0,
+        "min": 2,
+        "max": 1995
+      }
+    }
+  },
+  "Big Springs 2": {
+    "capacity": 1058,
+    "total_snapshots": 2709,
+    "filtered_snapshots": 2625,
+    "filtered_pct": 96.9,
+    "train_filtered_count": 2573,
+    "train_unfiltered_count": 2657,
+    "test_count": 52,
+    "date_range": {
+      "train_filtered": {
+        "start": "2026-01-23T16:10:20.213231+00:00",
+        "end": "2026-03-18T14:20:36.641564+00:00"
+      },
+      "train_unfiltered": {
+        "start": "2026-01-23T16:10:20.213231+00:00",
+        "end": "2026-03-24T10:01:48.306697+00:00"
+      },
+      "test": {
+        "start": "2026-03-30T17:30:20.923156+00:00",
+        "end": "2026-03-31T18:15:22.291936+00:00"
+      }
+    },
+    "free_spaces_distribution": {
+      "train_filtered": {
+        "n": 2573,
+        "mean": 605.5,
+        "median": 566.0,
+        "std": 197.1,
+        "min": 225,
+        "max": 1058
+      },
+      "train_unfiltered": {
+        "n": 2657,
+        "mean": 611.6,
+        "median": 573.0,
+        "std": 197.5,
+        "min": 225,
+        "max": 1058
+      },
+      "test": {
+        "n": 52,
+        "mean": 528.7,
+        "median": 489.0,
+        "std": 113.2,
+        "min": 429,
+        "max": 864
+      }
+    }
+  },
+  "Lot 50": {
+    "capacity": 413,
+    "total_snapshots": 6502,
+    "filtered_snapshots": 5901,
+    "filtered_pct": 90.8,
+    "train_filtered_count": 5704,
+    "train_unfiltered_count": 6305,
+    "test_count": 197,
+    "date_range": {
+      "train_filtered": {
+        "start": "2026-01-22T16:08:20.771223+00:00",
+        "end": "2026-03-29T18:02:40.645757+00:00"
+      },
+      "train_unfiltered": {
+        "start": "2026-01-22T16:08:20.771223+00:00",
+        "end": "2026-03-29T18:02:40.645757+00:00"
+      },
+      "test": {
+        "start": "2026-03-29T19:02:03.124431+00:00",
+        "end": "2026-03-31T18:15:22.944097+00:00"
+      }
+    },
+    "free_spaces_distribution": {
+      "train_filtered": {
+        "n": 5704,
+        "mean": 317.5,
+        "median": 361.0,
+        "std": 91.5,
+        "min": 114,
+        "max": 413
+      },
+      "train_unfiltered": {
+        "n": 6305,
+        "mean": 325.4,
+        "median": 376.0,
+        "std": 90.3,
+        "min": 114,
+        "max": 413
+      },
+      "test": {
+        "n": 197,
+        "mean": 400.0,
+        "median": 400.0,
+        "std": 0.0,
+        "min": 400,
+        "max": 400
+      }
+    }
+  },
+  "Lot 26": {
+    "capacity": 436,
+    "total_snapshots": 6502,
+    "filtered_snapshots": 5901,
+    "filtered_pct": 90.8,
+    "train_filtered_count": 5704,
+    "train_unfiltered_count": 6305,
+    "test_count": 197,
+    "date_range": {
+      "train_filtered": {
+        "start": "2026-01-22T16:08:20.109734+00:00",
+        "end": "2026-03-29T18:02:40.339997+00:00"
+      },
+      "train_unfiltered": {
+        "start": "2026-01-22T16:08:20.109734+00:00",
+        "end": "2026-03-29T18:02:40.339997+00:00"
+      },
+      "test": {
+        "start": "2026-03-29T19:02:02.820061+00:00",
+        "end": "2026-03-31T18:15:22.621375+00:00"
+      }
+    },
+    "free_spaces_distribution": {
+      "train_filtered": {
+        "n": 5704,
+        "mean": 295.1,
+        "median": 302.0,
+        "std": 96.8,
+        "min": 11,
+        "max": 436
+      },
+      "train_unfiltered": {
+        "n": 6305,
+        "mean": 305.7,
+        "median": 323.0,
+        "std": 97.9,
+        "min": 11,
+        "max": 436
+      },
+      "test": {
+        "n": 197,
+        "mean": 349.3,
+        "median": 406.0,
+        "std": 83.6,
+        "min": 170,
+        "max": 435
+      }
+    }
+  },
+  "Lot 32": {
+    "capacity": 258,
+    "total_snapshots": 6502,
+    "filtered_snapshots": 5901,
+    "filtered_pct": 90.8,
+    "train_filtered_count": 5704,
+    "train_unfiltered_count": 6305,
+    "test_count": 197,
+    "date_range": {
+      "train_filtered": {
+        "start": "2026-01-22T16:08:20.571202+00:00",
+        "end": "2026-03-29T18:02:40.542696+00:00"
+      },
+      "train_unfiltered": {
+        "start": "2026-01-22T16:08:20.571202+00:00",
+        "end": "2026-03-29T18:02:40.542696+00:00"
+      },
+      "test": {
+        "start": "2026-03-29T19:02:03.022985+00:00",
+        "end": "2026-03-31T18:15:22.837223+00:00"
+      }
+    },
+    "free_spaces_distribution": {
+      "train_filtered": {
+        "n": 5704,
+        "mean": 153.0,
+        "median": 164.0,
+        "std": 90.9,
+        "min": 0,
+        "max": 258
+      },
+      "train_unfiltered": {
+        "n": 6305,
+        "mean": 163.0,
+        "median": 184.0,
+        "std": 91.8,
+        "min": 0,
+        "max": 258
+      },
+      "test": {
+        "n": 197,
+        "mean": 141.4,
+        "median": 142.0,
+        "std": 99.2,
+        "min": 0,
+        "max": 258
+      }
+    }
+  },
+  "Lot 24": {
+    "capacity": 406,
+    "total_snapshots": 6502,
+    "filtered_snapshots": 5901,
+    "filtered_pct": 90.8,
+    "train_filtered_count": 5704,
+    "train_unfiltered_count": 6305,
+    "test_count": 197,
+    "date_range": {
+      "train_filtered": {
+        "start": "2026-01-22T16:08:19.910939+00:00",
+        "end": "2026-03-29T18:02:40.238750+00:00"
+      },
+      "train_unfiltered": {
+        "start": "2026-01-22T16:08:19.910939+00:00",
+        "end": "2026-03-29T18:02:40.238750+00:00"
+      },
+      "test": {
+        "start": "2026-03-29T19:02:02.719118+00:00",
+        "end": "2026-03-31T18:15:22.510660+00:00"
+      }
+    },
+    "free_spaces_distribution": {
+      "train_filtered": {
+        "n": 5704,
+        "mean": 216.2,
+        "median": 196.0,
+        "std": 117.7,
+        "min": 0,
+        "max": 406
+      },
+      "train_unfiltered": {
+        "n": 6305,
+        "mean": 224.7,
+        "median": 222.0,
+        "std": 116.4,
+        "min": 0,
+        "max": 406
+      },
+      "test": {
+        "n": 197,
+        "mean": 233.9,
+        "median": 233.0,
+        "std": 111.2,
+        "min": 46,
+        "max": 385
+      }
+    }
+  },
+  "Big Springs 1": {
+    "capacity": 490,
+    "total_snapshots": 6502,
+    "filtered_snapshots": 5901,
+    "filtered_pct": 90.8,
+    "train_filtered_count": 5704,
+    "train_unfiltered_count": 6305,
+    "test_count": 197,
+    "date_range": {
+      "train_filtered": {
+        "start": "2026-01-22T16:08:19.167993+00:00",
+        "end": "2026-03-29T18:02:39.914072+00:00"
+      },
+      "train_unfiltered": {
+        "start": "2026-01-22T16:08:19.167993+00:00",
+        "end": "2026-03-29T18:02:39.914072+00:00"
+      },
+      "test": {
+        "start": "2026-03-29T19:02:02.389511+00:00",
+        "end": "2026-03-31T18:15:22.109924+00:00"
+      }
+    },
+    "free_spaces_distribution": {
+      "train_filtered": {
+        "n": 5704,
+        "mean": 221.6,
+        "median": 225.0,
+        "std": 72.5,
+        "min": 64,
+        "max": 471
+      },
+      "train_unfiltered": {
+        "n": 6305,
+        "mean": 236.6,
+        "median": 231.0,
+        "std": 83.5,
+        "min": 64,
+        "max": 471
+      },
+      "test": {
+        "n": 197,
+        "mean": 229.4,
+        "median": 231.0,
+        "std": 40.1,
+        "min": 176,
+        "max": 347
+      }
+    }
+  },
+  "Lot 6": {
+    "capacity": 387,
+    "total_snapshots": 6502,
+    "filtered_snapshots": 5901,
+    "filtered_pct": 90.8,
+    "train_filtered_count": 5704,
+    "train_unfiltered_count": 6305,
+    "test_count": 197,
+    "date_range": {
+      "train_filtered": {
+        "start": "2026-01-22T16:08:19.654220+00:00",
+        "end": "2026-03-29T18:02:40.135433+00:00"
+      },
+      "train_unfiltered": {
+        "start": "2026-01-22T16:08:19.654220+00:00",
+        "end": "2026-03-29T18:02:40.135433+00:00"
+      },
+      "test": {
+        "start": "2026-03-29T19:02:02.616031+00:00",
+        "end": "2026-03-31T18:15:22.402953+00:00"
+      }
+    },
+    "free_spaces_distribution": {
+      "train_filtered": {
+        "n": 5704,
+        "mean": 215.2,
+        "median": 214.0,
+        "std": 129.6,
+        "min": 0,
+        "max": 387
+      },
+      "train_unfiltered": {
+        "n": 6305,
+        "mean": 223.3,
+        "median": 230.0,
+        "std": 128.0,
+        "min": 0,
+        "max": 387
+      },
+      "test": {
+        "n": 197,
+        "mean": 246.4,
+        "median": 260.0,
+        "std": 114.0,
+        "min": 53,
+        "max": 387
+      }
+    }
+  }
+}
