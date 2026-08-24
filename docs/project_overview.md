@@ -1,16 +1,16 @@
 # High-Level Summary
 
-A web application that helps students optimize their commute to campus by identifying which parking lots are closest to their classrooms and predicting parking availability. The app uses machine learning to analyze historical parking data, integrates with student class schedules, and calculates optimal departure times based on personalized preferences like arrival buffer time and transportation method.
+A web application that helps students plan their commute to campus by showing how long it takes to reach each parking lot and walk from there to their classroom. The app integrates with student class schedules and calculates departure times based on personalized preferences like arrival buffer time and walking speed.
 
 ---
 
 # In-Depth Description
 
 ## The Problem:
-Students face two major challenges when commuting to campus: (1) they don’t know which parking lots are closest to their specific classrooms, leading to unnecessary walking and late arrivals, and (2) they don’t know if lots will be full when they arrive, causing wasted time circling for spots or the stress of not knowing when to leave home. Current parking systems only show real-time availability without any spatial guidance or predictive insights, leaving students to guess both where and when to park.
+Students don't know which parking lots are closest to their specific classrooms, leading to unnecessary walking and late arrivals. Campus parking maps show lots without any sense of what the trip actually costs: how long the drive takes, how long the walk from the lot takes, and therefore when a student needs to leave home to make it to class on time.
 
 ## Our Solution:
-Our web application solves both problems by combining intelligent routing with machine learning predictions. Users upload their class schedule (via .ics file), and the app automatically maps each classroom to its campus location. When a student selects an upcoming class, the app identifies which parking lots they’re permitted to use, ranks them by distance to that specific classroom, predicts availability based on historical patterns, and recommends the top 3 parking options along with an optimal departure time. This eliminates the guesswork of both “where should I park?” and “when should I leave?”
+Our web application answers "where should I park, and when should I leave?" with travel-time math. Users upload their class schedule (via .ics file), and the app automatically maps each classroom to its campus location. When a student selects an upcoming class, the app identifies which parking lots they're permitted to use and lists them by combined driving and walking time to that specific classroom, along with the time they need to leave to arrive on schedule.
 
 ## Technical Approach:
-The system collects parking lot occupancy data and uses time-series machine learning models to predict future availability based on time of day, day of week, and historical trends. The app maintains a database mapping classrooms to GPS coordinates and integrates with mapping APIs to calculate walking distances from each lot. Users can personalize recommendations by setting preferences like risk tolerance for being late, desired arrival buffer, and whether they walk or use alternative transport. The mobile-friendly web interface provides both live parking counts and AI-powered predictions to help students make informed decisions about both where to park and when to leave.​​​​​​​​​​​​​​​​
+The app maintains a database mapping classrooms and parking lots to GPS coordinates, and integrates with mapping APIs to calculate driving time from the user's location to each lot and walking time from each lot to their building. Lot-to-building walking distances are precomputed and stored; driving times are resolved from the user's current location at request time. Users can personalize the results by setting their permit type, desired arrival buffer, and walking speed, which scales the walking leg of every estimate. The mobile-friendly web interface presents the lots as a single list ordered by total travel time, each with turn-by-turn navigation to the lot.

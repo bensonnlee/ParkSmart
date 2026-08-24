@@ -207,7 +207,7 @@ export default function Home() {
                 <Calendar className="size-8 text-ucr-blue" />
               </div>
               <h2 className="text-xl font-bold text-gray-900 mb-2">No Schedule Found</h2>
-              <p className="text-gray-500 mb-6 max-w-xs mx-auto">Upload your .ics file to see your classes and parking recommendations.</p>
+              <p className="text-gray-500 mb-6 max-w-xs mx-auto">Upload your .ics file to see your classes and nearby parking.</p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <Button onClick={() => navigate('/dashboard/upload')} className="bg-ucr-blue hover:bg-ucr-blue-dark px-8">
                   <Upload className="size-4 mr-2" />

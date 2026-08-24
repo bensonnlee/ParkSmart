@@ -7,7 +7,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from app.routers import academic, auth, buildings, classrooms, feedback, forecasts, health, parking, permits, schedules
+from app.routers import auth, buildings, classrooms, feedback, health, permits, schedules
 
 # Configure logging
 logging.basicConfig(
@@ -27,7 +27,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 app = FastAPI(
     title="ParkSmart API",
-    description="API for UCR parking lot availability tracking",
+    description="API for UCR parking lot travel times",
     version="1.0.0",
     lifespan=lifespan,
 )
@@ -52,14 +52,11 @@ async def global_exception_handler(request: Request, exc: Exception) -> JSONResp
 
 
 # Include routers
-app.include_router(academic.router)
 app.include_router(auth.router)
 app.include_router(buildings.router)
 app.include_router(classrooms.router)
 app.include_router(feedback.router)
-app.include_router(forecasts.router)
 app.include_router(health.router)
-app.include_router(parking.router)
 app.include_router(permits.router)
 app.include_router(schedules.router)
 

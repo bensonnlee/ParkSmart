@@ -1,6 +1,6 @@
 # ParkSmart Backend
 
-FastAPI REST API for ParkSmart — campus parking availability tracking and ML-powered predictions.
+FastAPI REST API for ParkSmart — driving and walking travel times between campus parking lots and buildings.
 
 ## Tech Stack
 
@@ -9,8 +9,7 @@ FastAPI REST API for ParkSmart — campus parking availability tracking and ML-p
 - **ORM**: SQLAlchemy 2.0 with asyncpg
 - **Migrations**: Alembic
 - **Auth**: Supabase Auth (JWT verification via python-jose)
-- **ML**: Prophet (time-series forecasting)
-- **Data Collection**: BeautifulSoup (web scraping)
+- **Routing**: Mapbox (driving and walking travel times)
 - **Calendar Parsing**: icalendar
 
 ## Prerequisites
@@ -71,20 +70,18 @@ FastAPI REST API for ParkSmart — campus parking availability tracking and ML-p
 | Prefix              | Tag         | Description                                    |
 | -------------------- | ----------- | ---------------------------------------------- |
 | `/api/auth`          | auth        | Sign up, login, logout, password reset, profile |
-| `/api/lots`          | parking     | Parking lot list, details, availability history |
-| `/api/lots`          | forecasts   | ML availability forecasts per lot              |
 | `/api/buildings`     | buildings   | Campus buildings and nearby lots               |
 | `/api/classrooms`    | classrooms  | Classroom lookup and nearest lots by distance  |
 | `/api/permits`       | permits     | Permit types and associated lots               |
 | `/api/schedules`     | schedules   | Upload/view/delete class schedules (.ics)      |
 | `/api/feedback`      | feedback    | Submit beta user feedback                      |
-| `/health`            | health      | Health check and manual data collection trigger |
+| `/health`            | health      | Health check                                   |
 
 Full interactive API documentation is available at `/docs` when running the server.
 
 ## Database
 
-The database schema is managed with Alembic migrations located in `alembic/`. Key models include parking lots, availability snapshots, buildings, classrooms, permits, user schedules, and forecasts.
+The database schema is managed with Alembic migrations located in `alembic/`. Key models include parking lots, buildings, classrooms, permits, lot-to-building distances, and user schedules.
 
 To create a new migration after modifying models:
 
@@ -92,18 +89,6 @@ To create a new migration after modifying models:
 alembic revision --autogenerate -m "description of change"
 alembic upgrade head
 ```
-
-## Cron Jobs
-
-Automated data collection and forecast generation run on Render (configured in `render.yaml`):
-
-| Job                  | Schedule                              | Description                          |
-| -------------------- | ------------------------------------- | ------------------------------------ |
-| collector-rush       | Every 5 min, 6am–11am PT, weekdays   | High-frequency collection during rush|
-| collector-midday     | Every 15 min, 11am–6pm PT, weekdays  | Moderate collection during midday    |
-| collector-offpeak    | Every 60 min, 6pm–5am PT, weekday nights | Low-frequency overnight collection |
-| collector-weekend    | Every 60 min, all day, weekends       | Baseline weekend collection          |
-| forecast-generator   | Daily at ~9–10pm PT                   | Generate ML forecasts from collected data |
 
 ## Code Quality
 

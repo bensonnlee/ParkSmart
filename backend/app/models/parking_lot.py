@@ -11,14 +11,12 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import Base, TimestampMixin, UUIDMixin
 
 if TYPE_CHECKING:
-    from app.models.forecast import ParkingForecast
     from app.models.lot_building_distance import LotBuildingDistance
     from app.models.permit import LotPermitAccess
-    from app.models.snapshot import ParkingSnapshot
 
 
 class ParkingLot(Base, UUIDMixin, TimestampMixin):
-    """A campus parking lot. Links to snapshots (occupancy) and permit_access (rules)."""
+    """A campus parking lot. Links to permit_access (rules) and building distances."""
 
     __tablename__ = "parking_lots"
 
@@ -29,17 +27,11 @@ class ParkingLot(Base, UUIDMixin, TimestampMixin):
     longitude: Mapped[Decimal | None] = mapped_column(Numeric(10, 7), nullable=True)
 
     # Relationships
-    snapshots: Mapped[list[ParkingSnapshot]] = relationship(
-        "ParkingSnapshot", back_populates="lot", cascade="all, delete-orphan"
-    )
     permit_access: Mapped[list[LotPermitAccess]] = relationship(
         "LotPermitAccess", back_populates="lot", cascade="all, delete-orphan"
     )
     distances: Mapped[list["LotBuildingDistance"]] = relationship(
         "LotBuildingDistance", back_populates="lot", cascade="all, delete-orphan"
-    )
-    forecasts: Mapped[list["ParkingForecast"]] = relationship(
-        "ParkingForecast", back_populates="lot", cascade="all, delete-orphan"
     )
 
     def __repr__(self) -> str:

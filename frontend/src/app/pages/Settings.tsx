@@ -249,7 +249,7 @@ export default function Settings() {
               </div>
               <div>
                 <h2 className="font-bold text-gray-900 text-lg leading-tight">Optimization Preferences</h2>
-                <p className="text-muted-foreground text-sm">Fine-tune how we recommend parking spots</p>
+                <p className="text-muted-foreground text-sm">Fine-tune how we calculate your travel times</p>
               </div>
             </div>
 

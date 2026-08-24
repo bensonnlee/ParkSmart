@@ -1,6 +1,6 @@
 # ParkSmart Frontend
 
-React SPA for ParkSmart — the campus parking optimizer.
+React SPA for ParkSmart — the campus parking distance calculator.
 
 ## Tech Stack
 
@@ -61,7 +61,6 @@ src/
 │   ├── auth.ts               # Authentication API
 │   ├── config.ts             # API base URL config
 │   ├── schedule.ts           # Schedule API
-│   ├── forecast.ts           # Forecast API
 │   ├── maps.ts               # Maps API
 │   └── prefs.ts              # User preferences API
 ├── app/
@@ -83,7 +82,7 @@ src/
 | `/`                          | Welcome                  | Landing / login page                       |
 | `/signup`                    | SignUp                   | Account registration with onboarding       |
 | `/dashboard`                 | Home                     | Class schedule overview with parking links  |
-| `/dashboard/parking/:classId`| ParkingRecommendations   | ML-ranked parking lot recommendations      |
+| `/dashboard/parking/:classId`| ParkingRecommendations   | Parking lots by travel time to a class     |
 | `/dashboard/find-by-building`| FindByBuilding           | Search parking by building/destination      |
 | `/dashboard/schedule`        | SchedulePlanner          | View and manage class schedule              |
 | `/dashboard/upload`          | IcsUpload                | Upload .ics calendar file                  |

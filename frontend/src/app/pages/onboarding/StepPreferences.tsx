@@ -75,7 +75,7 @@ export default function StepPreferences({
           <span className="text-sm font-bold text-primary tabular-nums">{arrivalBuffer} min</span>
         </div>
         <p className="text-xs text-muted-foreground mb-3">
-          How early do you arrive before class? We'll recommend lots likely to be available at that time.
+          How early do you arrive before class? We'll use this to work out when you need to leave.
         </p>
         <Slider value={[arrivalBuffer]} onValueChange={([v]) => setArrivalBuffer(v)} max={30} step={5} />
         <div className="flex justify-between mt-2 px-1 text-[10px] text-muted-foreground font-medium uppercase tracking-wide">

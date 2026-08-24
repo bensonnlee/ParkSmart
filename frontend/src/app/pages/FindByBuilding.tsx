@@ -15,12 +15,7 @@ import { loadPrefs, WALK_SPEED_MULTIPLIER } from '@/lib/prefs';
 import { openMapsDirections } from '@/lib/maps';
 import { useDebounce } from '@/app/hooks/useDebounce';
 import { useLocation } from '@/app/hooks/useLocation';
-import { useBreak } from '@/app/hooks/useBreak';
-import { getPredictedSpots } from '@/lib/forecast';
-import { AvailabilityStrip } from '@/app/components/AvailabilityStrip';
-import { BreakBanner } from '@/app/components/BreakBanner';
-import { ForecastPausedBanner } from '@/app/components/ForecastPausedBanner';
-import { PREDICTIONS_PAUSED } from '@/api/config';
+import { LiveParkingLink } from '@/app/components/LiveParkingLink';
 
 interface BuildingOption {
   id: string;
@@ -43,9 +38,7 @@ export default function FindByBuilding() {
   // Results state — null means "hasn't searched yet", [] means "searched, no results"
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [recommendations, setRecommendations] = useState<any[] | null>(null);
-  const [otherLots, setOtherLots] = useState<any[]>([]);
-  const onBreak = useBreak();
+  const [lots, setLots] = useState<any[] | null>(null);
 
   // Fetch buildings on debounced query change (empty query returns all buildings)
   useEffect(() => {
@@ -71,8 +64,7 @@ export default function FindByBuilding() {
     setOpen(false);
     setQuery('');
     // Reset previous results
-    setRecommendations(null);
-    setOtherLots([]);
+    setLots(null);
     setError(null);
   };
 
@@ -80,7 +72,6 @@ export default function FindByBuilding() {
     if (!selectedBuilding) return;
     setLoading(true);
     setError(null);
-    setOtherLots([]);
 
     try {
       const usingUserLocation = !!(latitude && longitude);
@@ -127,24 +118,9 @@ export default function FindByBuilding() {
         });
       }
 
-      // Fetch availability + forecasts for top 3
-      const settledResults = await Promise.allSettled(
-        filteredLots.slice(0, 3).map(async (lot: any) => {
-          const [detail, forecast] = await Promise.all([
-            cachedFetch(`${API_BASE}/api/lots/${lot.id}`, { ttl: 60_000 }),
-            cachedFetch(`${API_BASE}/api/lots/${lot.id}/forecast`, { ttl: 60_000 }).catch(() => ({ forecasts: [] })),
-          ]);
-          return { ...detail, forecasts: forecast.forecasts ?? [] };
-        })
-      );
-
-      const detailedLots = settledResults
-        .filter((r): r is PromiseFulfilledResult<any> => r.status === 'fulfilled')
-        .map(r => r.value);
-
       // Map to UI structure
       const now = Date.now();
-      const formattedLots = detailedLots.map((lot: any) => {
+      const formattedLots = filteredLots.map((lot: any) => {
         const driveMin = driveTimeMap.get(lot.id) ?? 0;
         const rawWalk = walkTimeMap.get(lot.id);
         const walkMin = rawWalk != null ? Math.round(rawWalk * walkMultiplier) : 0;
@@ -153,56 +129,18 @@ export default function FindByBuilding() {
         const totalMinutes = driveMin + walkMin;
         const arriveByTime = totalMinutes > 0 ? new Date(now + totalMinutes * 60_000) : null;
 
-        const predictedSpots = PREDICTIONS_PAUSED
-          ? null
-          : getPredictedSpots(arriveByTime, lot.forecasts);
-
         return {
           id: lot.id,
           name: lot.name,
-          currentSpots: lot.free_spaces ?? 0,
-          totalSpots: lot.total_spaces ?? 0,
           walkMinutes: rawWalk != null ? walkMin : null,
           driveMinutes: driveTimeMap.get(lot.id) ?? null,
           lat: lot.latitude,
           lng: lot.longitude,
           arriveByTime,
-          predictedSpots,
         };
       });
 
-      setRecommendations(formattedLots);
-
-      // Fetch availability for remaining lots (beyond top 3)
-      const remainingLots = filteredLots.slice(3);
-      if (remainingLots.length > 0) {
-        const otherSettled = await Promise.allSettled(
-          remainingLots.map((lot: any) =>
-            cachedFetch(`${API_BASE}/api/lots/${lot.id}`, { ttl: 60_000 }).catch(() => null)
-          )
-        );
-
-        const otherFormatted = remainingLots.map((lot: any, i: number) => {
-          const result = otherSettled[i];
-          const detail = result.status === 'fulfilled' ? result.value : null;
-          const rawWalk = walkTimeMap.get(lot.id);
-          const walkMin = rawWalk != null ? Math.round(rawWalk * walkMultiplier) : null;
-          const driveMin = driveTimeMap.get(lot.id) ?? null;
-
-          return {
-            id: lot.id,
-            name: detail?.name ?? lot.name ?? lot.id,
-            walkMinutes: walkMin,
-            driveMinutes: driveMin,
-            lat: detail?.latitude ?? lot.latitude,
-            lng: detail?.longitude ?? lot.longitude,
-            currentSpots: detail?.free_spaces ?? null,
-            totalSpots: detail?.total_spaces ?? null,
-          };
-        });
-
-        setOtherLots(otherFormatted);
-      }
+      setLots(formattedLots);
     } catch (err: any) {
       console.error('FindByBuilding fetch error:', err);
       setError(err.message);
@@ -217,12 +155,6 @@ export default function FindByBuilding() {
         title="Find by Building"
         subtitle="Search any campus building for parking"
       />
-
-      {PREDICTIONS_PAUSED ? (
-        <ForecastPausedBanner className="max-w-2xl mx-auto mb-4" />
-      ) : onBreak ? (
-        <BreakBanner className="max-w-2xl mx-auto mb-4" />
-      ) : null}
 
       <div className="max-w-2xl mx-auto">
         {/* Search + Select */}
@@ -295,7 +227,7 @@ export default function FindByBuilding() {
         </Button>
 
         {/* Results */}
-        {recommendations !== null && !loading && (
+        {lots !== null && !loading && (
           <>
             {error ? (
               <div className="text-center py-12">
@@ -314,7 +246,9 @@ export default function FindByBuilding() {
                     : 'Sorted by walking distance from building'}
                 </p>
 
-                {recommendations.length === 0 ? (
+                <LiveParkingLink className="mb-4" />
+
+                {lots.length === 0 ? (
                   <Card className="border-dashed border-2 border-gray-300 p-10 text-center rounded-2xl">
                     <MapPin className="size-8 text-gray-300 mx-auto mb-3" />
                     {prefs.preferredPermitId ? (
@@ -330,7 +264,7 @@ export default function FindByBuilding() {
                     )}
                   </Card>
                 ) : (
-                  recommendations.map((lot) => (
+                  lots.map((lot) => (
                     <Card key={lot.id} className="mb-4 border-none shadow-sm rounded-2xl overflow-hidden">
                       <CardContent className="p-0 last:pb-0">
                         {/* Arrive By banner */}
@@ -368,14 +302,6 @@ export default function FindByBuilding() {
                           </div>
                         </div>
 
-                        {/* Availability strip */}
-                        <AvailabilityStrip
-                          currentSpots={lot.currentSpots}
-                          totalSpots={lot.totalSpots}
-                          predictedSpots={lot.predictedSpots}
-                          className="mx-4 sm:mx-6 mb-4"
-                        />
-
                         {/* Navigation button */}
                         <button
                           onClick={() => openMapsDirections(lot.lat, lot.lng)}
@@ -386,56 +312,6 @@ export default function FindByBuilding() {
                       </CardContent>
                     </Card>
                   ))
-                )}
-
-                {/* All Other Lots */}
-                {otherLots.length > 0 && (
-                  <>
-                    <h2 className="text-sm font-black text-gray-400 uppercase tracking-widest mb-1 mt-8 flex items-center gap-2">
-                      <MapPin className="size-4 text-gray-400" /> All Other Lots
-                    </h2>
-                    <p className="text-xs text-gray-400 mb-4">
-                      {otherLots.length} additional lot{otherLots.length !== 1 ? 's' : ''} nearby
-                    </p>
-
-                    {otherLots.map((lot) => (
-                      <Card key={lot.id} className="mb-3 border-none shadow-sm rounded-2xl overflow-hidden">
-                        <CardContent className="p-0 last:pb-0">
-                          <div className="px-4 sm:px-6 pt-4 pb-3">
-                            <div className="flex items-center justify-between mb-1">
-                              <h3 className="font-bold text-base text-gray-900">{lot.name}</h3>
-                              {lot.currentSpots != null && lot.totalSpots != null && (
-                                <span className="text-xs font-bold text-gray-500 bg-gray-100 rounded-full px-2.5 py-1">
-                                  {lot.currentSpots} / {lot.totalSpots} spots
-                                </span>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-1.5 text-sm text-gray-400 flex-wrap">
-                              {lot.driveMinutes != null && (
-                                <span className="flex items-center gap-1 whitespace-nowrap">
-                                  <Car className="size-3.5 shrink-0" /> ~{Math.round(lot.driveMinutes)} min drive
-                                </span>
-                              )}
-                              {lot.driveMinutes != null && lot.walkMinutes != null && (
-                                <span className="text-gray-300">{'\u00B7'}</span>
-                              )}
-                              {lot.walkMinutes != null && (
-                                <span className="flex items-center gap-1 whitespace-nowrap">
-                                  <Footprints className="size-3.5 shrink-0" /> ~{Math.round(lot.walkMinutes)} min walk
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          <button
-                            onClick={() => openMapsDirections(lot.lat, lot.lng)}
-                            className="w-full bg-blue-600 hover:bg-blue-700 py-3 flex items-center justify-center gap-2 text-xs font-bold text-white transition-colors uppercase tracking-wide"
-                          >
-                            <Navigation className="size-3.5" /> Start Navigation
-                          </button>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </>
                 )}
               </>
             )}

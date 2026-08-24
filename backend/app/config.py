@@ -6,10 +6,7 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     database_url: str
 
-    # UCR API endpoint
-    ucr_api_url: str = "https://lotspaces.ucr.edu/api/lots"
-
-    # Supabase Auth (optional for cron jobs that don't use auth)
+    # Supabase Auth (optional in environments that don't use auth)
     supabase_url: str = ""
     supabase_anon_key: str = ""
     supabase_service_role_key: str = ""

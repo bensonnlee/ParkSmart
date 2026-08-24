@@ -24,5 +24,5 @@ Add `--dry-run` to preview without committing.
 
 ## Notes
 
-- Scripts skip lots not found in `parking_lots` (only lots returned by the UCR API are seeded).
+- Scripts skip lots not found in `parking_lots` (the lot roster is maintained manually in the database).
 - Scripts are idempotent for the permit row (won't duplicate if re-run), but will fail on duplicate `lot_permit_access` entries due to the unique constraint.

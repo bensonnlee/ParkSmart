@@ -43,7 +43,7 @@ export default function StepAccountCreate({
       <div className="text-center mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Create Your Account</h1>
         <p className="text-muted-foreground mt-1">
-          Join ParkSmart to get personalized parking recommendations
+          Join ParkSmart to find the closest parking for your classes
         </p>
       </div>
 

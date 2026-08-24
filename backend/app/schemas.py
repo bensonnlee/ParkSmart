@@ -14,16 +14,6 @@ class PermitTypeRead(BaseModel):
     description: str | None = None
 
 
-class ParkingSnapshotRead(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: uuid.UUID
-    lot_id: uuid.UUID
-    free_spaces: int
-    occupancy_pct: Decimal | None = None
-    collected_at: datetime
-
-
 class ParkingLotRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -41,49 +31,8 @@ class ParkingLotWithDistance(ParkingLotRead):
     travel_minutes: float | None = None  # driving or walking time to/from this lot
 
 
-class ParkingLotWithAvailability(ParkingLotRead):
-    free_spaces: int | None = None
-    occupancy_pct: Decimal | None = None
-    availability_updated_at: datetime | None = None
-
-
-class ParkingForecastRead(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: uuid.UUID
-    lot_id: uuid.UUID
-    forecast_time: datetime
-    predicted_free_spaces: int
-    predicted_free_spaces_lower: int
-    predicted_occupancy_pct: Decimal | None = None
-    model_version: str
-    generated_at: datetime
-
-
-class ForecastResponse(BaseModel):
-    lot_id: uuid.UUID
-    lot_name: str
-    generated_at: datetime | None = None
-    forecasts: list[ParkingForecastRead]
-
-
-class PaginatedSnapshots(BaseModel):
-    items: list[ParkingSnapshotRead]
-    total: int
-    page: int
-    per_page: int
-    pages: int
-
-
 class HealthResponse(BaseModel):
     status: str
-    last_collection: datetime | None = None
-
-
-class CollectionResponse(BaseModel):
-    status: str
-    lots_updated: int
-    snapshots_created: int
 
 
 # Auth schemas
@@ -280,40 +229,3 @@ class FeedbackRead(BaseModel):
     message: str
     contact_email: str | None = None
     created_at: datetime
-
-
-# Academic calendar schemas
-class AcademicTermCreate(BaseModel):
-    term_type: Literal["fall", "winter", "spring"]
-    start_date: date
-
-
-# All fields are required for updates (full replacement), same shape as create.
-AcademicTermUpdate = AcademicTermCreate
-
-
-class AcademicWeekRead(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: uuid.UUID
-    term_id: uuid.UUID
-    week_number: int
-    start_date: date
-    end_date: date
-    label: str | None = None
-
-
-class AcademicTermRead(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: uuid.UUID
-    name: str
-    term_type: Literal["fall", "winter", "spring"]
-    start_date: date
-    weeks: list[AcademicWeekRead] = []
-    created_at: datetime
-    updated_at: datetime
-
-
-class CurrentTermResponse(BaseModel):
-    current_term: AcademicTermRead | None = None

@@ -88,7 +88,7 @@ export default function IcsUpload() {
             Upload Calendar
           </CardTitle>
           <CardDescription className="text-center text-gray-600 px-2 sm:px-4">
-            Import your class schedule for current quarter to receive parking recommendations
+            Import your class schedule for current quarter to see parking near your classes
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">

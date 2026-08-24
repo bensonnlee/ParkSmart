@@ -69,7 +69,7 @@ export default function StepScheduleUpload({
       <div className="text-center mb-2">
         <h1 className="text-2xl font-bold text-gray-900">Upload Your Schedule</h1>
         <p className="text-muted-foreground mt-1">
-          Import your class schedule so we can recommend parking near your buildings
+          Import your class schedule so we can show the closest parking to your buildings
         </p>
       </div>
 
